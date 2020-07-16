@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warp", "Warp.csproj", "{4AA3E898-6C08-4C50-A960-12E6C622F7CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4AA3E898-6C08-4C50-A960-12E6C622F7CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AA3E898-6C08-4C50-A960-12E6C622F7CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AA3E898-6C08-4C50-A960-12E6C622F7CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AA3E898-6C08-4C50-A960-12E6C622F7CF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F3101481-D54D-444C-BF3B-2B8025BE7DA6}
+	EndGlobalSection
+EndGlobal
