@@ -18,10 +18,15 @@ public class WarpMenu
     public static string newRoom;
     public static string newRegion;
     public static List<AbstractRoom> abstractRoomList = new List<AbstractRoom>();
+    public static bool realtimeWarp = false;
+    public static SimpleButton switchButton;
+    public static bool updateText = false;
+
     public static void MenuHook()
     {
         On.Menu.PauseMenu.ctor += PauseMenu_ctor;
         On.Menu.PauseMenu.Singal += PauseMenu_Singal;
+        On.Menu.PauseMenu.Update += PauseMenu_Update;
         On.OverWorld.Update += OverWorld_Update;
         On.OverWorld.LoadFirstWorld += OverWorld_LoadFirstWorld;
         On.SaveState.LoadGame += SaveState_LoadGame;
@@ -46,10 +51,10 @@ public class WarpMenu
         orig.Invoke(self, str, game);
         if (warpingToNewRegion)
         {
-            //Debug.Log("WARP: Loading game in new region, adjusting denPosition.");
+            Debug.Log("WARP: Loading game in new region, adjusting denPosition.");
             self.denPosition = newRegion + "_ZZZ";
             warpingToNewRegion = false;
-            //Debug.Log("WARP: Region warp completed.");
+            Debug.Log("WARP: Region warp completed.");
         }
     }
 
@@ -61,70 +66,106 @@ public class WarpMenu
         {
             if (switchRoom == null || switchRoom.name != newRoom)
             {
-                //Debug.Log("WARP: Room warp activated.");
+                Debug.Log("WARP: Room warp activated.");
                 switchRoom = self.game.world.GetAbstractRoom(newRoom);
             }
             if (switchRoom != null && switchRoom.realizedRoom == null)
             {
-                //Debug.Log("WARP: About to realise destination " + switchRoom.name);
+                Debug.Log("WARP: About to realise destination " + switchRoom.name);
                 switchRoom.RealizeRoom(self.game.world, self.game);
             }
-            if (switchRoom.realizedRoom != null && switchRoom.realizedRoom.fullyLoaded && player != null)
+            if (switchRoom.realizedRoom != null && switchRoom.realizedRoom.ReadyForPlayer && player != null)
             {
-                //Debug.Log("WARP: Destination room " + switchRoom.name + " fully loaded, about to warp player.");
+                Debug.Log("WARP: Destination room " + switchRoom.name + " fully loaded, about to warp player.");
                 player.PlaceInRoom(switchRoom.realizedRoom);
+                player.abstractCreature.ChangeRooms(player.room.GetWorldCoordinate(player.mainBodyChunk.pos));
             }
             if (player != null && player.room == switchRoom.realizedRoom)
             {
-                //Debug.Log("WARP: Player moved to destination room, moving camera position.");
+                Debug.Log("WARP: Player moved to destination room, moving camera position.");
                 self.game.cameras[0].MoveCamera(player.room, 0);
                 warpActive = false;
                 switchRoom = null;
-                //Debug.Log("WARP: Warp completed.");
+                Debug.Log("WARP: Warp completed.");
             }
         }
         if (regionWarpActive && !warpActive)
         {
-            //Debug.Log("WARP: Restarting cycle for region warp.");
-            self.game.RestartGame();
+            Debug.Log("WARP: Restarting cycle for region warp.");
+            if (realtimeWarp)
+            {
+                //Realtime warp goes here
+            }
+            else
+            {
+                self.game.RestartGame();
+                warpingToNewRegion = true;
+            }
             regionWarpActive = false;
-            warpingToNewRegion = true;
         }
     }
-
+    private static void PauseMenu_Update(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
+    {
+        orig.Invoke(self);
+        if (updateText)
+        {
+            if (realtimeWarp)
+            {
+                switchButton.menuLabel.text = "ENABLED";
+            }
+            else
+            {
+                switchButton.menuLabel.text = "DISABLED";
+            }
+            updateText = false;
+        }
+    }
     private static void PauseMenu_Singal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
         orig.Invoke(self, sender, message);
-        //Debug.Log("WARP: Button pressed");
+        Debug.Log("WARP: Button pressed");
         if (message.EndsWith("warp"))
         {
             string room = message.Remove(message.Length - 4, 4);
             warpActive = true;
             regionWarpActive = false;
             newRoom = room;
-            //Debug.Log("WARP: Room warp initiated for: " + room);
+            Debug.Log("WARP: Room warp initiated for: " + room);
             self.Singal(null, "CONTINUE");
         }
         if (message.EndsWith("reg"))
         {
             newRegion = message.Remove(message.Length - 3, 3);
-            //Debug.Log("WARP: Region warp initiated for: " + newRegion);
+            Debug.Log("WARP: Region warp initiated for: " + newRegion);
             warpActive = false;
             regionWarpActive = true;
             self.Singal(null, "CONTINUE");
+        }
+        if(message == "SWITCH")
+        {
+            if (realtimeWarp)
+            {
+                realtimeWarp = false;
+            }
+            else
+            {
+                realtimeWarp = true;
+            }
+            updateText = true;
+            self.PlaySound(SoundID.MENU_Player_Join_Game);
         }
     }
 
     private static void PauseMenu_ctor(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
     {
         warpActive = false;
-        //Debug.Log("WARP: Pause screen opened.");
+        Debug.Log("WARP: Pause screen opened.");
         orig.Invoke(self, manager, game);
         if (game.devToolsActive)
         {
             if (self.controlMap != null)
             {
-                //Debug.Log("WARP: Removing control map to make room for buttons.");
+                Debug.Log("WARP: Moving control map position.");
                 self.controlMap.pos = new Vector2(0f, 3000f);
             }
             float hOffset = 80f;
@@ -136,7 +177,7 @@ public class WarpMenu
             int regionVerShift = 0;
             if (game.world.abstractRooms != null)
             {
-                //Debug.Log("WARP: Grabbing region's abstract rooms list.");
+                Debug.Log("WARP: Grabbing region's abstract rooms list.");
                 List<string> roomList = new List<string>();
                 foreach (AbstractRoom room in game.world.abstractRooms)
                 {
@@ -167,14 +208,18 @@ public class WarpMenu
                         }
                     }
                 }
-                //Debug.Log("WARP: Finished adding room buttons.");
+                self.pages[0].subObjects.Add(new MenuLabel(self, self.pages[0], "Real-time Warp", new Vector2(71f, game.rainWorld.options.ScreenSize.y - 38f), new Vector2(), false));
+                switchButton = new SimpleButton(self, self.pages[0], "", "SWITCH", new Vector2(20f, game.rainWorld.options.ScreenSize.y - 80f), new Vector2(100f, 30f));
+                self.pages[0].subObjects.Add(switchButton);
+                updateText = true;
+                Debug.Log("WARP: Finished adding room buttons.");
             }
             if (self.game.overWorld.regions != null)
             {
-                //Debug.Log("WARP: Grabbing loaded region list");
+                Debug.Log("WARP: Grabbing loaded region list");
                 for (int r = 0; r < self.game.overWorld.regions.Length; r++)
                 {
-                    self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], self.game.overWorld.regions[r].name, self.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 80f - ((vOffset + 6f) * regionVerShift)), new Vector2(45f, 30f)));
+                    self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], self.game.overWorld.regions[r].name, self.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 120f - ((vOffset + 6f) * regionVerShift)), new Vector2(45f, 30f)));
                     regionShift++;
                     if (regionShift == 2)
                     {
@@ -182,7 +227,7 @@ public class WarpMenu
                         regionVerShift++;
                     }
                 }
-                //Debug.Log("WARP: Finished adding region buttons.");
+                Debug.Log("WARP: Finished adding region buttons.");
             }
         }
     }

@@ -28,7 +28,7 @@ public class WarpMod : PartialityMod
     public WarpMod()
     {
         this.ModID = "Warp";
-        this.Version = "V1.0";
+        this.Version = "V1.02";
         this.author = "LeeMoriya";
     }
     public override void OnEnable()
