@@ -29,23 +29,9 @@ public class WarpMenu
         On.Menu.PauseMenu.Singal += PauseMenu_Singal;
         On.Menu.PauseMenu.Update += PauseMenu_Update;
         On.OverWorld.Update += OverWorld_Update;
-        On.OverWorld.LoadFirstWorld += OverWorld_LoadFirstWorld;
         On.SaveState.LoadGame += SaveState_LoadGame;
     }
 
-    private static void OverWorld_LoadFirstWorld(On.OverWorld.orig_LoadFirstWorld orig, OverWorld self)
-    {
-        orig.Invoke(self);
-        int room = 0;
-        if (self.activeWorld.GetAbstractRoom(self.FIRSTROOM) != null)
-        {
-            room = self.activeWorld.GetAbstractRoom(self.FIRSTROOM).index;
-        }
-        if (!self.activeWorld.IsRoomInRegion(room))
-        {
-            self.FIRSTROOM = self.activeWorld.GetAbstractRoom(self.activeWorld.region.firstRoomIndex).name;
-        }
-    }
 
     private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
     {
@@ -92,11 +78,11 @@ public class WarpMenu
         }
         if (regionWarpActive && !warpActive)
         {
-            Debug.Log("WARP: Restarting cycle for region warp.");
             if (realtimeWarp)
             {
-                WarpMenu warp = new WarpMenu();
-                warp.SwitchRegions(self.game, newRegion, "_S04", new IntVector2(0, 0));
+                regionWarpActive = false;
+                RegionSwitcher rs = new RegionSwitcher();
+                rs.SwitchRegions(self.game, newRegion, newRegion + "_S04", new IntVector2(0, 0));
             }
             else
             {
@@ -143,7 +129,7 @@ public class WarpMenu
             regionWarpActive = true;
             self.Singal(null, "CONTINUE");
         }
-        if(message == "SWITCH")
+        if (message == "SWITCH")
         {
             if (realtimeWarp)
             {
@@ -233,12 +219,17 @@ public class WarpMenu
             }
         }
     }
+}
+public class RegionSwitcher
+{
     private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod("LoadWorld", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     public void SwitchRegions(RainWorldGame game, string destWorld, string destRoom, IntVector2 destPos)
     {
+        Debug.Log("Loading room " + destRoom + " from region " + destWorld + "!");
         AbstractCreature absPly = game.Players[0];
         AbstractRoom oldRoom = absPly.Room;
         Player ply = absPly.realizedCreature as Player;
+        Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
 
         // Load the new world
         World oldWorld = game.overWorld.activeWorld;
@@ -246,9 +237,18 @@ public class WarpMenu
 
         // Move the player and held items to the new room
         WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
+    }
 
-        // Make sure the camera moves too
-        game.cameras[0].MoveCamera(game.world.GetAbstractRoom(destRoom).realizedRoom, 0);
+    public AbstractRoom GetFirstRoom(AbstractRoom[] abstractRooms, string regionName)
+    {
+        for (int i = 0; i < abstractRooms.Length; i++)
+        {
+            if (abstractRooms[i].name.StartsWith(regionName))
+            {
+                return abstractRooms[i];
+            }
+        }
+        return null;
     }
 
     // Taken from OverWorld.WorldLoaded
@@ -258,7 +258,7 @@ public class WarpMenu
 
         // Realize the new room
         World newWorld = game.overWorld.activeWorld;
-        AbstractRoom newRoom = newWorld.GetAbstractRoom(newRoomName);
+        AbstractRoom newRoom = GetFirstRoom(newWorld.abstractRooms, newWorld.name);
         newRoom.RealizeRoom(newWorld, game);
 
         // Forcibly prepare all loaded rooms
@@ -378,6 +378,10 @@ public class WarpMenu
         oldWorld.regionState.world = null;
         newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
         newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
+
+        // Make sure the camera moves too
+        game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
     }
 }
+
 

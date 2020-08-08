@@ -2,6 +2,7 @@
 using System.Security;
 using System.Runtime.CompilerServices;
 using System.Security.Permissions;
+using Partiality;
 
 //Remove PublicityStunt requirement
 //--------------------------------------------------------------------------------------
@@ -25,6 +26,7 @@ namespace System.Runtime.CompilerServices
 public class WarpMod : PartialityMod
 {
     public static PartialityMod mod;
+    public static bool customRegions = false;
     public WarpMod()
     {
         this.ModID = "Warp";
