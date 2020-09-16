@@ -5,17 +5,29 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using Partiality;
+using Partiality.Modloader;
 
 public class RegionSwitcher
 {
     private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod("LoadWorld", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     public void SwitchRegions(RainWorldGame game, string destWorld, string destRoom, IntVector2 destPos)
     {
+        foreach (PartialityMod mod in PartialityManager.Instance.modManager.loadedMods)
+        {
+            if (mod.ModID == "Custom Regions Mod")
+            {
+                WarpMod.customRegions = true;
+            }
+        }
         Debug.Log("Loading room " + destRoom + " from region " + destWorld + "!");
         AbstractCreature absPly = game.Players[0];
         AbstractRoom oldRoom = absPly.Room;
         Player ply = absPly.realizedCreature as Player;
-        Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
+        if (WarpMod.customRegions)
+        {
+            Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
+        }
 
         // Load the new world
         World oldWorld = game.overWorld.activeWorld;
@@ -44,7 +56,7 @@ public class RegionSwitcher
 
         // Realize the new room
         World newWorld = game.overWorld.activeWorld;
-        AbstractRoom newRoom = GetFirstRoom(newWorld.abstractRooms, newWorld.name);
+        AbstractRoom newRoom = newWorld.GetAbstractRoom(newRoomName);
         newRoom.RealizeRoom(newWorld, game);
 
         // Forcibly prepare all loaded rooms
@@ -99,7 +111,7 @@ public class RegionSwitcher
                 realPly.enteringShortCut = null;
             }
             ply.Move(ply.pos);
-            ply.realizedObject.PlaceInRoom(newRoom.realizedRoom);
+            ply.realizedCreature.PlaceInRoom(newRoom.realizedRoom);
 
             if (ply is AbstractCreature && (ply as AbstractCreature).creatureTemplate.AI)
             {
@@ -121,9 +133,17 @@ public class RegionSwitcher
             {
                 (game.Players[i].realizedCreature as Player).objectInStomach.world = newWorld;
             }
+            if (game.Players[i].realizedCreature.grasps != null)
+            {
+                for (int g = 0; g < game.Players[i].realizedCreature.grasps.Length; g++)
+                {
+                    if (game.Players[i].realizedCreature.grasps[g] != null && game.Players[i].realizedCreature.grasps[g].grabbed != null && !game.Players[i].realizedCreature.grasps[g].discontinued && game.Players[i].realizedCreature.grasps[g].grabbed is Creature)
+                    {
+                        game.Players[i].realizedCreature.ReleaseGrasp(g);
+                    }
+                }
+            }
         }
-
-
         // Cut transport vessels from the old region
         for (int i = game.shortcuts.transportVessels.Count - 1; i >= 0; i--)
         {
