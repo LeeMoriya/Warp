@@ -4,3 +4,8 @@ This mod adds an in-game warp menu to the pause screen. Click on room names to w
 
 ## Requirements:
 Extended DevTools is not required but is recommended [Link](https://drive.google.com/file/d/1X9EQbZ__lla36YLKYijvwsshyEwy7QA7/view)
+
+## Download:
+
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.15)
+This mod also supports AutoUpdate.
