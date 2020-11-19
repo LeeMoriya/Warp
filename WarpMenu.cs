@@ -9,6 +9,8 @@ using RWCustom;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using Partiality.Modloader;
+using Partiality;
 
 public class WarpMenu
 {
@@ -21,6 +23,8 @@ public class WarpMenu
     public static List<AbstractRoom> abstractRoomList = new List<AbstractRoom>();
     public static bool updateRoomButtons = false;
     public static bool updateDenText = false;
+    public static bool ctrlSave = false;
+    public static bool ctrlWipe = false;
     public static bool denMode = false;
     public static string denPos = "NONE";
     public static void MenuHook()
@@ -35,7 +39,7 @@ public class WarpMenu
     private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
     {
         orig.Invoke(self, str, game);
-        if(denPos != "NONE")
+        if (denPos != "NONE")
         {
             self.denPosition = denPos;
         }
@@ -85,6 +89,12 @@ public class WarpMenu
                 if (player != null && player.room == switchRoom.realizedRoom)
                 {
                     //Debug.Log("WARP: Player moved to destination room, moving camera position.");
+                    for (int i = 0; i < player.abstractCreature.realizedCreature.bodyChunks.Length; i++)
+                    {
+                        player.abstractCreature.realizedCreature.bodyChunks[i].pos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
+                        player.abstractCreature.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
+                    }
+                    self.game.cameras[0].virtualMicrophone.AllQuiet();
                     self.game.cameras[0].MoveCamera(player.room, 0);
                     warpActive = false;
                     switchRoom = null;
@@ -97,18 +107,39 @@ public class WarpMenu
     private static void PauseMenu_Update(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
     {
         orig.Invoke(self);
-        if (Input.GetKey(KeyCode.C) && denPos != "NONE")
+        for (int i = 0; i < self.pages[0].subObjects.Count; i++)
+        {
+            if (self.pages[0].subObjects[i] is SimpleButton)
+            {
+                if ((self.pages[0].subObjects[i] as SimpleButton).Selected && (self.pages[0].subObjects[i] as SimpleButton).signalText.EndsWith("warp"))
+                {
+                    if (RWInput.PlayerInput(0, self.manager.rainWorld.options, self.manager.rainWorld.setup).pckp)
+                    {
+                        ctrlSave = true;
+                        denPos = (self.pages[0].subObjects[i] as SimpleButton).signalText.Remove((self.pages[0].subObjects[i] as SimpleButton).signalText.Length - 4, 4);
+                        updateDenText = true;
+                    }
+                }
+            }
+        }
+        if (RWInput.PlayerInput(0, self.manager.rainWorld.options, self.manager.rainWorld.setup).mp)
+        {
+            ctrlWipe = true;
+            updateDenText = true;
+        }
+        if (Input.GetKey(KeyCode.C) && denPos != "NONE" || ctrlWipe)
         {
             denPos = "NONE";
             updateDenText = true;
+            ctrlWipe = false;
         }
         if (updateDenText)
         {
-            for(int i = 0; i < self.pages[0].subObjects.Count; i++)
+            for (int i = 0; i < self.pages[0].subObjects.Count; i++)
             {
-                if(self.pages[0].subObjects[i] is MenuLabel)
+                if (self.pages[0].subObjects[i] is MenuLabel)
                 {
-                    if((self.pages[0].subObjects[i] as MenuLabel).label.text.StartsWith("Cur"))
+                    if ((self.pages[0].subObjects[i] as MenuLabel).label.text.StartsWith("Cur"))
                     {
                         (self.pages[0].subObjects[i] as MenuLabel).label.text = "Current den position: " + denPos + " | Press C to clear";
                         break;
@@ -133,9 +164,9 @@ public class WarpMenu
                 }
             }
             RoomFinder rf = new RoomFinder();
-            List<string> newRoomList = rf.RoomList(newRegion);
+            List<string> newRoomList = rf.RoomList(newRegion, WarpMod.customRegions);
             float hOffset = 80f;
-            float vOffset = 35f;
+            float vOffset = 28f;
             int vershift = 0;
             int horShift = 0;
             int gateshift = 0;
@@ -145,18 +176,18 @@ public class WarpMenu
             }
             for (int i = 0; i < newRoomList.Count; i++)
             {
-                if (vershift < 16 && !newRoomList[i].StartsWith("Off"))
+                if (vershift < 20 && !newRoomList[i].StartsWith("Off"))
                 {
                     if (newRoomList[i].StartsWith("GATE"))
                     {
-                        self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], newRoomList[i], newRoomList[i] + "warp", new Vector2(20f, 165f + (vOffset * gateshift)), new Vector2(100f, 30f)));
+                        self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], newRoomList[i], newRoomList[i] + "warp", new Vector2(20f, 160f + (vOffset * gateshift)), new Vector2(100f, 23f)));
                         gateshift++;
                     }
                     else
                     {
-                        self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], newRoomList[i], newRoomList[i] + "warp", new Vector2((self.game.rainWorld.options.ScreenSize.x - 100f) - (hOffset * horShift), (self.game.rainWorld.options.ScreenSize.y - 80f) - (vOffset * vershift)), new Vector2(70f, 30f)));
+                        self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], newRoomList[i], newRoomList[i] + "warp", new Vector2((self.game.rainWorld.options.ScreenSize.x - 100f) - (hOffset * horShift), (self.game.rainWorld.options.ScreenSize.y - 80f) - (vOffset * vershift)), new Vector2(70f, 23f)));
                         vershift++;
-                        if (vershift == 16)
+                        if (vershift == 20)
                         {
                             vershift = 0;
                             horShift++;
@@ -173,11 +204,12 @@ public class WarpMenu
         if (message.EndsWith("warp"))
         {
             string room = message.Remove(message.Length - 4, 4);
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) || ctrlSave)
             {
                 denPos = room;
                 self.PlaySound(SoundID.MENU_Player_Join_Game);
                 updateDenText = true;
+                ctrlSave = false;
                 return;
             }
             else
@@ -185,14 +217,16 @@ public class WarpMenu
                 Debug.Log(room);
                 newRoom = room;
                 warpActive = true;
-                //Debug.Log("WARP: Room warp initiated for: " + room);
+                Debug.Log("WARP: Room warp initiated for: " + room);
                 self.Singal(null, "CONTINUE");
+                return;
             }
         }
         if (message.EndsWith("reg"))
         {
             newRegion = message.Remove(message.Length - 3, 3);
             warpActive = false;
+            Debug.Log("WARP: Loading room list for: " + newRegion);
             updateRoomButtons = true;
         }
     }
@@ -201,14 +235,22 @@ public class WarpMenu
     {
         warpActive = false;
         orig.Invoke(self, manager, game);
-        if (game.devToolsActive)
+        if (game.IsStorySession)
         {
+            newRegion = game.world.region.name;
+            foreach (PartialityMod mod in PartialityManager.Instance.modManager.loadedMods)
+            {
+                if (mod.ModID == "Custom Regions Mod")
+                {
+                    WarpMod.customRegions = true;
+                }
+            }
             if (self.controlMap != null)
             {
                 self.controlMap.pos = new Vector2(0f, 3000f);
             }
             float hOffset = 80f;
-            float vOffset = 35f;
+            float vOffset = 28f;
             int vershift = 0;
             int horShift = 0;
             int gateshift = 0;
@@ -226,7 +268,7 @@ public class WarpMenu
                 {
                     roomList.Sort();
                 }
-                MenuLabel labelOne = new MenuLabel(self, self.pages[0], "Shift click a room name to set den position", new Vector2(22f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 20f),new Vector2(), false);
+                MenuLabel labelOne = new MenuLabel(self, self.pages[0], "Shift click a room name to set den position", new Vector2(22f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 20f), new Vector2(), false);
                 MenuLabel labelTwo = new MenuLabel(self, self.pages[0], "Current den position: " + denPos + " | Press C to clear", new Vector2(22f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 37f), new Vector2(), false);
                 labelOne.label.alignment = FLabelAlignment.Left;
                 labelTwo.label.alignment = FLabelAlignment.Left;
@@ -234,18 +276,18 @@ public class WarpMenu
                 self.pages[0].subObjects.Add(labelTwo);
                 for (int i = 0; i < roomList.Count; i++)
                 {
-                    if (vershift < 16 && !roomList[i].StartsWith("Off"))
+                    if (vershift < 20 && !roomList[i].StartsWith("Off"))
                     {
                         if (roomList[i].StartsWith("GATE"))
                         {
-                            self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], roomList[i], roomList[i] + "warp", new Vector2(20f, 165f + (vOffset * gateshift)), new Vector2(100f, 30f)));
+                            self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], roomList[i], roomList[i] + "warp", new Vector2(20f, 160f + (vOffset * gateshift)), new Vector2(100f, 23f)));
                             gateshift++;
                         }
                         else
                         {
-                            self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], roomList[i], roomList[i] + "warp", new Vector2((game.rainWorld.options.ScreenSize.x - 100f) - (hOffset * horShift), (game.rainWorld.options.ScreenSize.y - 80f) - (vOffset * vershift)), new Vector2(70f, 30f)));
+                            self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], roomList[i], roomList[i] + "warp", new Vector2((game.rainWorld.options.ScreenSize.x - 100f) - (hOffset * horShift), (game.rainWorld.options.ScreenSize.y - 80f) - (vOffset * vershift)), new Vector2(70f, 23f)));
                             vershift++;
-                            if (vershift == 16)
+                            if (vershift == 20)
                             {
                                 vershift = 0;
                                 horShift++;
@@ -259,7 +301,7 @@ public class WarpMenu
                 //Debug.Log("WARP: Grabbing loaded region list");
                 for (int r = 0; r < self.game.overWorld.regions.Length; r++)
                 {
-                    self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], self.game.overWorld.regions[r].name, self.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 80f - ((vOffset) * regionVerShift)), new Vector2(45f, 30f)));
+                    self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], self.game.overWorld.regions[r].name, self.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 80f - ((vOffset) * regionVerShift)), new Vector2(45f, 23f)));
                     regionShift++;
                     if (regionShift == 2)
                     {

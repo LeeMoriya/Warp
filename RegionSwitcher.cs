@@ -13,28 +13,30 @@ public class RegionSwitcher
     private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod("LoadWorld", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     public void SwitchRegions(RainWorldGame game, string destWorld, string destRoom, IntVector2 destPos)
     {
-        foreach (PartialityMod mod in PartialityManager.Instance.modManager.loadedMods)
+        Debug.Log("WARP: Loading room " + destRoom + " from region " + destWorld + "!");
+        AbstractCreature absPly = (game.Players.Count <= 0) ? null : (game.Players[0] as AbstractCreature);
+        if (absPly != null)
         {
-            if (mod.ModID == "Custom Regions Mod")
+            Debug.Log("WARP: Initiating region warp.");
+            AbstractRoom oldRoom = absPly.Room;
+            if (WarpMod.customRegions)
             {
-                WarpMod.customRegions = true;
+                Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
             }
+
+            // Load the new world
+            Debug.Log("WARP: Invoking original LoadWorld method for new region.");
+            World oldWorld = game.overWorld.activeWorld;
+            _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
+
+            // Move the player and held items to the new room
+            Debug.Log("WARP: Moving player to new region.");
+            WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
         }
-        Debug.Log("Loading room " + destRoom + " from region " + destWorld + "!");
-        AbstractCreature absPly = game.Players[0];
-        AbstractRoom oldRoom = absPly.Room;
-        Player ply = absPly.realizedCreature as Player;
-        if (WarpMod.customRegions)
+        else
         {
-            Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
+            Debug.Log("WARP: Cannot initiate region warp, player is null!");
         }
-
-        // Load the new world
-        World oldWorld = game.overWorld.activeWorld;
-        _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
-
-        // Move the player and held items to the new room
-        WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
     }
 
     public AbstractRoom GetFirstRoom(AbstractRoom[] abstractRooms, string regionName)
@@ -52,8 +54,6 @@ public class RegionSwitcher
     // Taken from OverWorld.WorldLoaded
     private void WorldLoaded(RainWorldGame game, AbstractRoom oldRoom, World oldWorld, string newRoomName, IntVector2 newPos)
     {
-        // Removed realized room transferrance code
-
         // Realize the new room
         World newWorld = game.overWorld.activeWorld;
         AbstractRoom newRoom = newWorld.GetAbstractRoom(newRoomName);
@@ -167,7 +167,16 @@ public class RegionSwitcher
             }
         }
 
-        //game.overWorld.worldLoader = null;
+        //Move Slugcat to the first room exit
+        for (int p = 0; p < game.Players.Count; p++)
+        {
+            AbstractCreature ply = game.Players[p];
+            for (int i = 0; i < ply.realizedCreature.bodyChunks.Length; i++)
+            {
+                ply.realizedCreature.bodyChunks[i].pos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
+                ply.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
+            }
+        }
 
         // Move the camera
         for (int i = 0; i < game.cameras.Length; i++)
@@ -178,6 +187,8 @@ public class RegionSwitcher
                 game.cameras[i].hud.textPrompt.subregionTracker.lastShownRegion = 0;
             }
         }
+
+        game.cameras[0].virtualMicrophone.AllQuiet();
 
         // Adapt the region state to the new world
         oldWorld.regionState.AdaptRegionStateToWorld(-1, newRoom.index);
