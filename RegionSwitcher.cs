@@ -21,7 +21,17 @@ public class RegionSwitcher
             AbstractRoom oldRoom = absPly.Room;
             if (WarpMod.customRegions)
             {
-                Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
+                if (Type.GetType("CustomRegions.OverWorldHook, CustomRegions") != null)
+                {
+                    Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
+                }
+                else
+                {
+                    if (Type.GetType("CustomRegions.CWorld.OverWorldHook, CustomRegionsSupport") != null)
+                    {
+                        Type.GetType("CustomRegions.CWorld.OverWorldHook, CustomRegionsSupport").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
+                    }
+                }
             }
 
             // Load the new world
@@ -175,6 +185,7 @@ public class RegionSwitcher
             {
                 ply.realizedCreature.bodyChunks[i].pos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
                 ply.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
+                ply.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
             }
         }
 

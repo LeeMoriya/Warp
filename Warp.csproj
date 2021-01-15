@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="RegionSwitcher.cs" />
     <Compile Include="RoomFinder.cs" />
+    <Compile Include="WarpButton.cs" />
     <Compile Include="WarpMenu.cs" />
     <Compile Include="WarpMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

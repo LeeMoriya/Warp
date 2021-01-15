@@ -14,11 +14,34 @@ using Partiality;
 
 public class WarpMenu
 {
+    public enum SortType
+    {
+        Type,
+        Size,
+        Subregion
+    }
+
+    public enum ViewType
+    {
+        Type,
+        Size,
+        Subregion
+    }
+
+    public static SortType sortType = SortType.Type;
+    public static ViewType viewType = ViewType.Type;
+
+    //New
+    //Master Room Dictionary
+    public static Dictionary<string, List<RoomInfo>> masterRoomList = new Dictionary<string, List<RoomInfo>>();
+    public static WarpContainer warpContainer;
+
+    //Old
     public static bool warpActive = false;
     public static bool regionWarpActive = false;
     public static AbstractRoom switchRoom;
     public static string newRoom;
-    public static string newRegion;
+    public static string newRegion = "";
     public static string newRegionPrefix;
     public static List<AbstractRoom> abstractRoomList = new List<AbstractRoom>();
     public static bool updateRoomButtons = false;
@@ -44,7 +67,6 @@ public class WarpMenu
             self.denPosition = denPos;
         }
     }
-
     private static void OverWorld_Update(On.OverWorld.orig_Update orig, OverWorld self)
     {
         orig.Invoke(self);
@@ -93,6 +115,7 @@ public class WarpMenu
                     {
                         player.abstractCreature.realizedCreature.bodyChunks[i].pos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
                         player.abstractCreature.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
+                        player.abstractCreature.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
                     }
                     self.game.cameras[0].virtualMicrophone.AllQuiet();
                     self.game.cameras[0].MoveCamera(player.room, 0);
@@ -152,55 +175,21 @@ public class WarpMenu
         {
             updateRoomButtons = false;
             self.init = false;
-            for (int i = 0; i < self.pages[0].subObjects.Count; i++)
+            if (!masterRoomList.ContainsKey(newRegion))
             {
-                if (self.pages[0].subObjects[i] is SimpleButton)
-                {
-                    if ((self.pages[0].subObjects[i] as SimpleButton).signalText.EndsWith("warp"))
-                    {
-                        (self.pages[0].subObjects[i] as SimpleButton).RemoveSprites();
-                        self.pages[0].RecursiveRemoveSelectables(self.pages[0].subObjects[i] as SimpleButton);
-                    }
-                }
+                RoomFinder rf = new RoomFinder();
+                List<RoomInfo> roomList = rf.Generate(newRegion, WarpMod.customRegions);
+                warpContainer.GenerateRoomButtons(roomList, sortType, viewType);
             }
-            RoomFinder rf = new RoomFinder();
-            List<string> newRoomList = rf.RoomList(newRegion, WarpMod.customRegions);
-            float hOffset = 80f;
-            float vOffset = 28f;
-            int vershift = 0;
-            int horShift = 0;
-            int gateshift = 0;
-            if (newRoomList.Count > 0)
+            else
             {
-                newRoomList.Sort();
-            }
-            for (int i = 0; i < newRoomList.Count; i++)
-            {
-                if (vershift < 20 && !newRoomList[i].StartsWith("Off"))
-                {
-                    if (newRoomList[i].StartsWith("GATE"))
-                    {
-                        self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], newRoomList[i], newRoomList[i] + "warp", new Vector2(20f, 160f + (vOffset * gateshift)), new Vector2(100f, 23f)));
-                        gateshift++;
-                    }
-                    else
-                    {
-                        self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], newRoomList[i], newRoomList[i] + "warp", new Vector2((self.game.rainWorld.options.ScreenSize.x - 100f) - (hOffset * horShift), (self.game.rainWorld.options.ScreenSize.y - 80f) - (vOffset * vershift)), new Vector2(70f, 23f)));
-                        vershift++;
-                        if (vershift == 20)
-                        {
-                            vershift = 0;
-                            horShift++;
-                        }
-                    }
-                }
+                warpContainer.GenerateRoomButtons(masterRoomList[newRegion], sortType, viewType);
             }
         }
     }
     private static void PauseMenu_Singal(On.Menu.PauseMenu.orig_Singal orig, PauseMenu self, MenuObject sender, string message)
     {
         orig.Invoke(self, sender, message);
-        //Debug.Log("WARP: Button pressed");
         if (message.EndsWith("warp"))
         {
             string room = message.Remove(message.Length - 4, 4);
@@ -227,7 +216,495 @@ public class WarpMenu
             newRegion = message.Remove(message.Length - 3, 3);
             warpActive = false;
             Debug.Log("WARP: Loading room list for: " + newRegion);
+            self.PlaySound(SoundID.MENU_Add_Level);
             updateRoomButtons = true;
+        }
+    }
+
+    public class WarpContainer : RectangularMenuObject
+    {
+        public RainWorldGame game;
+        public IntVector2 regOffset;
+        public List<WarpButton> roomButtons;
+        public List<MenuLabel> categoryLabels;
+        public List<WarpButton> regionButtons;
+        public MenuLabel keyLabel;
+        public List<MenuLabel> colorKey;
+        public bool loadAll = false;
+        public int loadCount = 0;
+        public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
+        {
+            game = (menu as PauseMenu).game;
+            float hOffset = 80f;
+            float vOffset = 28f;
+            //Menu Text
+            MenuLabel labelOne = new MenuLabel(menu, this, "Warp Menu - " + WarpMod.mod.Version, new Vector2(22f, game.rainWorld.options.ScreenSize.y - 20f), new Vector2(), false);
+            labelOne.label.alignment = FLabelAlignment.Left;
+            this.subObjects.Add(labelOne);
+            //Region Buttons
+            regionButtons = new List<WarpButton>();
+            regOffset = new IntVector2();
+            if (game.overWorld.regions != null)
+            {
+                this.subObjects.Add(new SimpleButton(menu, this, "LOAD ALL", "LOADALL", new Vector2(20f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(100f, 20f)));
+                for (int r = 0; r < this.game.overWorld.regions.Length; r++)
+                {
+                    WarpButton region = new WarpButton(menu, this, this.game.overWorld.regions[r].name, this.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regOffset.x), game.rainWorld.options.ScreenSize.y - 100f - ((vOffset) * regOffset.y)), new Vector2(45f, 23f), new Color(0.8f, 0.8f, 0.8f));
+                    regionButtons.Add(region);
+                    this.subObjects.Add(region);
+                    regOffset.x++;
+                    if (regOffset.x == 2)
+                    {
+                        regOffset.x = 0;
+                        regOffset.y++;
+                    }
+                }
+            }
+
+            //Temp sort and view buttons
+            this.subObjects.Add(new SimpleButton(menu, this, "TYPE", "STYPE", new Vector2(20f, 20f), new Vector2(60f, 20f)));
+            this.subObjects.Add(new SimpleButton(menu, this, "SIZE", "SSIZE", new Vector2(90f, 20f), new Vector2(60f, 20f)));
+            this.subObjects.Add(new SimpleButton(menu, this, "SUBREGION", "SSUB", new Vector2(160f, 20f), new Vector2(60f, 20f)));
+
+            this.subObjects.Add(new SimpleButton(menu, this, "TYPE", "VTYPE", new Vector2(20f, 50f), new Vector2(60f, 20f)));
+            this.subObjects.Add(new SimpleButton(menu, this, "SIZE", "VSIZE", new Vector2(90f, 50f), new Vector2(60f, 20f)));
+            this.subObjects.Add(new SimpleButton(menu, this, "SUBREGION", "VSUB", new Vector2(160f, 50f), new Vector2(60f, 20f)));
+
+            if (!masterRoomList.ContainsKey(game.world.region.name))
+            {
+                RoomFinder rf = new RoomFinder();
+                List<RoomInfo> roomList = rf.Generate(game.world.region.name, WarpMod.customRegions);
+                GenerateRoomButtons(roomList, sortType, viewType);
+            }
+            else
+            {
+                GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
+            }
+        }
+
+        public override void Update()
+        {
+            base.Update();
+            if (regionButtons != null)
+            {
+                foreach (WarpButton but in regionButtons)
+                {
+                    if (!masterRoomList.ContainsKey(but.menuLabel.text))
+                    {
+                        but.color = new Color(0.45f, 0.45f, 0.45f);
+                    }
+                    else
+                    {
+                        but.color = new Color(0.8f, 0.8f, 0.8f);
+                    }
+                }
+                if (loadAll)
+                {
+                    if (loadCount < game.overWorld.regions.Length)
+                    {
+                        if (!masterRoomList.ContainsKey(game.overWorld.regions[loadCount].name))
+                        {
+                            RoomFinder rf = new RoomFinder();
+                            List<RoomInfo> temp = rf.Generate(game.overWorld.regions[loadCount].name, WarpMod.customRegions);
+                            menu.PlaySound(SoundID.MENU_Add_Level);
+                        }
+                        else
+                        {
+                            loadCount++;
+                        }
+                    }
+                    else
+                    {
+                        loadAll = false;
+                        menu.PlaySound(SoundID.MENU_Start_New_Game);
+                    }
+                }
+            }
+        }
+
+        public override void Singal(MenuObject sender, string message)
+        {
+            base.Singal(sender, message);
+            if (message == "LOADALL")
+            {
+                loadAll = true;
+            }
+            if (message == "STYPE")
+            {
+                sortType = SortType.Type;
+                RefreshRoomButtons();
+            }
+            if (message == "SSIZE")
+            {
+                sortType = SortType.Size;
+                RefreshRoomButtons();
+            }
+            if (message == "SSUB")
+            {
+                sortType = SortType.Subregion;
+                RefreshRoomButtons();
+            }
+            if (message == "VTYPE")
+            {
+                viewType = ViewType.Type;
+                RefreshRoomButtons();
+            }
+            if (message == "VSIZE")
+            {
+                viewType = ViewType.Size;
+                RefreshRoomButtons();
+            }
+            if (message == "VSUB")
+            {
+                viewType = ViewType.Subregion;
+                RefreshRoomButtons();
+            }
+        }
+
+        public void RefreshRoomButtons()
+        {
+            if (newRegion != "")
+            {
+                if (!masterRoomList.ContainsKey(newRegion))
+                {
+                    RoomFinder rf = new RoomFinder();
+                    List<RoomInfo> roomList = rf.Generate(newRegion, WarpMod.customRegions);
+                    GenerateRoomButtons(roomList, sortType, viewType);
+                }
+                else
+                {
+                    GenerateRoomButtons(masterRoomList[newRegion], sortType, viewType);
+                }
+            }
+            else
+            {
+                if (!masterRoomList.ContainsKey(game.world.region.name))
+                {
+                    RoomFinder rf = new RoomFinder();
+                    List<RoomInfo> roomList = rf.Generate(game.world.region.name, WarpMod.customRegions);
+                    GenerateRoomButtons(roomList, sortType, viewType);
+                }
+                else
+                {
+                    GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
+                }
+            }
+        }
+
+        public void GenerateRoomButtons(List<RoomInfo> roomList, SortType sort, ViewType view)
+        {
+            if (roomButtons != null)
+            {
+                ObliterateRoomButtons();
+            }
+            if (categoryLabels != null)
+            {
+                ObliterateCategoryLabels();
+            }
+            if (colorKey != null)
+            {
+                ObliterateColorKeyLabels();
+            }
+            IntVector2 offset = new IntVector2();
+            float regionHeight = regionButtons.Last().pos.y;
+            float gateHeight = 0f;
+            int regionOffset = 0;
+            float categoryOffset = 0f;
+            float screenWidth = this.game.rainWorld.options.ScreenSize.x;
+            float screenHeight = this.game.rainWorld.options.ScreenSize.y;
+            int num = -1;
+            roomButtons = new List<WarpButton>();
+            categoryLabels = new List<MenuLabel>();
+            colorKey = new List<MenuLabel>();
+            List<string> subregionNames = new List<string>();
+            //Generate buttons
+            switch (sort)
+            {
+                case SortType.Type:
+                    {
+                        roomList.Sort(RoomInfo.SortByTypeAndName);
+                        break;
+                    }
+                case SortType.Size:
+                    {
+                        roomList.Sort(RoomInfo.SortBySizeAndName);
+                        break;
+                    }
+                case SortType.Subregion:
+                    {
+                        roomList.Sort(RoomInfo.SortBySubregionAndName);
+                        break;
+                    }
+            }
+            foreach (RoomInfo info in roomList)
+            {
+                Color color = new Color(1f, 1f, 1f);
+                switch (view)
+                {
+                    case ViewType.Type:
+                        {
+                            color = ColorInfo.typeColors[(int)info.type];
+                            break;
+                        }
+                    case ViewType.Size:
+                        {
+                            if (info.cameras <= 9)
+                            {
+                                color = ColorInfo.sizeColors[info.cameras];
+                            }
+                            else
+                            {
+                                color = new Color(0.3f, 0.3f, 0.3f);
+                            }
+                            break;
+                        }
+                    case ViewType.Subregion:
+                        {
+                            color = ColorInfo.subregionColors[info.subregion];
+                            break;
+                        }
+                }
+                if (info.type == RoomInfo.RoomType.Gate)
+                {
+                    WarpButton gate = new WarpButton(menu, this, info.name, info.name + "warp", new Vector2(20f, regionHeight - 35f - (28f * regionOffset)), new Vector2(100f, 23f), color);
+                    gateHeight = gate.pos.y;
+                    roomButtons.Add(gate);
+                    regionOffset++;
+                }
+                else
+                {
+                    switch (sort)
+                    {
+                        case SortType.Subregion:
+                            {
+                                if (num == -1)
+                                {
+                                    num = info.subregion;
+                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (70f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                    categoryLabels.Add(label);
+                                }
+                                if (info.subregion != num)
+                                {
+                                    offset.x++;
+                                    offset.y = 0;
+                                    num = info.subregion;
+                                    categoryOffset += 8f;
+                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (70f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                    categoryLabels.Add(label);
+                                }
+                                break;
+                            }
+                        case SortType.Size:
+                            {
+                                if (num == -1)
+                                {
+                                    num = info.cameras;
+                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (70f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                    categoryLabels.Add(label);
+                                }
+                                if (info.cameras != num)
+                                {
+                                    offset.x++;
+                                    offset.y = 0;
+                                    num = info.cameras;
+                                    categoryOffset += 8f;
+                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (70f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                    categoryLabels.Add(label);
+                                }
+                                break;
+                            }
+                        case SortType.Type:
+                            {
+                                if (num == -1)
+                                {
+                                    num = (int)info.type;
+                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (70f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                    categoryLabels.Add(label);
+                                }
+                                if ((int)info.type != num)
+                                {
+                                    offset.x++;
+                                    offset.y = 0;
+                                    num = (int)info.type;
+                                    categoryOffset += 8f;
+                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (70f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                    categoryLabels.Add(label);
+                                }
+                                break;
+                            }
+
+                    }
+                    roomButtons.Add(new WarpButton(menu, this, info.name, info.name + "warp", new Vector2(screenWidth - (100f + categoryOffset) - (75f * offset.x), screenHeight - 80f - (30f * offset.y)), new Vector2(60f, 25f), color));
+                    if (offset.y < 20)
+                    {
+                        offset.y++;
+                    }
+                    else
+                    {
+                        offset.x++;
+                        offset.y = 0;
+                        categoryOffset -= 10f;
+                    }
+                }
+            }
+            //Add buttons
+            for (int i = 0; i < roomButtons.Count; i++)
+            {
+                this.subObjects.Add(roomButtons[i]);
+            }
+
+            //Add Color Key
+            switch (view)
+            {
+                case ViewType.Type:
+                    {
+                        colorKey = new List<MenuLabel>();
+                        keyLabel = new MenuLabel(menu, this, "ROOM TYPE", new Vector2(23f, gateHeight - 15f), new Vector2(), false);
+                        keyLabel.label.alignment = FLabelAlignment.Left;
+                        this.subObjects.Add(keyLabel);
+                        for (int i = 0; i < ColorInfo.typeColors.Length; i++)
+                        {
+                            MenuLabel label = new MenuLabel(menu, this, Enum.GetNames(typeof(RoomInfo.RoomType))[i], new Vector2(), new Vector2(), false);
+                            label.label.color = ColorInfo.typeColors[i];
+                            label.label.alignment = FLabelAlignment.Left;
+                            colorKey.Add(label);
+                        }
+                        break;
+                    }
+                case ViewType.Size:
+                    {
+                        colorKey = new List<MenuLabel>();
+                        keyLabel = new MenuLabel(menu, this, "ROOM SIZE", new Vector2(23f, gateHeight - 15f), new Vector2(), false);
+                        keyLabel.label.alignment = FLabelAlignment.Left;
+                        this.subObjects.Add(keyLabel);
+                        for (int i = 0; i < ColorInfo.sizeColors.Length; i++)
+                        {
+                            if (i > 0)
+                            {
+                                MenuLabel label = new MenuLabel(menu, this, "Screens - " + i.ToString(), new Vector2(), new Vector2(), false);
+                                label.label.alignment = FLabelAlignment.Left;
+                                label.label.color = ColorInfo.sizeColors[i];
+                                colorKey.Add(label);
+                            }
+                        }
+                        break;
+                    }
+                case ViewType.Subregion:
+                    {
+                        //Sort list by Subregion so values can match correct labels
+                        roomList.Sort(RoomInfo.SortBySubregionAndName);
+                        subregionNames = new List<string>();
+                        foreach(RoomInfo info in roomList)
+                        {
+                            if(info.subregionName == null)
+                            {
+                                info.subregionName = "Default";
+                            }
+                            //Add subregion names to list
+                            if (!subregionNames.Contains(info.subregionName))
+                            {
+                                subregionNames.Add(info.subregionName);
+                            }
+                        }
+                        colorKey = new List<MenuLabel>();
+                        keyLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(23f, gateHeight - 15f), new Vector2(), false);
+                        keyLabel.label.alignment = FLabelAlignment.Left;
+                        this.subObjects.Add(keyLabel);
+                        for (int i = 0; i < subregionNames.Count; i++)
+                        {
+                            MenuLabel label = new MenuLabel(menu, this, subregionNames[i], new Vector2(), new Vector2(), false);
+                            label.label.alignment = FLabelAlignment.Left;
+                            label.label.color = ColorInfo.subregionColors[i];
+                            colorKey.Add(label);
+                        }
+                        break;
+                    }
+            }
+            //Add color key labels
+            for (int i = 0; i < colorKey.Count; i++)
+            {
+                colorKey[i].pos = new Vector2(25f, gateHeight - 30f - (15f * i));
+                this.subObjects.Add(colorKey[i]);
+            }
+            for(int i = 0; i < categoryLabels.Count; i++)
+            {
+                this.subObjects.Add(categoryLabels[i]);
+            }
+        }
+
+        public string CategoryName(SortType sort, int num)
+        {
+            switch (sort)
+            {
+                case SortType.Subregion:
+                    {
+                        return "SUB " + num.ToString();
+                    }
+                case SortType.Size:
+                    {
+                        return "CAMS " + num.ToString();
+                    }
+                case SortType.Type:
+                    {
+                        string text = Enum.GetNames(typeof (RoomInfo.RoomType))[num].ToUpper();
+                        switch (text)
+                        {
+                            case "SCAVTRADER":
+                                {
+                                    text = "TRADER";
+                                    break;
+                                }
+                            case "SWARMROOM":
+                                {
+                                    text = "SWARM";
+                                    break;
+                                }
+                            case "SCAVOUTPOST":
+                                {
+                                    text = "OUTPOST";
+                                    break;
+                                }
+                        }
+                        return text;
+                    }
+
+            }
+            return "Error";
+        }
+
+        public void ObliterateRoomButtons()
+        {
+            for (int i = 0; i < roomButtons.Count; i++)
+            {
+                roomButtons[i].RemoveSprites();
+                this.RemoveSubObject(roomButtons[i]);
+            }
+        }
+        public void ObliterateCategoryLabels()
+        {
+            for (int i = 0; i < categoryLabels.Count; i++)
+            {
+                categoryLabels[i].RemoveSprites();
+                this.RemoveSubObject(categoryLabels[i]);
+            }
+        }
+        public void ObliterateColorKeyLabels()
+        {
+            if (keyLabel != null)
+            {
+                keyLabel.RemoveSprites();
+                this.RemoveSubObject(keyLabel);
+            }
+            for (int i = 0; i < colorKey.Count; i++)
+            {
+                colorKey[i].RemoveSprites();
+                this.RemoveSubObject(colorKey[i]);
+            }
+        }
+
+        public override void GrafUpdate(float timeStacker)
+        {
+            base.GrafUpdate(timeStacker);
         }
     }
 
@@ -237,7 +714,6 @@ public class WarpMenu
         orig.Invoke(self, manager, game);
         if (game.IsStorySession)
         {
-            newRegion = game.world.region.name;
             foreach (PartialityMod mod in PartialityManager.Instance.modManager.loadedMods)
             {
                 if (mod.ModID == "Custom Regions Mod")
@@ -249,67 +725,8 @@ public class WarpMenu
             {
                 self.controlMap.pos = new Vector2(0f, 3000f);
             }
-            float hOffset = 80f;
-            float vOffset = 28f;
-            int vershift = 0;
-            int horShift = 0;
-            int gateshift = 0;
-            int regionShift = 0;
-            int regionVerShift = 0;
-            if (game.world.abstractRooms != null)
-            {
-                //Debug.Log("WARP: Grabbing region's abstract rooms list.");
-                List<string> roomList = new List<string>();
-                foreach (AbstractRoom room in game.world.abstractRooms)
-                {
-                    roomList.Add(room.name);
-                }
-                if (roomList.Count > 0)
-                {
-                    roomList.Sort();
-                }
-                MenuLabel labelOne = new MenuLabel(self, self.pages[0], "Shift click a room name to set den position", new Vector2(22f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 20f), new Vector2(), false);
-                MenuLabel labelTwo = new MenuLabel(self, self.pages[0], "Current den position: " + denPos + " | Press C to clear", new Vector2(22f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 37f), new Vector2(), false);
-                labelOne.label.alignment = FLabelAlignment.Left;
-                labelTwo.label.alignment = FLabelAlignment.Left;
-                self.pages[0].subObjects.Add(labelOne);
-                self.pages[0].subObjects.Add(labelTwo);
-                for (int i = 0; i < roomList.Count; i++)
-                {
-                    if (vershift < 20 && !roomList[i].StartsWith("Off"))
-                    {
-                        if (roomList[i].StartsWith("GATE"))
-                        {
-                            self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], roomList[i], roomList[i] + "warp", new Vector2(20f, 160f + (vOffset * gateshift)), new Vector2(100f, 23f)));
-                            gateshift++;
-                        }
-                        else
-                        {
-                            self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], roomList[i], roomList[i] + "warp", new Vector2((game.rainWorld.options.ScreenSize.x - 100f) - (hOffset * horShift), (game.rainWorld.options.ScreenSize.y - 80f) - (vOffset * vershift)), new Vector2(70f, 23f)));
-                            vershift++;
-                            if (vershift == 20)
-                            {
-                                vershift = 0;
-                                horShift++;
-                            }
-                        }
-                    }
-                }
-            }
-            if (self.game.overWorld.regions != null)
-            {
-                //Debug.Log("WARP: Grabbing loaded region list");
-                for (int r = 0; r < self.game.overWorld.regions.Length; r++)
-                {
-                    self.pages[0].subObjects.Add(new SimpleButton(self, self.pages[0], self.game.overWorld.regions[r].name, self.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regionShift), game.rainWorld.options.ScreenSize.y - 80f - ((vOffset) * regionVerShift)), new Vector2(45f, 23f)));
-                    regionShift++;
-                    if (regionShift == 2)
-                    {
-                        regionShift = 0;
-                        regionVerShift++;
-                    }
-                }
-            }
+            warpContainer = new WarpContainer(self, self.pages[0], self.pages[0].pos, new Vector2());
+            self.pages[0].subObjects.Add(warpContainer);
         }
     }
 }
