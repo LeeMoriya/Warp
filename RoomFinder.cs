@@ -120,37 +120,6 @@ class RoomFinder
 
     public List<RoomInfo> Generate(string region, bool CRS)
     {
-        //Explanation:
-        //----------------------------------------------------------------------------------------
-        //A New list of RoomInfo objects is created
-        //The Vanilla world_XX.txt is scanned for rooms and tags
-        //New RoomInfos are added to the list with these name and type fields
-
-        //CRS: Search Mod\CustomResources folder for directories
-        //Check each directory for regionInfo/packInfo.json
-        //Check that region is activated
-        //If so, search the folder for a matching region prefix
-        //If found, scan the world_XX.txt for rooms and tags
-        //Add rooms and tags to the roomList if they are not duplicates
-        //If a room is a duplicate, check to see if tag has changed
-        //Assign modded tag if its different to current tag
-
-        //Using the name fields from the list, the Rooms folder is then scanned
-        //Individual XX_Room.txts are scanned for the number of cameras
-        //List is looped through and entries with matching names have their camera count assigned
-
-        //CRS: string containing path to modded region folder is stored
-        //Modded region room folder is scanned for matching room .txts
-        //Camera count is assigned to any new rooms
-        //Camera count is updated for existing rooms if it's different
-
-        //map_XX.txt is then scanned, each room line is split up to grab the subregion number
-        //List is looped through again and subregion numbers are assigned
-
-        //CRS: modded region map_XX.txt is scanned for subregion numbers
-        //If the room already exists new subregion numbers are assigned if they're different
-        //----------------------------------------------------------------------------------------
-
         List<RoomInfo> roomList = new List<RoomInfo>();
         List<RoomInfo> crsRoomList = new List<RoomInfo>();
 
@@ -319,43 +288,46 @@ class RoomFinder
                     if (crsRoomSection)
                     {
                         RoomInfo info = new RoomInfo();
-                        string[] roomLine = Regex.Split(crsWorldFile[l], " : ");
-                        if (roomLine != null)
+                        if (crsWorldFile[l].Length > 0 && !crsWorldFile[l].StartsWith("//"))
                         {
-                            //Assign Room Name
-                            info.name = roomLine[0];
-                            //Check Room Tag - Default = Room
-                            info.type = RoomInfo.RoomType.Room;
-                            if (roomLine.Length > 2)
+                            string[] roomLine = Regex.Split(crsWorldFile[l], " : ");
+                            if (roomLine != null)
                             {
-                                switch (roomLine[2])
+                                //Assign Room Name
+                                info.name = roomLine[0];
+                                //Check Room Tag - Default = Room
+                                info.type = RoomInfo.RoomType.Room;
+                                if (roomLine.Length > 2)
                                 {
-                                    case "GATE":
-                                        info.type = RoomInfo.RoomType.Gate;
-                                        break;
-                                    case "SHELTER":
-                                        info.type = RoomInfo.RoomType.Shelter;
-                                        break;
-                                    case "SWARMROOM":
-                                        info.type = RoomInfo.RoomType.SwarmRoom;
-                                        break;
-                                    case "SCAVTRADER":
-                                        info.type = RoomInfo.RoomType.ScavTrader;
-                                        break;
-                                    case "SCAVOUTPOST":
-                                        info.type = RoomInfo.RoomType.ScavOutpost;
-                                        break;
+                                    switch (roomLine[2])
+                                    {
+                                        case "GATE":
+                                            info.type = RoomInfo.RoomType.Gate;
+                                            break;
+                                        case "SHELTER":
+                                            info.type = RoomInfo.RoomType.Shelter;
+                                            break;
+                                        case "SWARMROOM":
+                                            info.type = RoomInfo.RoomType.SwarmRoom;
+                                            break;
+                                        case "SCAVTRADER":
+                                            info.type = RoomInfo.RoomType.ScavTrader;
+                                            break;
+                                        case "SCAVOUTPOST":
+                                            info.type = RoomInfo.RoomType.ScavOutpost;
+                                            break;
+                                    }
                                 }
-                            }
-                            //If this room isn't vanilla, add it
-                            if (!vanillaRoomNames.Contains(info.name))
-                            {
-                                crsRoomList.Add(info);
-                            }
-                            //if there is already a room with this name but the type is different, add it
-                            else if (roomList.Exists(x => x.name == info.name && x.type != info.type))
-                            {
-                                crsRoomList.Add(info);
+                                //If this room isn't vanilla, add it
+                                if (!vanillaRoomNames.Contains(info.name))
+                                {
+                                    crsRoomList.Add(info);
+                                }
+                                //if there is already a room with this name but the type is different, add it
+                                else if (roomList.Exists(x => x.name == info.name && x.type != info.type))
+                                {
+                                    crsRoomList.Add(info);
+                                }
                             }
                         }
                     }
@@ -666,7 +638,7 @@ class RoomFinder
             //Combining the two lists
             foreach (RoomInfo info in crsRoomList)
             {
-                if(info.subregionName == "Null")
+                if (info.subregionName == "Null")
                 {
                     info.subregionName = "Default";
                 }
@@ -681,6 +653,15 @@ class RoomFinder
                     int index = roomList.FindIndex(x => x.name == info.name);
                     roomList[index] = info;
                 }
+            }
+        }
+
+        if (!ColorInfo.customSubregionColors.ContainsKey(region))
+        {
+            ColorInfo.customSubregionColors.Add(region, new List<HSLColor>());
+            for(int i = 0; i < subregionNames.Count + 1; i++)
+            {
+                ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
             }
         }
 
@@ -770,111 +751,236 @@ public class RoomInfo : IComparable<RoomInfo>, IEquatable<RoomInfo>
 
 public static class ColorInfo
 {
-    public static Color[] typeColors = new Color[6]
+    public static HSLColor[] typeColors = new HSLColor[6]
     {
         //1 Room
-        new Color(0.55f,1f,0.55f),
+        new HSLColor(0.33f,0.99f,0.67f),
         //2 Gate
-        new Color(1f,1f,0.55f),
+        new HSLColor(0.18f,0.99f,0.63f),
         //3 Shelter
-        new Color(1f,0.75f,0.55f),
+        new HSLColor(0.51f,0.99f,0.61f),
         //4 SwarmRoom
-        new Color(1f,0.55f,0.55f),
+        new HSLColor(0.73f,0.99f,0.76f),
         //5 ScavTrader
-        new Color(1f,0.3f,0.3f),
+        new HSLColor(0.06f,0.99f,0.63f),
         //6 ScavOutpost
-        new Color(0f,1f,1f)
+        new HSLColor(0.99f,0.99f,0.66f)
     };
-    public static Color[] sizeColors = new Color[10]
+    public static HSLColor[] sizeColors = new HSLColor[9]
     {
-        //0 Cam
-        new Color(1f,1f,1f),
         //1 Cam
-        new Color(0.55f,1f,0.55f),
+        new HSLColor(0.33f,0.99f,0.67f),
         //2 Cam
-        new Color(1f,1f,0.55f),
+        new HSLColor(0.18f,0.99f,0.68f),
         //3 Cam
-        new Color(1f,0.75f,0.55f),
+        new HSLColor(0.08f,0.99f,0.61f),
         //4 Cam
-        new Color(1f,0.55f,0.55f),
+        new HSLColor(0f,0.99f,0.69f),
         //5 Cam
-        new Color(1f,0.3f,0.3f),
+        new HSLColor(0.82f,0.99f,0.73f),
         //6 Cam
-        new Color(0.5f,0f,0.5f),
+        new HSLColor(0.71f,0.99f,0.66f),
         //7 Cam
-        new Color(0.5f,0f,1f),
+        new HSLColor(0.6f,0.99f,0.59f),
         //8 Cam
-        new Color(0f,0.5f,1f),
+        new HSLColor(0.54f,0.99f,0.65f),
         //9+ Cam
-        new Color(0f,1f,1f)
+        new HSLColor(0.46f,0.99f,0.58f)
     };
-    public static Color[] subregionColors = new Color[10]
+    //Default subregion colors
+    public static HSLColor[] subregionColors = new HSLColor[10]
     {
+        //Default
+        new HSLColor(0.46f,0.99f,0.99f),
         //1 Subregion
-        new Color(0.55f,1f,0.55f),
+        new HSLColor(0.33f,0.99f,0.67f),
         //2 Subregion
-        new Color(1f,1f,0.55f),
+        new HSLColor(0.18f,0.99f,0.68f),
         //3 Subregion
-        new Color(1f,0.75f,0.55f),
+        new HSLColor(0.08f,0.99f,0.61f),
         //4 Subregion
-        new Color(1f,0.55f,0.55f),
+        new HSLColor(0f,0.99f,0.69f),
         //5 Subregion
-        new Color(1f,0.3f,0.3f),
+        new HSLColor(0.82f,0.99f,0.73f),
         //6 Subregion
-        new Color(0.5f,0f,0.5f),
+        new HSLColor(0.71f,0.99f,0.66f),
         //7 Subregion
-        new Color(0.5f,0f,1f),
+        new HSLColor(0.6f,0.99f,0.59f),
         //8 Subregion
-        new Color(0f,0.5f,1f),
-        //9+ Subregion
-        new Color(0f,1f,1f),
-        //0 Subregion
-        new Color(1f,1f,1f),
+        new HSLColor(0.54f,0.99f,0.65f),
+        //9 Subregion
+        new HSLColor(0.46f,0.99f,0.58f),
     };
+
+    public static Dictionary<string, List<HSLColor>> customSubregionColors = new Dictionary<string, List<HSLColor>>();
+
+    public static void Save()
+    {
+        string savePath = Custom.RootFolderDirectory() + "Colors.txt";
+        StringBuilder sb = new StringBuilder();
+        //Type
+        sb.Append("[TYPE]");
+        sb.AppendLine();
+        for (int i = 0; i < typeColors.Length; i++)
+        {
+            sb.Append(Math.Round(typeColors[i].hue, 2) + ":" + Math.Round(typeColors[i].saturation, 2) + ":" + Math.Round(typeColors[i].lightness, 2));
+            sb.AppendLine();
+        }
+        //Size
+        sb.Append("[SIZE]");
+        sb.AppendLine();
+        for (int i = 0; i < sizeColors.Length; i++)
+        {
+            sb.Append(Math.Round(sizeColors[i].hue, 2) + ":" + Math.Round(sizeColors[i].saturation, 2) + ":" + Math.Round(sizeColors[i].lightness, 2));
+            sb.AppendLine();
+        }
+        sb.Append("[SUBREGION]");
+        sb.AppendLine();
+        for (int i = 0; i < customSubregionColors.Keys.Count; i++)
+        {
+            sb.Append("[" + customSubregionColors.ElementAt(i).Key + "]");
+            sb.AppendLine();
+            for (int c = 0; c < customSubregionColors.ElementAt(i).Value.Count; c++)
+            {
+                sb.Append(Math.Round(customSubregionColors.ElementAt(i).Value[c].hue, 2) + ":" + Math.Round(customSubregionColors.ElementAt(i).Value[c].saturation, 2) + ":" + Math.Round(customSubregionColors.ElementAt(i).Value[c].lightness, 2));
+                sb.AppendLine();
+            }
+        }
+        sb.Append("[END]");
+        string text = sb.ToString();
+        File.WriteAllText(savePath, text);
+    }
+
+    public static void Load()
+    {
+        string savePath = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
+        if (File.Exists(savePath))
+        {
+            string[] array = new string[]
+            {
+                string.Empty
+            };
+            array = File.ReadAllLines(savePath);
+            int section = 0;
+            int index = 0;
+            string currentReg = "";
+            if (array != new string[] { string.Empty } && array.Length > 0)
+            {
+                for (int i = 0; i < array.Length; i++)
+                {
+                    if (!array[i].StartsWith("//") && array[i] != "")
+                    {
+                        if (array[i] == "[END]")
+                        {
+                            break;
+                        }
+                        if (section == 3)
+                        {
+                            //Determine region
+                            if (array[i].StartsWith("["))
+                            {
+                                char[] trim = { '[', ']' };
+                                string reg = array[i].Trim(trim);
+                                currentReg = reg;
+                                Debug.Log(reg);
+                                //Region in save file is present
+                                if (!customSubregionColors.ContainsKey(reg))
+                                {
+                                    Debug.Log("Custom color dict does not contain this region, added");
+                                    customSubregionColors.Add(reg, new List<HSLColor>());
+                                }
+                                else
+                                {
+                                    Debug.Log("Already present in custom color dict, creating new HSLColor list");
+                                    customSubregionColors[reg] = new List<HSLColor>();
+                                }
+                            }
+                            else
+                            {
+                                if (customSubregionColors.ContainsKey(currentReg))
+                                {
+                                    Debug.Log("Region present in color list, grabbing saved colors");
+                                    Debug.Log(array[i]);
+                                    string[] col = Regex.Split(array[i], ":");
+                                    try
+                                    {
+                                        HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
+                                        Debug.Log(hsl.ToString());
+                                        if (customSubregionColors[currentReg] == null)
+                                        {
+                                            Debug.Log("CUSTOM COLOR ENTRY FOR THIS REGION IS NULL");
+                                        }
+                                        customSubregionColors[currentReg].Add(hsl);
+                                        Debug.Log("color added");
+                                    }
+                                    catch
+                                    {
+                                        Debug.LogError("Error reading color from save file");
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.Log("REGION NOT PRESENT IN CUSTOM COLOR DICT");
+                                }
+                            }
+                        }
+                        if (array[i] == "[SUBREGION]")
+                        {
+                            section = 3;
+                            index = 0;
+                        }
+                        if (section == 2)
+                        {
+                            string[] col = Regex.Split(array[i], ":");
+                            try
+                            {
+                                HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
+                                sizeColors[index] = hsl;
+                            }
+                            catch
+                            {
+                                Debug.LogError("Error reading color from save file");
+                            }
+                            index++;
+                        }
+                        if (array[i] == "[SIZE]")
+                        {
+                            section = 2;
+                            index = 0;
+                        }
+                        if (section == 1)
+                        {
+                            string[] col = Regex.Split(array[i], ":");
+                            try
+                            {
+                                HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
+                                typeColors[index] = hsl;
+                            }
+                            catch
+                            {
+                                Debug.LogError("Error reading color from save file");
+                            }
+                            index++;
+                        }
+                        if (array[i] == "[TYPE]")
+                        {
+                            section = 1;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (!Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+            {
+                Directory.CreateDirectory(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp");
+            }
+            if (Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+            {
+                File.WriteAllText(savePath, Warp.Resources.Colors);
+            }
+            Load();
+        }
+    }
 }
-
-
-////Grab Subregion Names from Properties .txt
-//string[] propFile = new string[]
-//{
-//            string.Empty
-//};
-////Check Properties .txt exists
-//if (File.Exists(string.Concat(new object[]
-//{
-//    Custom.RootFolderDirectory(),
-//    "World",
-//    Path.DirectorySeparatorChar,
-//    "Regions",
-//    Path.DirectorySeparatorChar,
-//    region,
-//    Path.DirectorySeparatorChar,
-//    "Properties.txt"
-//})))
-////Load Properties .txt into String Array
-//{
-//    propFile = File.ReadAllLines(string.Concat(new object[]
-//    {
-//        Custom.RootFolderDirectory(),
-//        "World",
-//        Path.DirectorySeparatorChar,
-//        "Regions",
-//        Path.DirectorySeparatorChar,
-//        region,
-//        Path.DirectorySeparatorChar,
-//        "Properties.txt"
-//    }));
-//}
-////Add Subregion Names to List
-//List<string> subregionNames = new List<string>();
-//for (int i = 0; i<propFile.Length; i++)
-//{
-//    if (propFile[i].StartsWith("Sub"))
-//    {
-//        string[] subLine = Regex.Split(propFile[i], ": ");
-//        if (subLine.Length > 0)
-//        {
-//            subregionNames.Add(subLine[1]);
-//        }
-//    }
-//}
