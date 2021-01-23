@@ -1,4 +1,4 @@
-# Rain World Warp Menu
+# Rain World Warp Menu ![GitHub all releases](https://img.shields.io/github/downloads/LeeMoriya/Warp/total?style=for-the-badge)
 
 This mod adds an in-game warp menu to the pause screen. Click on room names to warp to them immediately without loading screens or the use of Gates.
 
