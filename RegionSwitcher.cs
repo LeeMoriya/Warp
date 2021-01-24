@@ -105,6 +105,9 @@ public class RegionSwitcher
             }
         }
 
+        // Make sure the camera moves too
+        game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
+
         // Transfer entities between rooms
         for (int j = 0; j < game.Players.Count; j++)
         {
@@ -136,6 +139,7 @@ public class RegionSwitcher
                 }
             }
             newRoom.world.game.roomRealizer.followCreature = ply;
+            Debug.Log("Player " + j + " Moved to new Region");
         }
 
         // Move players' stomach objects
@@ -219,8 +223,5 @@ public class RegionSwitcher
         oldWorld.regionState.world = null;
         newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
         newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
-
-        // Make sure the camera moves too
-        game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
     }
 }
