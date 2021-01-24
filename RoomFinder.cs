@@ -459,6 +459,7 @@ class RoomFinder
             }));
             if (propFile != new string[] { string.Empty })
             {
+                subregionNames.Add("Default");
                 for (int i = 0; i < propFile.Length; i++)
                 {
                     if (propFile[i].StartsWith("Subregion"))
@@ -470,6 +471,14 @@ class RoomFinder
                             subregionNames.Add(subName[1]);
                         }
                     }
+                }
+                if (!WarpMenu.subregionNames.ContainsKey(region))
+                {
+                    WarpMenu.subregionNames.Add(region, subregionNames);
+                }
+                else
+                {
+                    WarpMenu.subregionNames[region] = subregionNames;
                 }
             }
         }
@@ -565,6 +574,7 @@ class RoomFinder
                     if (crsPropFile != new string[] { string.Empty })
                     {
                         subregionNames = new List<string>();
+                        subregionNames.Add("Default");
                         for (int i = 0; i < crsPropFile.Length; i++)
                         {
                             if (crsPropFile[i].StartsWith("Subregion"))
@@ -576,6 +586,14 @@ class RoomFinder
                                     subregionNames.Add(subName[1]);
                                 }
                             }
+                        }
+                        if (!WarpMenu.subregionNames.ContainsKey(region))
+                        {
+                            WarpMenu.subregionNames.Add(region, subregionNames);
+                        }
+                        else
+                        {
+                            WarpMenu.subregionNames[region] = subregionNames;
                         }
                     }
                 }
@@ -656,18 +674,21 @@ class RoomFinder
             }
         }
 
+        Debug.Log("Assigning default subregion colors");
         if (!ColorInfo.customSubregionColors.ContainsKey(region))
         {
             ColorInfo.customSubregionColors.Add(region, new List<HSLColor>());
-            for(int i = 0; i < subregionNames.Count + 1; i++)
+            for(int i = 0; i < subregionNames.Count; i++)
             {
                 ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
             }
         }
+        Debug.Log("Default subregion colors assigned");
 
         if (!WarpMenu.masterRoomList.ContainsKey(region))
         {
             WarpMenu.masterRoomList.Add(region, roomList);
+            Debug.Log(region + " added to master list");
         }
 
         roomList.Sort(RoomInfo.SortByTypeAndName);
@@ -788,7 +809,7 @@ public static class ColorInfo
         new HSLColor(0.46f,0.99f,0.58f)
     };
     //Default subregion colors
-    public static HSLColor[] subregionColors = new HSLColor[10]
+    public static HSLColor[] subregionColors = new HSLColor[15]
     {
         //Default
         new HSLColor(0.46f,0.99f,0.99f),
@@ -810,13 +831,23 @@ public static class ColorInfo
         new HSLColor(0.54f,0.99f,0.65f),
         //9 Subregion
         new HSLColor(0.46f,0.99f,0.58f),
+        //10 Subregion
+        new HSLColor(0.82f,0.99f,0.73f),
+        //11 Subregion
+        new HSLColor(0.71f,0.99f,0.66f),
+        //12 Subregion
+        new HSLColor(0.6f,0.99f,0.59f),
+        //13 Subregion
+        new HSLColor(0.54f,0.99f,0.65f),
+        //14 Subregion
+        new HSLColor(0.46f,0.99f,0.58f),
     };
 
     public static Dictionary<string, List<HSLColor>> customSubregionColors = new Dictionary<string, List<HSLColor>>();
 
     public static void Save()
     {
-        string savePath = Custom.RootFolderDirectory() + "Colors.txt";
+        string savePath = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
         StringBuilder sb = new StringBuilder();
         //Type
         sb.Append("[TYPE]");
@@ -848,7 +879,12 @@ public static class ColorInfo
         }
         sb.Append("[END]");
         string text = sb.ToString();
+        if (!Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+        {
+            Directory.CreateDirectory(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp");
+        }
         File.WriteAllText(savePath, text);
+        Debug.Log("Custom Warp colors saved");
     }
 
     public static void Load()
@@ -882,16 +918,13 @@ public static class ColorInfo
                                 char[] trim = { '[', ']' };
                                 string reg = array[i].Trim(trim);
                                 currentReg = reg;
-                                Debug.Log(reg);
                                 //Region in save file is present
                                 if (!customSubregionColors.ContainsKey(reg))
                                 {
-                                    Debug.Log("Custom color dict does not contain this region, added");
                                     customSubregionColors.Add(reg, new List<HSLColor>());
                                 }
                                 else
                                 {
-                                    Debug.Log("Already present in custom color dict, creating new HSLColor list");
                                     customSubregionColors[reg] = new List<HSLColor>();
                                 }
                             }
@@ -899,19 +932,11 @@ public static class ColorInfo
                             {
                                 if (customSubregionColors.ContainsKey(currentReg))
                                 {
-                                    Debug.Log("Region present in color list, grabbing saved colors");
-                                    Debug.Log(array[i]);
                                     string[] col = Regex.Split(array[i], ":");
                                     try
                                     {
                                         HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
-                                        Debug.Log(hsl.ToString());
-                                        if (customSubregionColors[currentReg] == null)
-                                        {
-                                            Debug.Log("CUSTOM COLOR ENTRY FOR THIS REGION IS NULL");
-                                        }
                                         customSubregionColors[currentReg].Add(hsl);
-                                        Debug.Log("color added");
                                     }
                                     catch
                                     {
@@ -981,6 +1006,7 @@ public static class ColorInfo
                 File.WriteAllText(savePath, Warp.Resources.Colors);
             }
             Load();
+            Debug.Log("Custom Warp colors loaded");
         }
     }
 }

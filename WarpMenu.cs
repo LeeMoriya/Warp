@@ -34,6 +34,7 @@ public class WarpMenu
     //New
     //Master Room Dictionary
     public static Dictionary<string, List<RoomInfo>> masterRoomList = new Dictionary<string, List<RoomInfo>>();
+    public static Dictionary<string, List<string>> subregionNames = new Dictionary<string, List<string>>();
     public static WarpContainer warpContainer;
 
     //Old
@@ -698,27 +699,13 @@ public class WarpMenu
                 case ViewType.Subregion:
                     {
                         //Sort list by Subregion so values can match correct labels
-                        roomList.Sort(RoomInfo.SortBySubregionAndName);
-                        subregionNames = new List<string>();
-                        foreach (RoomInfo info in roomList)
-                        {
-                            if (info.subregionName == null)
-                            {
-                                info.subregionName = "Default";
-                            }
-                            //Add subregion names to list
-                            if (!subregionNames.Contains(info.subregionName))
-                            {
-                                subregionNames.Add(info.subregionName);
-                            }
-                        }
                         colorKey = new List<MenuLabel>();
                         keyLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
                         keyLabel.label.alignment = FLabelAlignment.Left;
                         this.subObjects.Add(keyLabel);
-                        for (int i = 0; i < subregionNames.Count; i++)
+                        for (int i = 0; i < WarpMenu.subregionNames[newRegion].Count; i++)
                         {
-                            MenuLabel label = new MenuLabel(menu, this, subregionNames[i], new Vector2(), new Vector2(), false);
+                            MenuLabel label = new MenuLabel(menu, this, WarpMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
                             label.label.alignment = FLabelAlignment.Left;
                             label.label.color = ColorInfo.customSubregionColors[WarpMenu.newRegion][i].rgb;
                             colorKey.Add(label);
@@ -743,19 +730,6 @@ public class WarpMenu
             {
                 subregionLabels = new List<MenuLabel>();
                 roomList.Sort(RoomInfo.SortBySubregionAndName);
-                subregionNames = new List<string>();
-                foreach (RoomInfo info in roomList)
-                {
-                    if (info.subregionName == null)
-                    {
-                        info.subregionName = "Default";
-                    }
-                    //Add subregion names to list
-                    if (!subregionNames.Contains(info.subregionName))
-                    {
-                        subregionNames.Add(info.subregionName);
-                    }
-                }
                 float subregionHeight = 0f;
                 if (viewType == ViewType.Size)
                 {
@@ -768,9 +742,9 @@ public class WarpMenu
                 subLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, subregionHeight - 15f), new Vector2(), false);
                 subLabel.label.alignment = FLabelAlignment.Left;
                 this.subObjects.Add(subLabel);
-                for (int i = 0; i < subregionNames.Count; i++)
+                for (int i = 0; i < WarpMenu.subregionNames[newRegion].Count; i++)
                 {
-                    MenuLabel label = new MenuLabel(menu, this, i + " - " + subregionNames[i], new Vector2(), new Vector2(), false);
+                    MenuLabel label = new MenuLabel(menu, this, i + " - " + WarpMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
                     label.label.alignment = FLabelAlignment.Left;
                     label.label.color = ColorInfo.subregionColors[i].rgb;
                     subregionLabels.Add(label);
@@ -1164,26 +1138,11 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
         subregionNames = new List<string>();
         if (WarpMenu.masterRoomList.ContainsKey(currentRegion))
         {
-            WarpMenu.masterRoomList[currentRegion].Sort(RoomInfo.SortBySubregionAndName);
-            subregionNames = new List<string>();
-            foreach (RoomInfo info in WarpMenu.masterRoomList[currentRegion])
-            {
-                if (info.subregionName == null)
-                {
-                    info.subregionName = "Default";
-                }
-                //Add subregion names to list
-                if (!subregionNames.Contains(info.subregionName))
-                {
-                    subregionNames.Add(info.subregionName);
-                }
-            }
-
             //If no custom colors are defined for this region's subregions, create a new entry with default colors
             if (!ColorInfo.customSubregionColors.ContainsKey(currentRegion))
             {
                 ColorInfo.customSubregionColors.Add(currentRegion, new List<HSLColor>());
-                for (int i = 0; i < subregionNames.Count; i++)
+                for (int i = 0; i < WarpMenu.subregionNames[currentRegion].Count; i++)
                 {
                     ColorInfo.customSubregionColors[currentRegion].Add(ColorInfo.subregionColors[i]);
                 }
@@ -1308,9 +1267,9 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             {
                 if (category == Category.Subregion && subregionNames != null)
                 {
-                    if (subregionNames.Count >= selectedColor)
+                    if (WarpMenu.subregionNames[currentRegion].Count >= selectedColor)
                     {
-                        categoryLabel.label.text = subregionNames[selectedColor];
+                        categoryLabel.label.text = WarpMenu.subregionNames[currentRegion][selectedColor];
                         categoryLabel.label.color = currentCol.rgb;
                     }
                 }

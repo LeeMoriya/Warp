@@ -122,6 +122,7 @@ public class RegionSwitcher
             }
             ply.Move(ply.pos);
             ply.realizedCreature.PlaceInRoom(newRoom.realizedRoom);
+            ply.ChangeRooms(newRoom.realizedRoom.LocalCoordinateOfNode(0));
 
             if (ply is AbstractCreature && (ply as AbstractCreature).creatureTemplate.AI)
             {
@@ -134,6 +135,7 @@ public class RegionSwitcher
                     kpginw.Invoke(game.overWorld, new object[] { newWorld, ply as AbstractCreature });
                 }
             }
+            newRoom.world.game.roomRealizer.followCreature = ply;
         }
 
         // Move players' stomach objects
@@ -142,6 +144,14 @@ public class RegionSwitcher
             if (game.Players[i].realizedCreature != null && (game.Players[i].realizedCreature as Player).objectInStomach != null)
             {
                 (game.Players[i].realizedCreature as Player).objectInStomach.world = newWorld;
+            }
+            if (game.Players[i].realizedCreature != null && (game.Players[i].realizedCreature as Player).spearOnBack != null)
+            {
+                if((game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
+                {
+                    (game.Players[i].realizedCreature as Player).spearOnBack.spear.abstractPhysicalObject.world = newWorld;
+                    (game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(newRoom.realizedRoom);
+                }
             }
             if (game.Players[i].realizedCreature.grasps != null)
             {
@@ -154,6 +164,8 @@ public class RegionSwitcher
                 }
             }
         }
+
+
         // Cut transport vessels from the old region
         for (int i = game.shortcuts.transportVessels.Count - 1; i >= 0; i--)
         {
@@ -186,6 +198,7 @@ public class RegionSwitcher
                 ply.realizedCreature.bodyChunks[i].pos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
                 ply.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
                 ply.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
+                ply.realizedCreature.bodyChunks[i].vel = new Vector2();
             }
         }
 
