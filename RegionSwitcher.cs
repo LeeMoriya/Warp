@@ -134,7 +134,7 @@ public class RegionSwitcher
             {
                 realPly.enteringShortCut = null;
             }
-            ply.Move(ply.pos);
+            ply.Move(newRoom.realizedRoom.LocalCoordinateOfNode(0));
             ply.realizedCreature.PlaceInRoom(newRoom.realizedRoom);
             ply.ChangeRooms(newRoom.realizedRoom.LocalCoordinateOfNode(0));
 
@@ -201,19 +201,6 @@ public class RegionSwitcher
             if (!game.overWorld.activeWorld.region.IsRoomInRegion(game.shortcuts.borderTravelVessels[i].room.index))
             {
                 game.shortcuts.borderTravelVessels.RemoveAt(i);
-            }
-        }
-
-        //Move Slugcat to the first room exit
-        for (int p = 0; p < game.Players.Count; p++)
-        {
-            AbstractCreature ply = game.Players[p];
-            for (int i = 0; i < ply.realizedCreature.bodyChunks.Length; i++)
-            {
-                ply.realizedCreature.bodyChunks[i].pos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
-                ply.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
-                ply.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)ply.realizedCreature.room.LocalCoordinateOfNode(0).x * 20f, (float)ply.realizedCreature.room.LocalCoordinateOfNode(0).y * 20f);
-                ply.realizedCreature.bodyChunks[i].vel = new Vector2();
             }
         }
         if (WarpMod.jollyCoop)

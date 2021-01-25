@@ -683,6 +683,13 @@ class RoomFinder
                 ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
             }
         }
+        else if(subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
+        {
+            while(subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
+            {
+                ColorInfo.customSubregionColors[region].Add(new HSLColor(0.5f, 0f, 1f));
+            }
+        }
         Debug.Log("Default subregion colors assigned");
 
         if (!WarpMenu.masterRoomList.ContainsKey(region))

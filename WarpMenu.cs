@@ -56,6 +56,13 @@ public class WarpMenu
         On.Menu.PauseMenu.Update += PauseMenu_Update;
         On.OverWorld.Update += OverWorld_Update;
         On.SaveState.LoadGame += SaveState_LoadGame;
+        On.RoomSpecificScript.SU_C04StartUp.Update += SU_C04StartUp_Update;
+    }
+
+    private static void SU_C04StartUp_Update(On.RoomSpecificScript.SU_C04StartUp.orig_Update orig, RoomSpecificScript.SU_C04StartUp self, bool eu)
+    {
+        self.showedControls = true;
+        orig.Invoke(self, eu);
     }
 
     private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
@@ -73,7 +80,7 @@ public class WarpMenu
         if (warpActive)
         {
             //New region selected, initiate Region Switcher
-            if ((newRegion != null && newRegion.Length == 2 && newRegion != self.activeWorld.region.name) || (switchRoom == null || switchRoom.name != newRoom))
+            if ((newRegion != null && newRegion.Length == 2 && newRegion != self.activeWorld.region.name))
             {
                 RegionSwitcher rs = new RegionSwitcher();
                 rs.SwitchRegions(self.game, newRegion, newRoom, new IntVector2(0, 0));
@@ -128,9 +135,9 @@ public class WarpMenu
                 {
                     for (int i = 0; i < player.abstractCreature.realizedCreature.bodyChunks.Length; i++)
                     {
-                        player.abstractCreature.realizedCreature.bodyChunks[i].pos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
-                        player.abstractCreature.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
-                        player.abstractCreature.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
+                        //player.abstractCreature.realizedCreature.bodyChunks[i].pos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
+                        //player.abstractCreature.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
+                        //player.abstractCreature.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
                     }
                     self.game.cameras[0].virtualMicrophone.AllQuiet();
                     self.game.cameras[0].MoveCamera(player.room, 0);
@@ -727,6 +734,10 @@ public class WarpMenu
                         {
                             MenuLabel label = new MenuLabel(menu, this, WarpMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
                             label.label.alignment = FLabelAlignment.Left;
+                            while(WarpMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[WarpMenu.newRegion].Count)
+                            {
+                                ColorInfo.customSubregionColors[WarpMenu.newRegion].Add(new HSLColor(1f, 1f, 1f));
+                            }
                             label.label.color = ColorInfo.customSubregionColors[WarpMenu.newRegion][i].rgb;
                             colorKey.Add(label);
                         }
