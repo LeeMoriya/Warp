@@ -40,6 +40,7 @@ public class WarpMod : PartialityMod
     // ------------------------------------------------
     public static PartialityMod mod;
     public static bool customRegions = false;
+    public static bool jollyCoop = false;
     public WarpMod()
     {
         this.ModID = "Warp";

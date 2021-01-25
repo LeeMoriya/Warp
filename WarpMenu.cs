@@ -218,6 +218,7 @@ public class WarpMenu
         public bool loadAll = false;
         public int loadCount = 0;
         public WarpColor warpColor;
+        public MenuLabel denLabel;
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
             game = (menu as PauseMenu).game;
@@ -237,6 +238,10 @@ public class WarpMenu
             MenuLabel labelOne = new MenuLabel(menu, this, "Warp Menu - " + WarpMod.mod.Version, new Vector2(22f, game.rainWorld.options.ScreenSize.y - 20f), new Vector2(), false);
             labelOne.label.alignment = FLabelAlignment.Left;
             this.subObjects.Add(labelOne);
+            //Den pos
+            denLabel = new MenuLabel(menu, this, "Den Position: NONE", new Vector2(game.rainWorld.options.ScreenSize.x- 22f, game.rainWorld.options.ScreenSize.y - 20f), new Vector2(), false);
+            denLabel.label.alignment = FLabelAlignment.Right;
+            this.subObjects.Add(denLabel);
             //Region Title
             MenuLabel regionLabel = new MenuLabel(menu, this, "REGION LIST", new Vector2(70f, game.rainWorld.options.ScreenSize.y - 40f), new Vector2(), false);
             this.subObjects.Add(regionLabel);
@@ -875,6 +880,17 @@ public class WarpMenu
         public override void GrafUpdate(float timeStacker)
         {
             base.GrafUpdate(timeStacker);
+            if (denLabel != null)
+            {
+                if (denPos == "NONE")
+                {
+                    denLabel.label.text = "Den Position: " + denPos + " | Hold shift + click a room to assign";
+                }
+                else
+                {
+                    denLabel.label.text = "Den Position: " + denPos + " | Press C to clear";
+                }
+            }
         }
     }
 
@@ -889,6 +905,10 @@ public class WarpMenu
                 if (mod.ModID == "Custom Regions Mod")
                 {
                     WarpMod.customRegions = true;
+                }
+                if (mod.ModID == "Jolly Co-op Mod")
+                {
+                    WarpMod.jollyCoop = true;
                 }
             }
             if (self.controlMap != null)

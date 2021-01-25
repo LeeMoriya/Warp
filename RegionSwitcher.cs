@@ -105,6 +105,17 @@ public class RegionSwitcher
             }
         }
 
+        //Jolly Fix Attempt
+        if (WarpMod.jollyCoop)
+        {
+            for (int i = 0; i < game.cameras[0].hud.fContainers.Length; i++)
+            {
+                game.cameras[0].hud.fContainers[i].RemoveAllChildren();
+            }
+            game.cameras[0].hud = null;
+        }
+
+
         // Make sure the camera moves too
         game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
 
@@ -205,7 +216,10 @@ public class RegionSwitcher
                 ply.realizedCreature.bodyChunks[i].vel = new Vector2();
             }
         }
-
+        if (WarpMod.jollyCoop)
+        {
+            game.cameras[0].FireUpSinglePlayerHUD(game.Players[0].realizedCreature as Player);
+        }
         // Move the camera
         for (int i = 0; i < game.cameras.Length; i++)
         {
