@@ -122,6 +122,16 @@ public class RegionSwitcher
         // Transfer entities between rooms
         for (int j = 0; j < game.Players.Count; j++)
         {
+            if (game.Players[j].realizedCreature.grasps != null)
+            {
+                for (int g = 0; g < game.Players[j].realizedCreature.grasps.Length; g++)
+                {
+                    if (game.Players[j].realizedCreature.grasps[g] != null && game.Players[j].realizedCreature.grasps[g].grabbed != null && !game.Players[j].realizedCreature.grasps[g].discontinued && game.Players[j].realizedCreature.grasps[g].grabbed is Creature)
+                    {
+                        game.Players[j].realizedCreature.ReleaseGrasp(g);
+                    }
+                }
+            }
             AbstractCreature ply = game.Players[j];
             ply.world = newWorld;
             ply.pos.room = newRoom.index;
@@ -162,20 +172,10 @@ public class RegionSwitcher
             }
             if (game.Players[i].realizedCreature != null && (game.Players[i].realizedCreature as Player).spearOnBack != null)
             {
-                if((game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
+                if ((game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
                 {
                     (game.Players[i].realizedCreature as Player).spearOnBack.spear.abstractPhysicalObject.world = newWorld;
                     (game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(newRoom.realizedRoom);
-                }
-            }
-            if (game.Players[i].realizedCreature.grasps != null)
-            {
-                for (int g = 0; g < game.Players[i].realizedCreature.grasps.Length; g++)
-                {
-                    if (game.Players[i].realizedCreature.grasps[g] != null && game.Players[i].realizedCreature.grasps[g].grabbed != null && !game.Players[i].realizedCreature.grasps[g].discontinued && game.Players[i].realizedCreature.grasps[g].grabbed is Creature)
-                    {
-                        game.Players[i].realizedCreature.ReleaseGrasp(g);
-                    }
                 }
             }
         }

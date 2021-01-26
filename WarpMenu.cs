@@ -104,6 +104,16 @@ public class WarpMenu
                 {
                     for (int i = 0; i < self.game.Players.Count; i++)
                     {
+                        if (self.game.Players[i].realizedCreature.grasps != null)
+                        {
+                            for (int g = 0; g < self.game.Players[i].realizedCreature.grasps.Length; g++)
+                            {
+                                if (self.game.Players[i].realizedCreature.grasps[g] != null && self.game.Players[i].realizedCreature.grasps[g].grabbed != null && !self.game.Players[i].realizedCreature.grasps[g].discontinued && self.game.Players[i].realizedCreature.grasps[g].grabbed is Creature)
+                                {
+                                    self.game.Players[i].realizedCreature.ReleaseGrasp(g);
+                                }
+                            }
+                        }
                         self.game.Players[i].realizedCreature.abstractCreature.Move(switchRoom.realizedRoom.LocalCoordinateOfNode(0));
                         self.game.Players[i].realizedCreature.PlaceInRoom(switchRoom.realizedRoom);
                         self.game.Players[i].realizedCreature.abstractCreature.ChangeRooms(player.room.GetWorldCoordinate(player.mainBodyChunk.pos));
@@ -119,26 +129,10 @@ public class WarpMenu
                             (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(switchRoom.realizedRoom);
                         }
                     }
-                    if (self.game.Players[i].realizedCreature.grasps != null)
-                    {
-                        for (int g = 0; g < self.game.Players[i].realizedCreature.grasps.Length; g++)
-                        {
-                            if (self.game.Players[i].realizedCreature.grasps[g] != null && self.game.Players[i].realizedCreature.grasps[g].grabbed != null && !self.game.Players[i].realizedCreature.grasps[g].discontinued && self.game.Players[i].realizedCreature.grasps[g].grabbed is Creature)
-                            {
-                                self.game.Players[i].realizedCreature.ReleaseGrasp(g);
-                            }
-                        }
-                    }
                 }
                 //Move players to the first entrance, move the room camera
                 if (player != null && player.room == switchRoom.realizedRoom)
                 {
-                    for (int i = 0; i < player.abstractCreature.realizedCreature.bodyChunks.Length; i++)
-                    {
-                        //player.abstractCreature.realizedCreature.bodyChunks[i].pos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
-                        //player.abstractCreature.realizedCreature.bodyChunks[i].lastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
-                        //player.abstractCreature.realizedCreature.bodyChunks[i].lastLastPos = new Vector2((float)player.room.LocalCoordinateOfNode(0).x * 20f, (float)player.room.LocalCoordinateOfNode(0).y * 20f);
-                    }
                     self.game.cameras[0].virtualMicrophone.AllQuiet();
                     self.game.cameras[0].MoveCamera(player.room, 0);
                     warpActive = false;
@@ -926,8 +920,11 @@ public class WarpMenu
             {
                 self.controlMap.pos = new Vector2(0f, 3000f);
             }
-            warpContainer = new WarpContainer(self, self.pages[0], self.pages[0].pos, new Vector2());
-            self.pages[0].subObjects.Add(warpContainer);
+            if (game.Players[0] != null && game.Players[0].realizedCreature != null)
+            {
+                warpContainer = new WarpContainer(self, self.pages[0], self.pages[0].pos, new Vector2());
+                self.pages[0].subObjects.Add(warpContainer);
+            }
         }
     }
 }

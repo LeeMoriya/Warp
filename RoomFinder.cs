@@ -678,7 +678,7 @@ class RoomFinder
         if (!ColorInfo.customSubregionColors.ContainsKey(region))
         {
             ColorInfo.customSubregionColors.Add(region, new List<HSLColor>());
-            for(int i = 0; i < subregionNames.Count; i++)
+            for (int i = 0; i < subregionNames.Count; i++)
             {
                 ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
             }
