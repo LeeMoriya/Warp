@@ -127,6 +127,7 @@ public class WarpMenu
                         if ((self.game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
                         {
                             (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(switchRoom.realizedRoom);
+                            (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.room = (self.game.Players[i].realizedCreature as Player).room;
                         }
                     }
                 }

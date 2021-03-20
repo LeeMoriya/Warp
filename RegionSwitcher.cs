@@ -105,19 +105,11 @@ public class RegionSwitcher
             }
         }
 
-        //Jolly Fix Attempt
-        if (WarpMod.jollyCoop)
+        for (int i = 0; i < game.cameras[0].hud.fContainers.Length; i++)
         {
-            for (int i = 0; i < game.cameras[0].hud.fContainers.Length; i++)
-            {
-                game.cameras[0].hud.fContainers[i].RemoveAllChildren();
-            }
-            game.cameras[0].hud = null;
+            game.cameras[0].hud.fContainers[i].RemoveAllChildren();
         }
-
-
-        // Make sure the camera moves too
-        game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
+        game.cameras[0].hud = null;
 
         // Transfer entities between rooms
         for (int j = 0; j < game.Players.Count; j++)
@@ -144,9 +136,83 @@ public class RegionSwitcher
             {
                 realPly.enteringShortCut = null;
             }
+
+            List<AbstractPhysicalObject> objs = ply.GetAllConnectedObjects();
+            for (int i = 0; i < objs.Count; i++)
+            {
+                objs[i].world = newWorld;
+                objs[i].pos = newRoom.realizedRoom.LocalCoordinateOfNode(0);
+                objs[i].Room.RemoveEntity(objs[i]);
+                newRoom.AddEntity(objs[i]);
+                objs[i].realizedObject.sticksRespawned = true;
+            }
+
+            Spear hasSpear = null;
+            AbstractPhysicalObject stomachObject = null;
+            // Move players' stomach objects
+            if (ply.realizedCreature != null && (ply.realizedCreature as Player).objectInStomach != null)
+            {
+                (ply.realizedCreature as Player).objectInStomach.world = newWorld;
+                stomachObject = (ply.realizedCreature as Player).objectInStomach;
+            }
+            if (ply.realizedCreature != null && (ply.realizedCreature as Player).spearOnBack != null)
+            {
+                if ((ply.realizedCreature as Player).spearOnBack.spear != null)
+                {
+                    hasSpear = (ply.realizedCreature as Player).spearOnBack.spear;
+                }
+            }
+
+            //Abstracize the player and Realize them in the new room
+            ply.timeSpentHere = 0;
+            ply.distanceToMyNode = 0;
             ply.Move(newRoom.realizedRoom.LocalCoordinateOfNode(0));
-            ply.realizedCreature.PlaceInRoom(newRoom.realizedRoom);
-            ply.ChangeRooms(newRoom.realizedRoom.LocalCoordinateOfNode(0));
+            if (ply.creatureTemplate.grasps > 0)
+            {
+                for (int i = 0; i < ply.creatureTemplate.grasps; i++)
+                {
+                    if (ply.realizedCreature.grasps[i] != null)
+                    {
+                        ply.realizedCreature.grasps[i].grabbed.abstractPhysicalObject.Abstractize(newRoom.realizedRoom.LocalCoordinateOfNode(0));
+                    }
+                }
+            }
+            if (ply.creatureTemplate.AI && ply.abstractAI.RealAI != null && ply.abstractAI.RealAI.pathFinder != null)
+            {
+                ply.abstractAI.SetDestination(QuickConnectivity.DefineNodeOfLocalCoordinate(ply.abstractAI.destination, ply.world, ply.creatureTemplate));
+                ply.abstractAI.timeBuffer = 0;
+                if (ply.abstractAI.destination.room == ply.pos.room && ply.abstractAI.destination.abstractNode == ply.pos.abstractNode)
+                {
+                    ply.abstractAI.path.Clear();
+                }
+                else
+                {
+                    List<WorldCoordinate> list = ply.abstractAI.RealAI.pathFinder.CreatePathForAbstractreature(ply.abstractAI.destination);
+                    if (list != null)
+                    {
+                        ply.abstractAI.path = list;
+                    }
+                    else
+                    {
+                        ply.abstractAI.FindPath(ply.abstractAI.destination);
+                    }
+                }
+                ply.abstractAI.RealAI = null;
+            }
+            ply.realizedCreature = null;
+            ply.RealizeInRoom();
+
+            //Re-add any backspears
+            if (hasSpear != null && (ply.realizedCreature as Player).spearOnBack != null && (ply.realizedCreature as Player).spearOnBack.spear != hasSpear)
+            {
+                (ply.realizedCreature as Player).spearOnBack.SpearToBack(hasSpear);
+                (ply.realizedCreature as Player).abstractPhysicalObject.stuckObjects.Add((ply.realizedCreature as Player).spearOnBack.abstractStick);
+            }
+            //Re-add any stomach objects
+            if(stomachObject != null && (ply.realizedCreature as Player).objectInStomach == null)
+            {
+                (ply.realizedCreature as Player).objectInStomach = stomachObject;
+            }
 
             if (ply is AbstractCreature && (ply as AbstractCreature).creatureTemplate.AI)
             {
@@ -162,25 +228,6 @@ public class RegionSwitcher
             newRoom.world.game.roomRealizer.followCreature = ply;
             Debug.Log("Player " + j + " Moved to new Region");
         }
-
-        // Move players' stomach objects
-        for (int i = 0; i < game.Players.Count; i++)
-        {
-            if (game.Players[i].realizedCreature != null && (game.Players[i].realizedCreature as Player).objectInStomach != null)
-            {
-                (game.Players[i].realizedCreature as Player).objectInStomach.world = newWorld;
-            }
-            if (game.Players[i].realizedCreature != null && (game.Players[i].realizedCreature as Player).spearOnBack != null)
-            {
-                if ((game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
-                {
-                    (game.Players[i].realizedCreature as Player).spearOnBack.spear.abstractPhysicalObject.world = newWorld;
-                    (game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(newRoom.realizedRoom);
-                }
-            }
-        }
-
-
         // Cut transport vessels from the old region
         for (int i = game.shortcuts.transportVessels.Count - 1; i >= 0; i--)
         {
@@ -203,14 +250,15 @@ public class RegionSwitcher
                 game.shortcuts.borderTravelVessels.RemoveAt(i);
             }
         }
-        if (WarpMod.jollyCoop)
-        {
-            game.cameras[0].FireUpSinglePlayerHUD(game.Players[0].realizedCreature as Player);
-        }
+        // Make sure the camera moves too
+        game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
+        game.cameras[0].ApplyPositionChange();
+        game.cameras[0].FireUpSinglePlayerHUD(game.Players[0].realizedCreature as Player);
+
         // Move the camera
         for (int i = 0; i < game.cameras.Length; i++)
         {
-            game.cameras[i].hud.ResetMap(new HUD.Map.MapData(newWorld, game.rainWorld));
+            game.cameras[0].hud.ResetMap(new HUD.Map.MapData(newWorld, game.rainWorld));
             if (game.cameras[i].hud.textPrompt.subregionTracker != null)
             {
                 game.cameras[i].hud.textPrompt.subregionTracker.lastShownRegion = 0;
