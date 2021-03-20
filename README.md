@@ -27,4 +27,4 @@ Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.
 This mod also supports AutoUpdate.
 
 ## Special Thanks:
-Slime_Cubed - For contributing the seamless region switching code.
+Slime_Cubed - For contributing the initial seamless region switching code.
