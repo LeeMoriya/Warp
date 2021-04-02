@@ -22,7 +22,7 @@ Extended DevTools is not required but is recommended [Link](https://drive.google
 
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.2)
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.35)
 
 This mod also supports AutoUpdate.
 
