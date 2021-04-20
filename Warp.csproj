@@ -59,9 +59,12 @@
     </Compile>
     <Compile Include="RoomFinder.cs" />
     <Compile Include="WarpButton.cs" />
+    <Compile Include="WarpColor.cs" />
+    <Compile Include="WarpSettings.cs" />
     <Compile Include="WarpMenu.cs" />
     <Compile Include="WarpMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WarpStats.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

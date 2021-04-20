@@ -28,10 +28,12 @@ public class WarpMenu
         Subregion
     }
 
+    //Persistant Settings
+    public static bool showMenu = true;
+    public static bool showStats = false;
     public static SortType sortType = SortType.Type;
     public static ViewType viewType = ViewType.Type;
 
-    //New
     //Master Room Dictionary
     public static Dictionary<string, List<RoomInfo>> masterRoomList = new Dictionary<string, List<RoomInfo>>();
     public static Dictionary<string, List<string>> subregionNames = new Dictionary<string, List<string>>();
@@ -141,7 +143,53 @@ public class WarpMenu
                 }
             }
         }
-
+    }
+    private static void PauseMenu_ctor(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
+    {
+        WarpSettings.Load();
+        warpActive = false;
+        orig.Invoke(self, manager, game);
+        if (game.IsStorySession)
+        {
+            foreach (PartialityMod mod in PartialityManager.Instance.modManager.loadedMods)
+            {
+                if (mod.ModID == "Custom Regions Mod")
+                {
+                    WarpMod.customRegions = true;
+                }
+                if (mod.ModID == "Jolly Co-op Mod")
+                {
+                    WarpMod.jollyCoop = true;
+                }
+            }
+            if (self.controlMap != null && showMenu)
+            {
+                self.controlMap.pos.y = -2000f;
+                self.controlMap.lastPos.y = -2000f;
+            }
+            if (game.Players[0] != null && game.Players[0].realizedCreature != null)
+            {
+                Vector2 offset = new Vector2();
+                if (!showMenu)
+                {
+                    offset.y = -2000f;
+                }
+                warpContainer = new WarpContainer(self, self.pages[0], self.pages[0].pos + offset, new Vector2());
+                self.pages[0].subObjects.Add(warpContainer);
+                WarpButton toggle = new WarpButton(self, self.pages[0], "HIDE", "toggleWarp", new Vector2(21f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20), new Color(1f, 0f, 0f));
+                if (showMenu)
+                {
+                    toggle.menuLabel.text = "HIDE";
+                    toggle.color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
+                }
+                else
+                {
+                    toggle.menuLabel.text = "WARP";
+                    toggle.color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.VeryDarkGrey);
+                }
+                self.pages[0].subObjects.Add(toggle);
+            }
+        }
     }
     private static void PauseMenu_Update(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
     {
@@ -199,6 +247,32 @@ public class WarpMenu
             self.PlaySound(SoundID.MENU_Add_Level);
             updateRoomButtons = true;
         }
+        if(message == "toggleWarp")
+        {
+            if (showMenu)
+            {
+                showMenu = false;
+                (sender as WarpButton).color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.VeryDarkGrey);
+                (sender as WarpButton).menuLabel.text = "WARP";
+                if(self.controlMap != null)
+                {
+                    self.controlMap.pos.y = 380f;
+                    self.controlMap.lastPos.y = -380f;
+                }
+            }
+            else
+            {
+                showMenu = true;
+                (sender as WarpButton).color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
+                (sender as WarpButton).menuLabel.text = "HIDE";
+                if (self.controlMap != null)
+                {
+                    self.controlMap.pos.y = -2000f;
+                    self.controlMap.lastPos.y = -2000f;
+                }
+            }
+        }
+        WarpSettings.Save();
     }
 
     public class WarpContainer : RectangularMenuObject
@@ -221,6 +295,7 @@ public class WarpMenu
         public int loadCount = 0;
         public WarpColor warpColor;
         public MenuLabel denLabel;
+        public WarpStats warpStats;
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
             game = (menu as PauseMenu).game;
@@ -252,7 +327,7 @@ public class WarpMenu
             regOffset = new IntVector2();
             if (game.overWorld.regions != null)
             {
-                this.subObjects.Add(new SimpleButton(menu, this, "LOAD ALL", "LOADALL", new Vector2(21f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(100f, 20f)));
+                this.subObjects.Add(new SimpleButton(menu, this, "STAT", "STATS", new Vector2(20f + ((hOffset - 25f) * 1), game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20f)));
                 for (int r = 0; r < this.game.overWorld.regions.Length; r++)
                 {
                     WarpButton region = new WarpButton(menu, this, this.game.overWorld.regions[r].name, this.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 25f) * regOffset.x), game.rainWorld.options.ScreenSize.y - 100f - ((vOffset) * regOffset.y)), new Vector2(45f, 23f), new Color(0.8f, 0.8f, 0.8f));
@@ -289,6 +364,8 @@ public class WarpMenu
                 colorConfig = new WarpButton(menu, this, "COLORS", "COLORS", new Vector2(21f, regionHeight - 137f), new Vector2(100f, 20f), new Color(1f, 0.4f, 0.4f));
                 this.subObjects.Add(colorConfig);
             }
+            warpStats = new WarpStats(menu, this, new Vector2(135f, game.rainWorld.options.ScreenSize.y - 53f), new Vector2());
+            this.subObjects.Add(warpStats);
             if (!masterRoomList.ContainsKey(game.world.region.name))
             {
                 RoomFinder rf = new RoomFinder();
@@ -304,6 +381,16 @@ public class WarpMenu
         public override void Update()
         {
             base.Update();
+            if (showMenu)
+            {
+                this.pos.y = 0f;
+                this.lastPos.y = 0f;
+            }
+            else
+            {
+                this.pos.y = -2000f;
+                this.lastPos.y = -2000f;
+            }
             if (regionButtons != null)
             {
                 foreach (WarpButton but in regionButtons)
@@ -407,6 +494,20 @@ public class WarpMenu
             if (message == "LOADALL")
             {
                 loadAll = true;
+            }
+            if (message == "STATS")
+            {
+                if (warpStats.stats.label.text != "")
+                {
+                    warpStats.stats.label.text = "";
+                    warpStats.stats2.label.text = "";
+                    showStats = false;
+                }
+                else
+                {
+                    warpStats.GenerateStats(newRegion);
+                    showStats = true;
+                }
             }
             if (message == "STYPE")
             {
@@ -785,6 +886,15 @@ public class WarpMenu
             {
                 this.subObjects.Add(categoryLabels[i]);
             }
+            if (showStats)
+            {
+                warpStats.GenerateStats(newRegion);
+            }
+            else
+            {
+                warpStats.stats.label.text = "";
+                warpStats.stats2.label.text = "";
+            }
         }
 
         public string CategoryName(SortType sort, int num)
@@ -899,504 +1009,9 @@ public class WarpMenu
             }
         }
     }
-
-    private static void PauseMenu_ctor(On.Menu.PauseMenu.orig_ctor orig, PauseMenu self, ProcessManager manager, RainWorldGame game)
-    {
-        warpActive = false;
-        orig.Invoke(self, manager, game);
-        if (game.IsStorySession)
-        {
-            foreach (PartialityMod mod in PartialityManager.Instance.modManager.loadedMods)
-            {
-                if (mod.ModID == "Custom Regions Mod")
-                {
-                    WarpMod.customRegions = true;
-                }
-                if (mod.ModID == "Jolly Co-op Mod")
-                {
-                    WarpMod.jollyCoop = true;
-                }
-            }
-            if (self.controlMap != null)
-            {
-                self.controlMap.pos = new Vector2(0f, 3000f);
-            }
-            if (game.Players[0] != null && game.Players[0].realizedCreature != null)
-            {
-                warpContainer = new WarpContainer(self, self.pages[0], self.pages[0].pos, new Vector2());
-                self.pages[0].subObjects.Add(warpContainer);
-            }
-        }
-    }
 }
 
-public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
-{
-    public WarpMenu.WarpContainer warpContainer;
-    public MenuLabel infoLabel;
-    public List<WarpButton> colButtons;
-    public WarpButton doneButton;
-    public Vector2 anchor;
-    public HorizontalSlider hueSlider;
-    public HorizontalSlider satSlider;
-    public HorizontalSlider litSlider;
-    public HSLColor currentCol;
-    public WarpButton typeButton;
-    public WarpButton sizeButton;
-    public WarpButton subButton;
-    public WarpButton saveButton;
-    public Category category;
-    public MenuLabel categoryLabel;
-    public MenuLabel mouseOverLabel;
-    public int selectedColor = -1;
-    public List<string> subregionNames;
-    public string currentRegion;
-    public enum Category
-    {
-        Type,
-        Size,
-        Subregion
-    }
-    public float hue = 0.2f;
-    public float sat = 1f;
-    public float lit = 0.5f;
-    public WarpColor(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
-    {
-        warpContainer = (owner as WarpMenu.WarpContainer);
-        currentCol = new HSLColor(hue, 1f, 0.5f);
-        anchor = new Vector2(160f, menu.manager.rainWorld.screenSize.y - 350f);
-        currentRegion = WarpMenu.newRegion;
 
-        //Reset and Save buttons
-        saveButton = new WarpButton(menu, this, "SAVE", "SAVE", new Vector2(anchor.x + 20f + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.4f, 1f, 0.4f));
-        this.subObjects.Add(saveButton);
-        doneButton = new WarpButton(menu, this, "DONE", "DONE", new Vector2(saveButton.pos.x + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
-        this.subObjects.Add(doneButton);
-
-        //Category switch buttons
-        typeButton = new WarpButton(menu, this, "TYPE", "CTYPE", new Vector2(anchor.x + 20f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
-        this.subObjects.Add(typeButton);
-        sizeButton = new WarpButton(menu, this, "SIZE", "CSIZE", new Vector2(typeButton.pos.x + 95f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
-        this.subObjects.Add(sizeButton);
-        subButton = new WarpButton(menu, this, "SUB", "CSUB", new Vector2(sizeButton.pos.x + 95f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
-        this.subObjects.Add(subButton);
-
-        //Title label
-        infoLabel = new MenuLabel(menu, this, "COLOR CUSTOMISER" + Environment.NewLine + "Adjust global room Type and Size button colors" + Environment.NewLine + "and individual subregion colors per region", new Vector2(sizeButton.pos.x + 40f, anchor.y + 265f), new Vector2(), false);
-        this.subObjects.Add(infoLabel);
-
-        //Category label
-        categoryLabel = new MenuLabel(menu, this, "Select a button above to configure colors", new Vector2(sizeButton.pos.x + 40f, anchor.y + 147f), new Vector2(), false);
-        this.subObjects.Add(categoryLabel);
-
-        //Mouse Over label
-        mouseOverLabel = new MenuLabel(menu, this, "", new Vector2(sizeButton.pos.x + 40f, anchor.y - 45f), new Vector2(), false);
-        this.subObjects.Add(mouseOverLabel);
-
-        //Color controls
-        hueSlider = new HorizontalSlider(menu, this, "HUE", new Vector2(anchor.x + 30f, anchor.y + 100f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
-        this.subObjects.Add(hueSlider);
-        satSlider = new HorizontalSlider(menu, this, "SAT", new Vector2(anchor.x + 30f, anchor.y + 60f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
-        this.subObjects.Add(satSlider);
-        litSlider = new HorizontalSlider(menu, this, "LIT", new Vector2(anchor.x + 30f, anchor.y + 20f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
-        this.subObjects.Add(litSlider);
-
-        switch (WarpMenu.viewType)
-        {
-            case WarpMenu.ViewType.Type:
-                {
-                    category = Category.Type;
-                    CreateTypeButtons();
-                    break;
-                }
-            case WarpMenu.ViewType.Size:
-                {
-                    category = Category.Size;
-                    CreateSizeButtons();
-                    break;
-                }
-            case WarpMenu.ViewType.Subregion:
-                {
-                    category = Category.Subregion;
-                    CreateSubregionButtons();
-                    break;
-                }
-        }
-    }
-
-    public override void Update()
-    {
-        base.Update();
-        //Region has changed
-        if (currentRegion != WarpMenu.newRegion && WarpMenu.masterRoomList.ContainsKey(WarpMenu.newRegion))
-        {
-            currentRegion = WarpMenu.newRegion;
-            selectedColor = -1;
-            switch (category)
-            {
-                case Category.Type:
-                    {
-                        CreateTypeButtons();
-                        break;
-                    }
-                case Category.Size:
-                    {
-                        CreateSizeButtons();
-                        break;
-                    }
-                case Category.Subregion:
-                    {
-                        CreateSubregionButtons();
-                        break;
-                    }
-            }
-        }
-    }
-
-    public override void Singal(MenuObject sender, string message)
-    {
-        base.Singal(sender, message);
-        if (message == "DONE")
-        {
-            this.RemoveSprites();
-            warpContainer.RemoveSubObject(this);
-            warpContainer.warpColor = null;
-            if (!WarpMenu.masterRoomList.ContainsKey(currentRegion))
-            {
-                RoomFinder rf = new RoomFinder();
-                List<RoomInfo> roomList = rf.Generate(currentRegion, WarpMod.customRegions);
-                warpContainer.GenerateRoomButtons(roomList, WarpMenu.sortType, WarpMenu.viewType);
-            }
-            else
-            {
-                warpContainer.GenerateRoomButtons(WarpMenu.masterRoomList[currentRegion], WarpMenu.sortType, WarpMenu.viewType);
-            }
-        }
-        //Category
-        if (message == "CTYPE")
-        {
-            menu.PlaySound(SoundID.MENU_Add_Level);
-            category = Category.Type;
-            selectedColor = -1;
-            CreateTypeButtons();
-        }
-        if (message == "CSIZE")
-        {
-            menu.PlaySound(SoundID.MENU_Add_Level);
-            category = Category.Size;
-            selectedColor = -1;
-            CreateSizeButtons();
-        }
-        if (message == "CSUB")
-        {
-            menu.PlaySound(SoundID.MENU_Add_Level);
-            category = Category.Subregion;
-            selectedColor = -1;
-            CreateSubregionButtons();
-        }
-        //Color buttons
-        if (message.StartsWith("X"))
-        {
-            menu.PlaySound(SoundID.MENU_Add_Level);
-            int num = int.Parse(message.Substring(1));
-            switch (category)
-            {
-                case Category.Type:
-                    {
-                        selectedColor = num;
-                        currentCol = ColorInfo.typeColors[selectedColor];
-                        break;
-                    }
-                case Category.Size:
-                    {
-                        selectedColor = num;
-                        currentCol = ColorInfo.sizeColors[selectedColor];
-                        break;
-                    }
-                case Category.Subregion:
-                    {
-                        selectedColor = num;
-                        currentCol = ColorInfo.customSubregionColors[currentRegion][selectedColor];
-                        break;
-                    }
-            }
-            Debug.Log("H:" + hue + "S:" + sat + "L:" + lit);
-            hue = currentCol.hue;
-            sat = currentCol.saturation;
-            lit = currentCol.lightness;
-        }
-        if (message == "SAVE")
-        {
-            menu.PlaySound(SoundID.MENU_Player_Join_Game);
-            ColorInfo.Save();
-        }
-    }
-
-    public void ObliterateColorButtons()
-    {
-        if (colButtons != null)
-        {
-            for (int i = 0; i < colButtons.Count; i++)
-            {
-                colButtons[i].RemoveSprites();
-                this.RemoveSubObject(colButtons[i]);
-            }
-        }
-    }
-
-    public void CreateTypeButtons()
-    {
-        ObliterateColorButtons();
-        float offset = 30f;
-        colButtons = new List<WarpButton>();
-        for (int i = 0; i < Enum.GetNames(typeof(RoomInfo.RoomType)).Length; i++)
-        {
-            WarpButton but = new WarpButton(menu, this, (i + 1).ToString(), "X" + i.ToString(), new Vector2(typeButton.pos.x + 3f + (offset * i), typeButton.pos.y - 35f), new Vector2(25f, 25f), ColorInfo.typeColors[i].rgb);
-            colButtons.Add(but);
-        }
-        for (int i = 0; i < colButtons.Count; i++)
-        {
-            this.subObjects.Add(colButtons[i]);
-        }
-    }
-
-    public void CreateSizeButtons()
-    {
-        ObliterateColorButtons();
-        float offset = 30f;
-        colButtons = new List<WarpButton>();
-        for (int i = 0; i < 9; i++)
-        {
-            WarpButton but = new WarpButton(menu, this, (i + 1).ToString(), "X" + i.ToString(), new Vector2(typeButton.pos.x + 3f + (offset * i), typeButton.pos.y - 35f), new Vector2(25f, 25f), ColorInfo.sizeColors[i].rgb);
-            colButtons.Add(but);
-        }
-        for (int i = 0; i < colButtons.Count; i++)
-        {
-            this.subObjects.Add(colButtons[i]);
-        }
-    }
-
-    public void CreateSubregionButtons()
-    {
-        Debug.Log("Creating subregion buttons");
-        subregionNames = new List<string>();
-        if (WarpMenu.masterRoomList.ContainsKey(currentRegion))
-        {
-            //If no custom colors are defined for this region's subregions, create a new entry with default colors
-            if (!ColorInfo.customSubregionColors.ContainsKey(currentRegion))
-            {
-                ColorInfo.customSubregionColors.Add(currentRegion, new List<HSLColor>());
-                for (int i = 0; i < WarpMenu.subregionNames[currentRegion].Count; i++)
-                {
-                    ColorInfo.customSubregionColors[currentRegion].Add(ColorInfo.subregionColors[i]);
-                }
-            }
-        }
-        ObliterateColorButtons();
-        float offset = 30f;
-        colButtons = new List<WarpButton>();
-        for (int i = 0; i < ColorInfo.customSubregionColors[currentRegion].Count; i++)
-        {
-            WarpButton but = new WarpButton(menu, this, (i + 1).ToString(), "X" + i.ToString(), new Vector2(typeButton.pos.x + 3f + (offset * i), typeButton.pos.y - 35f), new Vector2(25f, 25f), ColorInfo.customSubregionColors[currentRegion][i].rgb);
-            colButtons.Add(but);
-        }
-        for (int i = 0; i < colButtons.Count; i++)
-        {
-            this.subObjects.Add(colButtons[i]);
-        }
-    }
-
-
-    public override void GrafUpdate(float timeStacker)
-    {
-        base.GrafUpdate(timeStacker);
-
-        if (typeButton != null && sizeButton != null && subButton != null)
-        {
-            switch (category)
-            {
-                case Category.Type:
-                    {
-                        typeButton.color = new Color(0.8f, 0.8f, 0.8f);
-                        sizeButton.color = new Color(0.4f, 0.4f, 0.4f);
-                        subButton.color = new Color(0.4f, 0.4f, 0.4f);
-                        for (int i = 0; i < colButtons.Count; i++)
-                        {
-                            colButtons[i].color = ColorInfo.typeColors[i].rgb;
-                        }
-                        break;
-                    }
-                case Category.Size:
-                    {
-                        sizeButton.color = new Color(0.8f, 0.8f, 0.8f);
-                        typeButton.color = new Color(0.4f, 0.4f, 0.4f);
-                        subButton.color = new Color(0.4f, 0.4f, 0.4f);
-                        for (int i = 0; i < colButtons.Count; i++)
-                        {
-                            colButtons[i].color = ColorInfo.sizeColors[i].rgb;
-                        }
-                        break;
-                    }
-                case Category.Subregion:
-                    {
-                        subButton.color = new Color(0.8f, 0.8f, 0.8f);
-                        typeButton.color = new Color(0.4f, 0.4f, 0.4f);
-                        sizeButton.color = new Color(0.4f, 0.4f, 0.4f);
-                        for (int i = 0; i < colButtons.Count; i++)
-                        {
-                            colButtons[i].color = ColorInfo.customSubregionColors[currentRegion][i].rgb;
-                        }
-                        break;
-                    }
-            }
-        }
-        if (selectedColor != -1)
-        {
-            switch (category)
-            {
-                case Category.Type:
-                    {
-                        ColorInfo.typeColors[selectedColor] = currentCol;
-                        break;
-                    }
-                case Category.Size:
-                    {
-                        ColorInfo.sizeColors[selectedColor] = currentCol;
-                        break;
-                    }
-                case Category.Subregion:
-                    {
-                        ColorInfo.customSubregionColors[currentRegion][selectedColor] = currentCol;
-                        break;
-                    }
-            }
-        }
-        currentCol.hue = hue;
-        currentCol.saturation = sat;
-        currentCol.lightness = lit;
-        if (mouseOverLabel != null)
-        {
-            string text = "";
-            //Category buttons
-            if (typeButton.IsMouseOverMe)
-            {
-                text = "Configure button colors when viewing by room type";
-            }
-            else if (sizeButton.IsMouseOverMe)
-            {
-                text = "Configure button colors when viewing by room size";
-            }
-            else if (subButton.IsMouseOverMe)
-            {
-                text = "Configure button colors when viewing by subregion";
-            }
-            //Config buttons
-            else if (saveButton.IsMouseOverMe)
-            {
-                text = "Save the configured colors to a file";
-            }
-            else if (doneButton.IsMouseOverMe)
-            {
-                text = "Return to the main Warp menu";
-            }
-            else
-            {
-                text = "";
-            }
-            mouseOverLabel.label.text = text;
-        }
-        if (categoryLabel != null)
-        {
-            if (selectedColor != -1)
-            {
-                if (category == Category.Subregion && subregionNames != null)
-                {
-                    if (WarpMenu.subregionNames[currentRegion].Count >= selectedColor)
-                    {
-                        categoryLabel.label.text = WarpMenu.subregionNames[currentRegion][selectedColor];
-                        categoryLabel.label.color = currentCol.rgb;
-                    }
-                }
-                else
-                {
-                    if (category == Category.Size)
-                    {
-                        categoryLabel.label.text = "Cameras: " + (selectedColor + 1).ToString();
-                    }
-                    if (category == Category.Type)
-                    {
-                        switch (selectedColor)
-                        {
-                            case 0:
-                                categoryLabel.label.text = "Room";
-                                break;
-                            case 1:
-                                categoryLabel.label.text = "Gate";
-                                break;
-                            case 2:
-                                categoryLabel.label.text = "Shelter";
-                                break;
-                            case 3:
-                                categoryLabel.label.text = "Swarmroom";
-                                break;
-                            case 4:
-                                categoryLabel.label.text = "Scavenger Trader";
-                                break;
-                            case 5:
-                                categoryLabel.label.text = "Scavenger Outpost";
-                                break;
-                        }
-                    }
-                    categoryLabel.label.color = currentCol.rgb;
-                }
-            }
-            else
-            {
-                categoryLabel.label.text = "Select a button above to configure colors";
-                categoryLabel.label.color = Color.white;
-            }
-        }
-    }
-
-    public float ValueOfSlider(Slider slider)
-    {
-        if (slider == hueSlider)
-        {
-            return hue;
-        }
-        else if (slider == satSlider)
-        {
-            return sat;
-        }
-        else if (slider == litSlider)
-        {
-            return lit;
-        }
-        else
-        {
-            return 0f;
-        }
-    }
-
-    public void SliderSetValue(Slider slider, float setValue)
-    {
-        if (selectedColor != -1)
-        {
-            if (slider == hueSlider)
-            {
-                hue = Mathf.Lerp(0f, 0.99f, setValue);
-            }
-            if (slider == satSlider)
-            {
-                sat = Mathf.Lerp(0f, 0.99f, setValue);
-            }
-            if (slider == litSlider)
-            {
-                lit = Mathf.Lerp(0f, 0.99f, setValue);
-            }
-        }
-    }
-}
 
 
 
