@@ -44,6 +44,7 @@ class RoomFinder
                 ".txt"
             }));
         }
+        //Get list of rooms between ROOMS and END ROOMS
         bool flag = false;
         List<string> roomList = new List<string>();
         for (int i = 0; i < array.Length; i++)
@@ -52,7 +53,7 @@ class RoomFinder
             {
                 break;
             }
-            if (flag)
+            if (flag && array[i].Length > 0 && array[i][0] != ' ' && array[i][0] != '/')
             {
                 string[] roomName = Regex.Split(array[i], " : ");
                 if (roomName != null)
@@ -60,6 +61,7 @@ class RoomFinder
                     roomList.Add(roomName[0]);
                 }
             }
+            //ROOMS section starts
             if (array[i] == "ROOMS")
             {
                 flag = true;
@@ -167,36 +169,48 @@ class RoomFinder
                 }
                 if (roomSection)
                 {
-                    RoomInfo info = new RoomInfo();
-                    string[] roomLine = Regex.Split(array[i], " : ");
-                    if (roomLine != null)
+                    if (array[i].Length > 0 && array[i][0] != ' ' && array[i][0] != '/')
                     {
-                        //Assign Room Name
-                        info.name = roomLine[0];
-                        //Check Room Tag - Default = Room
-                        info.type = RoomInfo.RoomType.Room;
-                        if (roomLine.Length > 2)
+                        RoomInfo info = new RoomInfo();
+                        //Check for conditionals
+                        string[] roomLine = Regex.Split(array[i], " : ");
+                        if (roomLine != null)
                         {
-                            switch (roomLine[2])
+                            //Assign Room Name
+                            if (roomLine[0].Contains(")"))
                             {
-                                case "GATE":
-                                    info.type = RoomInfo.RoomType.Gate;
-                                    break;
-                                case "SHELTER":
-                                    info.type = RoomInfo.RoomType.Shelter;
-                                    break;
-                                case "SWARMROOM":
-                                    info.type = RoomInfo.RoomType.SwarmRoom;
-                                    break;
-                                case "SCAVTRADER":
-                                    info.type = RoomInfo.RoomType.ScavTrader;
-                                    break;
-                                case "SCAVOUTPOST":
-                                    info.type = RoomInfo.RoomType.ScavOutpost;
-                                    break;
+                                info.name = Regex.Split(roomLine[0], "\\)")[1];
+                                Debug.Log(info.name);
                             }
+                            else
+                            {
+                                info.name = roomLine[0];
+                            }
+                            //Check Room Tag - Default = Room
+                            info.type = RoomInfo.RoomType.Room;
+                            if (roomLine.Length > 2)
+                            {
+                                switch (roomLine[2])
+                                {
+                                    case "GATE":
+                                        info.type = RoomInfo.RoomType.Gate;
+                                        break;
+                                    case "SHELTER":
+                                        info.type = RoomInfo.RoomType.Shelter;
+                                        break;
+                                    case "SWARMROOM":
+                                        info.type = RoomInfo.RoomType.SwarmRoom;
+                                        break;
+                                    case "SCAVTRADER":
+                                        info.type = RoomInfo.RoomType.ScavTrader;
+                                        break;
+                                    case "SCAVOUTPOST":
+                                        info.type = RoomInfo.RoomType.ScavOutpost;
+                                        break;
+                                }
+                            }
+                            roomList.Add(info);
                         }
-                        roomList.Add(info);
                     }
                 }
                 if (array[i] == "ROOMS")
@@ -294,7 +308,15 @@ class RoomFinder
                             if (roomLine != null)
                             {
                                 //Assign Room Name
-                                info.name = roomLine[0];
+                                if (roomLine[0].Contains(")"))
+                                {
+                                    info.name = Regex.Split(roomLine[0], "\\)")[1];
+                                    Debug.Log(info.name);
+                                }
+                                else
+                                {
+                                    info.name = roomLine[0];
+                                }
                                 //Check Room Tag - Default = Room
                                 info.type = RoomInfo.RoomType.Room;
                                 if (roomLine.Length > 2)
@@ -459,7 +481,7 @@ class RoomFinder
             }));
             if (propFile != new string[] { string.Empty })
             {
-                subregionNames.Add("Default");
+                subregionNames.Add("None");
                 for (int i = 0; i < propFile.Length; i++)
                 {
                     if (propFile[i].StartsWith("Subregion"))
@@ -472,13 +494,13 @@ class RoomFinder
                         }
                     }
                 }
-                if (!WarpMenu.subregionNames.ContainsKey(region))
+                if (!WarpModMenu.subregionNames.ContainsKey(region))
                 {
-                    WarpMenu.subregionNames.Add(region, subregionNames);
+                    WarpModMenu.subregionNames.Add(region, subregionNames);
                 }
                 else
                 {
-                    WarpMenu.subregionNames[region] = subregionNames;
+                    WarpModMenu.subregionNames[region] = subregionNames;
                 }
             }
         }
@@ -544,7 +566,7 @@ class RoomFinder
                             }
                             else
                             {
-                                info.subregionName = "Default";
+                                info.subregionName = "None";
                             }
                         }
                     }
@@ -574,7 +596,7 @@ class RoomFinder
                     if (crsPropFile != new string[] { string.Empty })
                     {
                         subregionNames = new List<string>();
-                        subregionNames.Add("Default");
+                        subregionNames.Add("None");
                         for (int i = 0; i < crsPropFile.Length; i++)
                         {
                             if (crsPropFile[i].StartsWith("Subregion"))
@@ -587,13 +609,13 @@ class RoomFinder
                                 }
                             }
                         }
-                        if (!WarpMenu.subregionNames.ContainsKey(region))
+                        if (!WarpModMenu.subregionNames.ContainsKey(region))
                         {
-                            WarpMenu.subregionNames.Add(region, subregionNames);
+                            WarpModMenu.subregionNames.Add(region, subregionNames);
                         }
                         else
                         {
-                            WarpMenu.subregionNames[region] = subregionNames;
+                            WarpModMenu.subregionNames[region] = subregionNames;
                         }
                     }
                 }
@@ -641,7 +663,7 @@ class RoomFinder
                                     }
                                     else
                                     {
-                                        info.subregionName = "Default";
+                                        info.subregionName = "None";
                                     }
                                 }
                             }
@@ -658,7 +680,7 @@ class RoomFinder
             {
                 if (info.subregionName == "Null")
                 {
-                    info.subregionName = "Default";
+                    info.subregionName = "None";
                 }
                 //If a room with this name does not exist, add it
                 if (!roomList.Exists(x => x.name == info.name))
@@ -692,9 +714,9 @@ class RoomFinder
         }
         Debug.Log("Default subregion colors assigned");
 
-        if (!WarpMenu.masterRoomList.ContainsKey(region))
+        if (!WarpModMenu.masterRoomList.ContainsKey(region))
         {
-            WarpMenu.masterRoomList.Add(region, roomList);
+            WarpModMenu.masterRoomList.Add(region, roomList);
             Debug.Log(region + " added to master list");
         }
 

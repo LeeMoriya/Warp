@@ -9,15 +9,31 @@ public class WarpStats : RectangularMenuObject
 {
     public MenuLabel stats;
     public MenuLabel stats2;
+    public RoundedRect rect;
     public string data;
     public string data2;
 
     public WarpStats(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
     {
-        stats = new MenuLabel(menu, this, "", new Vector2(), new Vector2(), false);
+        rect = new RoundedRect(menu, this, new Vector2(200f, 300f), new Vector2(400f, 300f), true);
+        this.subObjects.Add(rect);
+        stats = new MenuLabel(menu, this, "", new Vector2(rect.pos.x + 10f, rect.pos.y + rect.size.y - 10f), new Vector2(), false);
         this.subObjects.Add(stats);
         stats2 = new MenuLabel(menu, this, "", new Vector2(), new Vector2(), false);
         this.subObjects.Add(stats2);
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        FloatRect menuBounds = new FloatRect(0f, 0f, 150f, 1000);
+        FloatRect statBounds = new FloatRect(rect.pos.x, rect.pos.y, rect.pos.x + rect.size.x, rect.pos.y + rect.size.y);
+        if(!statBounds.Vector2Inside(Input.mousePosition) && !menuBounds.Vector2Inside(Input.mousePosition) && Input.GetMouseButtonDown(0))
+        {
+            this.RemoveSprites();
+            (this.owner as WarpModMenu.WarpContainer).warpStats = null;
+            menu.PlaySound(SoundID.MENU_Fast_Travel_Shelter_Select);
+        }
     }
 
     public void GenerateStats(string region)
@@ -30,7 +46,7 @@ public class WarpStats : RectangularMenuObject
         int trader = 0;
         int toll = 0;
         SortedDictionary<int, int> screenCount = new SortedDictionary<int, int>();
-        foreach (RoomInfo item in WarpMenu.masterRoomList[region])
+        foreach (RoomInfo item in WarpModMenu.masterRoomList[region])
         {
             rooms++;
             screens += item.cameras;
@@ -62,15 +78,15 @@ public class WarpStats : RectangularMenuObject
         data += Environment.NewLine + Environment.NewLine;
         data += "Gates: " + gates + Environment.NewLine;
         data += "Shelters: " + shelters + Environment.NewLine;
-        if(swarm > 0)
+        if (swarm > 0)
         {
             data += "Swarm Rooms: " + swarm + Environment.NewLine;
         }
-        if(trader > 0)
+        if (trader > 0)
         {
             data += "Scav Traders: " + trader + Environment.NewLine;
         }
-        if(toll > 0)
+        if (toll > 0)
         {
             data += "Scav Tolls: " + toll + Environment.NewLine;
         }
@@ -87,6 +103,6 @@ public class WarpStats : RectangularMenuObject
         stats2.label.anchorY = 1f;
         stats2.pos.x = stats.pos.x;
         stats2.pos.y = stats.pos.y - stats.label.textRect.height;
-        WarpMenu.showStats = true;
+        WarpModMenu.showStats = true;
     }
 }
