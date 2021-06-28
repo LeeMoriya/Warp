@@ -31,14 +31,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>E:\Steam Games\steamapps\common\Rain World\Mods\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
-      <HintPath>E:\Steam Games\steamapps\common\Rain World\Mods\HOOKS-Assembly-CSharp.dll</HintPath>
+      <HintPath>E:\Steam Games\steamapps\common\Rain World - Main\Mods\HOOKS-Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Partiality">
-      <HintPath>E:\Steam Games\steamapps\common\Rain World\Mods\Partiality.dll</HintPath>
+      <HintPath>E:\Steam Games\steamapps\common\Rain World - Main\Mods\Partiality.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -47,7 +48,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>E:\Steam Games\steamapps\common\Rain World\Mods\UnityEngine.dll</HintPath>
+      <HintPath>E:\Steam Games\steamapps\common\Rain World - Main\Mods\UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

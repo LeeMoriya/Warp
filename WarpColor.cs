@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
 {
-    public WarpMenu.WarpContainer warpContainer;
+    public WarpModMenu.WarpContainer warpContainer;
     public MenuLabel infoLabel;
     public List<WarpButton> colButtons;
     public WarpButton doneButton;
@@ -37,10 +37,10 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
     public float lit = 0.5f;
     public WarpColor(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
     {
-        warpContainer = (owner as WarpMenu.WarpContainer);
+        warpContainer = (owner as WarpModMenu.WarpContainer);
         currentCol = new HSLColor(hue, 1f, 0.5f);
         anchor = new Vector2(160f, menu.manager.rainWorld.screenSize.y - 350f);
-        currentRegion = WarpMenu.newRegion;
+        currentRegion = WarpModMenu.newRegion;
 
         //Reset and Save buttons
         saveButton = new WarpButton(menu, this, "SAVE", "SAVE", new Vector2(anchor.x + 20f + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.4f, 1f, 0.4f));
@@ -76,21 +76,21 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
         litSlider = new HorizontalSlider(menu, this, "LIT", new Vector2(anchor.x + 30f, anchor.y + 20f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
         this.subObjects.Add(litSlider);
 
-        switch (WarpMenu.viewType)
+        switch (WarpModMenu.viewType)
         {
-            case WarpMenu.ViewType.Type:
+            case WarpModMenu.ViewType.Type:
                 {
                     category = Category.Type;
                     CreateTypeButtons();
                     break;
                 }
-            case WarpMenu.ViewType.Size:
+            case WarpModMenu.ViewType.Size:
                 {
                     category = Category.Size;
                     CreateSizeButtons();
                     break;
                 }
-            case WarpMenu.ViewType.Subregion:
+            case WarpModMenu.ViewType.Subregion:
                 {
                     category = Category.Subregion;
                     CreateSubregionButtons();
@@ -103,9 +103,9 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
     {
         base.Update();
         //Region has changed
-        if (currentRegion != WarpMenu.newRegion && WarpMenu.masterRoomList.ContainsKey(WarpMenu.newRegion))
+        if (currentRegion != WarpModMenu.newRegion && WarpModMenu.masterRoomList.ContainsKey(WarpModMenu.newRegion))
         {
-            currentRegion = WarpMenu.newRegion;
+            currentRegion = WarpModMenu.newRegion;
             selectedColor = -1;
             switch (category)
             {
@@ -136,15 +136,15 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             this.RemoveSprites();
             warpContainer.RemoveSubObject(this);
             warpContainer.warpColor = null;
-            if (!WarpMenu.masterRoomList.ContainsKey(currentRegion))
+            if (!WarpModMenu.masterRoomList.ContainsKey(currentRegion))
             {
                 RoomFinder rf = new RoomFinder();
                 List<RoomInfo> roomList = rf.Generate(currentRegion, WarpMod.customRegions);
-                warpContainer.GenerateRoomButtons(roomList, WarpMenu.sortType, WarpMenu.viewType);
+                warpContainer.GenerateRoomButtons(roomList, WarpModMenu.sortType, WarpModMenu.viewType);
             }
             else
             {
-                warpContainer.GenerateRoomButtons(WarpMenu.masterRoomList[currentRegion], WarpMenu.sortType, WarpMenu.viewType);
+                warpContainer.GenerateRoomButtons(WarpModMenu.masterRoomList[currentRegion], WarpModMenu.sortType, WarpModMenu.viewType);
             }
         }
         //Category
@@ -255,16 +255,20 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
     {
         Debug.Log("Creating subregion buttons");
         subregionNames = new List<string>();
-        if (WarpMenu.masterRoomList.ContainsKey(currentRegion))
+        if (WarpModMenu.masterRoomList.ContainsKey(currentRegion))
         {
             //If no custom colors are defined for this region's subregions, create a new entry with default colors
             if (!ColorInfo.customSubregionColors.ContainsKey(currentRegion))
             {
                 ColorInfo.customSubregionColors.Add(currentRegion, new List<HSLColor>());
-                for (int i = 0; i < WarpMenu.subregionNames[currentRegion].Count; i++)
+                for (int i = 0; i < WarpModMenu.subregionNames[currentRegion].Count; i++)
                 {
                     ColorInfo.customSubregionColors[currentRegion].Add(ColorInfo.subregionColors[i]);
                 }
+            }
+            while(ColorInfo.customSubregionColors[currentRegion].Count < WarpModMenu.subregionNames[currentRegion].Count)
+            {
+                ColorInfo.customSubregionColors[currentRegion].Add(ColorInfo.subregionColors[ColorInfo.customSubregionColors[currentRegion].Count]);
             }
         }
         ObliterateColorButtons();
@@ -386,9 +390,9 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             {
                 if (category == Category.Subregion && subregionNames != null)
                 {
-                    if (WarpMenu.subregionNames[currentRegion].Count >= selectedColor)
+                    if (WarpModMenu.subregionNames[currentRegion].Count >= selectedColor)
                     {
-                        categoryLabel.label.text = WarpMenu.subregionNames[currentRegion][selectedColor];
+                        categoryLabel.label.text = WarpModMenu.subregionNames[currentRegion][selectedColor];
                         categoryLabel.label.color = currentCol.rgb;
                     }
                 }

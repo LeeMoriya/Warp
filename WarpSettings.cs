@@ -25,19 +25,19 @@ public static class WarpSettings
                 {
                     //Menu Display
                     case 0:
-                        WarpMenu.showMenu = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                        WarpModMenu.showMenu = Convert.ToBoolean(int.Parse(data[i].ToString()));
                         break;
                     //Favourites Display
                     case 1:
-                        WarpMenu.showStats = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                        WarpModMenu.showStats = Convert.ToBoolean(int.Parse(data[i].ToString()));
                         break;
                     //Sort Type
                     case 2:
-                        WarpMenu.sortType = (WarpMenu.SortType)int.Parse(data[i].ToString());
+                        WarpModMenu.sortType = (WarpModMenu.SortType)int.Parse(data[i].ToString());
                         break;
                     //View Type
                     case 3:
-                        WarpMenu.viewType = (WarpMenu.ViewType)int.Parse(data[i].ToString());
+                        WarpModMenu.viewType = (WarpModMenu.ViewType)int.Parse(data[i].ToString());
                         break;
                 }
             }
@@ -47,10 +47,10 @@ public static class WarpSettings
     {
         string path = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Settings.txt";
         StringBuilder sb = new StringBuilder();
-        sb.Append(Convert.ToInt32(WarpMenu.showMenu));
-        sb.Append(Convert.ToInt32(WarpMenu.showStats));
-        sb.Append((int)WarpMenu.sortType);
-        sb.Append((int)WarpMenu.viewType);
+        sb.Append(Convert.ToInt32(WarpModMenu.showMenu));
+        sb.Append(Convert.ToInt32(WarpModMenu.showStats));
+        sb.Append((int)WarpModMenu.sortType);
+        sb.Append((int)WarpModMenu.viewType);
         string text = sb.ToString();
         if (!Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
         {
