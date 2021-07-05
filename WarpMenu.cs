@@ -250,12 +250,26 @@ public class WarpModMenu
             }
             else
             {
-                Debug.Log(room);
-                newRoom = room;
-                warpActive = true;
-                Debug.Log("WARP: Room warp initiated for: " + room);
-                self.Singal(null, "CONTINUE");
-                return;
+                if (WarpModMenu.mode == Mode.Warp)
+                {
+                    Debug.Log(room);
+                    newRoom = room;
+                    warpActive = true;
+                    Debug.Log("WARP: Room warp initiated for: " + room);
+                    self.Singal(null, "CONTINUE");
+                    return;
+                }
+                else
+                {
+                    if(WarpModMenu.warpContainer.warpStats != null)
+                    {
+                        WarpModMenu.warpContainer.warpStats.RemoveSprites();
+                        WarpModMenu.warpContainer.RemoveSubObject(WarpModMenu.warpContainer.warpStats);
+                    }
+                    WarpModMenu.warpContainer.warpStats = new WarpStats(self, WarpModMenu.warpContainer, new Vector2(), new Vector2());
+                    WarpModMenu.warpContainer.warpStats.GenerateStats(newRegion, room);
+                    WarpModMenu.warpContainer.subObjects.Add(WarpModMenu.warpContainer.warpStats);
+                }
             }
         }
         if (message.EndsWith("reg"))
@@ -314,6 +328,7 @@ public class WarpModMenu
         public int loadCount = 0;
         public WarpColor warpColor;
         public MenuLabel denLabel;
+        public WarpButton statButton;
         public WarpStats warpStats;
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
@@ -360,7 +375,7 @@ public class WarpModMenu
                     statColor = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
                     statText = "WARP";
                 }
-                WarpButton statButton = new WarpButton(menu, this, statText, "STATS", new Vector2(20f + ((hOffset - 25f) * 1), game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20f), statColor);
+                this.statButton = new WarpButton(menu, this, statText, "STATS", new Vector2(20f + ((hOffset - 25f) * 1), game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20f), statColor);
                 this.subObjects.Add(statButton);
                 for (int r = 0; r < this.game.overWorld.regions.Length; r++)
                 {
@@ -398,8 +413,6 @@ public class WarpModMenu
                 colorConfig = new WarpButton(menu, this, "COLORS", "COLORS", new Vector2(21f, regionHeight - 137f), new Vector2(100f, 20f), new Color(1f, 0.4f, 0.4f));
                 this.subObjects.Add(colorConfig);
             }
-            warpStats = new WarpStats(menu, this, new Vector2(), new Vector2());
-            this.subObjects.Add(warpStats);
             if (!masterRoomList.ContainsKey(game.world.region.name))
             {
                 RoomFinder rf = new RoomFinder();
@@ -538,12 +551,15 @@ public class WarpModMenu
                 if(WarpModMenu.mode == Mode.Warp)
                 {
                     //Enable Stats mode
+                    if (warpStats != null)
+                    {
+                        this.RemoveSubObject(warpStats);
+                        warpStats.RemoveSprites();
+                        warpStats = null;
+                    }
                     WarpModMenu.mode = Mode.Stats;
                     (sender as WarpButton).color = new Color(1f, 0.85f, 0f);
                     (sender as WarpButton).menuLabel.text = "STATS";
-                    warpStats = new WarpStats(menu, this, new Vector2(), new Vector2());
-                    this.subObjects.Add(warpStats);
-                    warpStats.GenerateStats(newRegion);
                     menu.PlaySound(SoundID.MENU_Button_Successfully_Assigned);
                 }
                 else
@@ -554,6 +570,7 @@ public class WarpModMenu
                     (sender as WarpButton).menuLabel.text = "WARP";
                     if (warpStats != null)
                     {
+                        this.RemoveSubObject(warpStats);
                         warpStats.RemoveSprites();
                         warpStats = null;
                     }
@@ -931,15 +948,6 @@ public class WarpModMenu
             for (int i = 0; i < categoryLabels.Count; i++)
             {
                 this.subObjects.Add(categoryLabels[i]);
-            }
-            if (showStats)
-            {
-                warpStats.GenerateStats(newRegion);
-            }
-            else
-            {
-                warpStats.stats.label.text = "";
-                warpStats.stats2.label.text = "";
             }
         }
 

@@ -30,6 +30,14 @@ public static class WarpSettings
                     //Favourites Display
                     case 1:
                         WarpModMenu.showStats = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                        if (WarpModMenu.showStats)
+                        {
+                            WarpModMenu.mode = WarpModMenu.Mode.Stats;
+                        }
+                        else
+                        {
+                            WarpModMenu.mode = WarpModMenu.Mode.Warp;
+                        }
                         break;
                     //Sort Type
                     case 2:
