@@ -20,10 +20,10 @@ public class WarpStats : RectangularMenuObject
     {
         this.BG = new FSprite("Futile_White", true);
         this.BG.SetAnchor(0f, 1f);
-        this.BG.x = 185f;
+        this.BG.x = 195f;
         this.BG.y = 640f;
         this.BG.scaleY = 30f;
-        this.BG.scaleX = 60f;
+        this.BG.scaleX = 40f;
         this.BG.color = new Color(0.1f, 0.1f, 0.1f);
         this.BG.alpha = 0.8f;
         this.Container.AddChild(this.BG);
@@ -44,8 +44,7 @@ public class WarpStats : RectangularMenuObject
     public override void Update()
     {
         base.Update();
-        FloatRect statBounds = new FloatRect(190f, 200f, 800f, 650f);
-        if(!statBounds.Vector2Inside(Input.mousePosition) && Input.GetMouseButton(0))
+        if(!this.BG.localRect.Contains(this.BG.GlobalToLocal(Input.mousePosition)) && Input.GetMouseButton(0))
         {
             this.RemoveSprites();
             (this.owner as WarpModMenu.WarpContainer).warpStats = null;
