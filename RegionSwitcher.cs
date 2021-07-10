@@ -166,6 +166,7 @@ public class RegionSwitcher
             //Abstracize the player and Realize them in the new room
             ply.timeSpentHere = 0;
             ply.distanceToMyNode = 0;
+            oldRoom.realizedRoom.RemoveObject(ply.realizedCreature);
             ply.Move(newRoom.realizedRoom.LocalCoordinateOfNode(0));
             if (ply.creatureTemplate.grasps > 0)
             {
@@ -199,7 +200,7 @@ public class RegionSwitcher
                 }
                 ply.abstractAI.RealAI = null;
             }
-            ply.realizedCreature = null;
+            //ply.realizedCreature = null;
             ply.RealizeInRoom();
 
             //Re-add any backspears

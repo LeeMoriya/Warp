@@ -18,17 +18,17 @@ public class WarpStats : RectangularMenuObject
 
     public WarpStats(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
     {
-        this.BG = new FSprite("Futile_White", true);
+        this.BG = new FSprite("pixel", true);
         this.BG.SetAnchor(0f, 1f);
-        this.BG.x = 195f;
-        this.BG.y = 640f;
-        this.BG.scaleY = 30f;
-        this.BG.scaleX = 40f;
+        this.BG.x = 130f;
+        this.BG.y = 724f;
+        this.BG.scaleY = 400f;
+        this.BG.scaleX = 150f;
         this.BG.color = new Color(0.1f, 0.1f, 0.1f);
-        this.BG.alpha = 0.8f;
+        this.BG.alpha = 0f;
         this.Container.AddChild(this.BG);
         //Region Stats
-        regionLabel = new MenuLabel(menu, this, "", new Vector2(200f, 625f), new Vector2(), true);
+        regionLabel = new MenuLabel(menu, this, "", new Vector2(this.BG.x + 10.01f, this.BG.y - 15f), new Vector2(), true);
         regionLabel.label.alignment = FLabelAlignment.Left;
         this.subObjects.Add(regionLabel);
         stats = new MenuLabel(menu, this, "", new Vector2(regionLabel.pos.x, regionLabel.pos.y + regionLabel.size.y - 20f), new Vector2(), false);
@@ -36,25 +36,26 @@ public class WarpStats : RectangularMenuObject
         stats2 = new MenuLabel(menu, this, "", new Vector2(), new Vector2(), false);
         this.subObjects.Add(stats2);
         //Room Stats
-        roomLabel = new MenuLabel(menu, this, "", new Vector2(550f, 625f), new Vector2(), true);
-        roomLabel.label.alignment = FLabelAlignment.Left;
-        this.subObjects.Add(roomLabel);
+        //roomLabel = new MenuLabel(menu, this, "", new Vector2(550f, 625f), new Vector2(), true);
+        //roomLabel.label.alignment = FLabelAlignment.Left;
+        //this.subObjects.Add(roomLabel);
     }
 
     public override void Update()
     {
         base.Update();
-        if(!this.BG.localRect.Contains(this.BG.GlobalToLocal(Input.mousePosition)) && Input.GetMouseButton(0))
-        {
-            this.RemoveSprites();
-            (this.owner as WarpModMenu.WarpContainer).warpStats = null;
-            menu.PlaySound(SoundID.MENU_Greyed_Out_Button_Clicked);
-            (this.owner as WarpModMenu.WarpContainer).RemoveSubObject(this);
-        }
+        //if(!this.BG.localRect.Contains(this.BG.GlobalToLocal(Input.mousePosition)) && Input.GetMouseButton(0))
+        //{
+        //    this.RemoveSprites();
+        //    (this.owner as WarpModMenu.WarpContainer).warpStats = null;
+        //    menu.PlaySound(SoundID.MENU_Greyed_Out_Button_Clicked);
+        //    (this.owner as WarpModMenu.WarpContainer).RemoveSubObject(this);
+        //}
     }
 
     public void GenerateStats(string region, string room)
     {
+        Debug.Log("Generating " + region + " stats");
         int rooms = 0;
         int screens = 0;
         int gates = 0;
@@ -91,15 +92,18 @@ public class WarpStats : RectangularMenuObject
             }
             screenCount[item.cameras]++;
         }
-        string regionName = "Unknown Region Name";
-        if(WarpModMenu.subregionNames.ContainsKey(region) && WarpModMenu.subregionNames[region].Count >= 2)
-        {
-            //First Subregion name for a region should be it's full name
-            regionName = WarpModMenu.subregionNames[region][1];
-        }
-        regionLabel.label.text = regionName + " (" + region + ")";
+        regionLabel.label.text = "REGION: " + region;
         data = "ROOMS: " + rooms + Environment.NewLine + "SCREENS: " + screens;
         data += Environment.NewLine + Environment.NewLine;
+        //data += "Subregions:" + Environment.NewLine;
+        //if (WarpModMenu.subregionNames.ContainsKey(region) && WarpModMenu.subregionNames[region].Count >= 2)
+        //{
+        //    //First Subregion name for a region should be it's full name
+        //    for (int i = 1; i < WarpModMenu.subregionNames[region].Count; i++)
+        //    {
+        //        data += WarpModMenu.subregionNames[region][i] + Environment.NewLine;
+        //    }
+        //}
         data += "Gates: " + gates + Environment.NewLine;
         data += "Shelters: " + shelters + Environment.NewLine;
         if (swarm > 0)
@@ -127,9 +131,8 @@ public class WarpStats : RectangularMenuObject
         stats2.label.anchorY = 1f;
         stats2.pos.x = stats.pos.x;
         stats2.pos.y = stats.pos.y - stats.label.textRect.height;
-
         //Room Stats
-        roomLabel.label.text = room;
+        //roomLabel.label.text = "ROOM: " + room;
         WarpModMenu.showStats = true;
     }
 

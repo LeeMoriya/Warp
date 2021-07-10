@@ -146,6 +146,12 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             {
                 warpContainer.GenerateRoomButtons(WarpModMenu.masterRoomList[currentRegion], WarpModMenu.sortType, WarpModMenu.viewType);
             }
+            if(WarpModMenu.mode == WarpModMenu.Mode.Stats)
+            {
+                warpContainer.warpStats = new WarpStats(menu, warpContainer, new Vector2(), new Vector2());
+                warpContainer.warpStats.GenerateStats(WarpModMenu.newRegion, "");
+                warpContainer.subObjects.Add(warpContainer.warpStats);
+            }
         }
         //Category
         if (message == "CTYPE")

@@ -19,6 +19,10 @@ public static class WarpSettings
         else
         {
             char[] data = File.ReadAllText(path).ToCharArray();
+            if(data.Length == 0)
+            {
+                return;
+            }
             for (int i = 0; i < data.Length; i++)
             {
                 switch (i)
