@@ -34,6 +34,9 @@ public class WarpModMenu
         Stats
     }
 
+    //Error checking
+    public static string warpError = "";
+
     //Persistant Settings
     public static bool showMenu = true;
     public static bool showStats = false;
@@ -98,11 +101,16 @@ public class WarpModMenu
                 RegionSwitcher rs = new RegionSwitcher();
                 try
                 {
+                    warpError = "";
                     rs.SwitchRegions(self.game, newRegion, newRoom, new IntVector2(0, 0));
                 }
-                catch
+                catch (Exception e)
                 {
-                    Debug.Log("Something broke!!");
+                    Debug.LogException(e);
+                    Debug.Log("WARP ERROR: " + rs.GetErrorText(rs.error));
+                    warpError = rs.GetErrorText(rs.error);
+                    self.game.pauseMenu = new PauseMenu(self.game.manager, self.game);
+
                 }
                 warpActive = false;
             }
@@ -338,6 +346,7 @@ public class WarpModMenu
         public MenuLabel denLabel;
         public WarpButton statButton;
         public WarpStats warpStats;
+        public MenuLabel errorMessage;
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
             game = (menu as PauseMenu).game;
@@ -445,11 +454,22 @@ public class WarpModMenu
                 warpStats.GenerateStats(newRegion, "");
                 this.subObjects.Add(warpStats);
             }
+            if (warpError != "")
+            {
+                this.errorMessage = new MenuLabel(menu, this, warpError, new Vector2(682f, 72f), new Vector2(), true);
+                this.errorMessage.label.color = new Color(1f, 0f, 0f);
+                this.subObjects.Add(errorMessage);
+            }
         }
 
         public override void Update()
         {
             base.Update();
+            if(warpError != "")
+            {
+                this.menu.PlaySound(SoundID.HUD_Game_Over_Prompt);
+                warpError = "";
+            }
             if (showMenu)
             {
                 this.pos.y = 0f;

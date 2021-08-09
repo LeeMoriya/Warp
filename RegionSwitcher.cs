@@ -7,12 +7,27 @@ using System.Text;
 using UnityEngine;
 using Partiality;
 using Partiality.Modloader;
+using Menu;
 
 public class RegionSwitcher
 {
+    public ErrorKey error;
+    public enum ErrorKey
+    {
+        LoadWorld,
+        AbstractRoom,
+        RealiseRoom,
+        RoomRealiser,
+        FindNode,
+        MovePlayer,
+        MoveObjects,
+        MoveCamera
+    }
+
     private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod("LoadWorld", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     public void SwitchRegions(RainWorldGame game, string destWorld, string destRoom, IntVector2 destPos)
     {
+        this.error = ErrorKey.LoadWorld;
         Debug.Log("WARP: Loading room " + destRoom + " from region " + destWorld + "!");
         AbstractCreature absPly = (game.Players.Count <= 0) ? null : (game.Players[0] as AbstractCreature);
         if (absPly != null)
@@ -34,14 +49,24 @@ public class RegionSwitcher
                 }
             }
 
-            // Load the new world
-            Debug.Log("WARP: Invoking original LoadWorld method for new region.");
-            World oldWorld = game.overWorld.activeWorld;
-            _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
+            try
+            {
+                // Load the new world
+                Debug.Log("WARP: Invoking original LoadWorld method for new region.");
+                World oldWorld = game.overWorld.activeWorld;
+                _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
 
-            // Move the player and held items to the new room
-            Debug.Log("WARP: Moving player to new region.");
-            WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
+                // Move the player and held items to the new room
+                Debug.Log("WARP: Moving player to new region.");
+                WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
+            }
+            catch(Exception e)
+            {
+                Debug.LogException(e);
+                Debug.Log("WARP ERROR: " + this.GetErrorText(error));
+                WarpModMenu.warpError = this.GetErrorText(error);
+                game.pauseMenu = new PauseMenu(game.manager, game);
+            };
         }
         else
         {
@@ -65,10 +90,13 @@ public class RegionSwitcher
     private void WorldLoaded(RainWorldGame game, AbstractRoom oldRoom, World oldWorld, string newRoomName, IntVector2 newPos)
     {
         // Realize the new room
+        this.error = ErrorKey.AbstractRoom;
         World newWorld = game.overWorld.activeWorld;
         AbstractRoom newRoom = newWorld.GetAbstractRoom(newRoomName);
+        this.error = ErrorKey.RealiseRoom;
         newRoom.RealizeRoom(newWorld, game);
 
+        this.error = ErrorKey.RoomRealiser;
         // Forcibly prepare all loaded rooms
         while (newWorld.loadingRooms.Count > 0)
         {
@@ -94,6 +122,7 @@ public class RegionSwitcher
         }
         game.overWorld.activeWorld = newWorld;
 
+        this.error = ErrorKey.FindNode;
         // Find a suitable abstract node to place creatures at
         int abstractNode = 0;
         for (int i = 0; i < newRoom.nodes.Length; i++)
@@ -114,6 +143,7 @@ public class RegionSwitcher
         // Transfer entities between rooms
         for (int j = 0; j < game.Players.Count; j++)
         {
+            this.error = ErrorKey.MovePlayer;
             if (game.Players[j].realizedCreature.grasps != null)
             {
                 for (int g = 0; g < game.Players[j].realizedCreature.grasps.Length; g++)
@@ -203,6 +233,7 @@ public class RegionSwitcher
             //ply.realizedCreature = null;
             ply.RealizeInRoom();
 
+            this.error = ErrorKey.MoveObjects;
             //Re-add any backspears
             if (hasSpear != null && (ply.realizedCreature as Player).spearOnBack != null && (ply.realizedCreature as Player).spearOnBack.spear != hasSpear)
             {
@@ -251,6 +282,7 @@ public class RegionSwitcher
                 game.shortcuts.borderTravelVessels.RemoveAt(i);
             }
         }
+        this.error = ErrorKey.MoveCamera;
         // Make sure the camera moves too
         game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
         game.cameras[0].ApplyPositionChange();
@@ -273,5 +305,45 @@ public class RegionSwitcher
         oldWorld.regionState.world = null;
         newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
         newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
+    }
+
+    public string GetErrorText(ErrorKey key)
+    {
+        switch (key)
+        {
+            case ErrorKey.LoadWorld:
+                {
+                    return "An error occurred while loading the new region, check your room connections";
+                }
+            case ErrorKey.AbstractRoom:
+                {
+                    return "An error occurred while loading the destination AbstractRoom";
+                }
+            case ErrorKey.RealiseRoom:
+                {
+                    return "An error occurred while realising the destination room";
+                }
+            case ErrorKey.RoomRealiser:
+                {
+                    return "An error occurred while loading rooms in the new region";
+                }
+            case ErrorKey.FindNode:
+                {
+                    return "An error occurred while finding a node to place the player";
+                }
+            case ErrorKey.MovePlayer:
+                {
+                    return "An error occurred while moving the player to the new region";
+                }
+            case ErrorKey.MoveObjects:
+                {
+                    return "An error occurred while moving the player's items";
+                }
+            case ErrorKey.MoveCamera:
+                {
+                    return "An error occurred while moving the RoomCamera to the new room";
+                }
+        }
+        return "I have no idea how you got this error";
     }
 }
