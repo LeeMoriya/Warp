@@ -17,14 +17,17 @@ Room buttons can be colored independently of the current sorting option, for exa
 
 Warp also features a color customiser so that you can adjust the colors used for showing room types and sizes as well as the colors of different subregions for each region. These colors are saved in your Rain World\UserData\Warp folder.
 
+If you are unfamiliar with the names of rooms you can instead use Dev Tools to open the Map tab and then warp to any room by clicking on the preview image of that room.
+
 ## Requirements:
 Extended DevTools is not required but is recommended [Link](https://drive.google.com/file/d/1X9EQbZ__lla36YLKYijvwsshyEwy7QA7/view)
 
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.5)
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.6)
 
 This mod also supports AutoUpdate.
 
 ## Special Thanks:
 Slime_Cubed - For contributing the initial seamless region switching code.
+Henpemaz - For creating MapWarp
