@@ -30,4 +30,5 @@ This mod also supports AutoUpdate.
 
 ## Special Thanks:
 Slime_Cubed - For contributing the initial seamless region switching code.
+
 Henpemaz - For creating MapWarp
