@@ -333,6 +333,8 @@ public class WarpModMenu
         public List<WarpButton> roomButtons;
         public List<MenuLabel> categoryLabels;
         public List<WarpButton> regionButtons;
+        public WarpButton pageLeft;
+        public WarpButton pageRight;
         public List<WarpButton> sortButtons;
         public List<WarpButton> viewButtons;
         public WarpButton colorConfig;
@@ -347,6 +349,7 @@ public class WarpModMenu
         public WarpButton statButton;
         public WarpStats warpStats;
         public MenuLabel errorMessage;
+        public bool debugMode = false;
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
             game = (menu as PauseMenu).game;
@@ -438,15 +441,24 @@ public class WarpModMenu
                 colorConfig = new WarpButton(menu, this, "COLORS", "COLORS", new Vector2(21f, regionHeight - 137f), new Vector2(100f, 20f), new Color(1f, 0.4f, 0.4f));
                 this.subObjects.Add(colorConfig);
             }
-            if (!masterRoomList.ContainsKey(game.world.region.name))
+            if (!debugMode)
             {
-                RoomFinder rf = new RoomFinder();
-                List<RoomInfo> roomList = rf.Generate(game.world.region.name, WarpMod.customRegions);
-                GenerateRoomButtons(roomList, sortType, viewType);
+                if (!masterRoomList.ContainsKey(game.world.region.name))
+                {
+                    RoomFinder rf = new RoomFinder();
+                    List<RoomInfo> roomList = rf.Generate(game.world.region.name, WarpMod.customRegions);
+                    GenerateRoomButtons(roomList, sortType, viewType);
+                }
+                else
+                {
+                    GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
+                }
             }
             else
             {
-                GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
+                RoomFinder rf = new RoomFinder();
+                GenerateRoomButtons(rf.DebugList(58, 10), sortType, viewType);
+                newRegion = "XX";
             }
             if (mode == Mode.Stats)
             {
@@ -465,6 +477,17 @@ public class WarpModMenu
         public override void Update()
         {
             base.Update();
+            if (Input.GetKeyDown(KeyCode.Minus))
+            {
+                if (debugMode)
+                {
+                    debugMode = false;
+                }
+                else
+                {
+                    debugMode = true;
+                }
+            }
             if(warpError != "")
             {
                 this.menu.PlaySound(SoundID.HUD_Game_Over_Prompt);
@@ -584,6 +607,48 @@ public class WarpModMenu
         public override void Singal(MenuObject sender, string message)
         {
             base.Singal(sender, message);
+            if(message == "PAGELEFT")
+            {
+                for (int i = 0; i < this.roomButtons.Count; i++)
+                {
+                    roomButtons[i].pos.x -= 3042f;
+                }
+                for (int i = 0; i < categoryLabels.Count; i++)
+                {
+                    categoryLabels[i].label.SetPosition(categoryLabels[i].label.x - 2000f, categoryLabels[i].label.y);
+                }
+                pageLeft.buttonBehav.greyedOut = true;
+                pageLeft.color = new Color(0.3f,0.3f,0.3f);
+                for (int i = 0; i < this.subObjects.Count; i++)
+                {
+                    if (this.subObjects[i] is WarpButton && (this.subObjects[i] as WarpButton).signalText == "PAGERIGHT")
+                    {
+                        pageRight.buttonBehav.greyedOut = false;
+                        pageRight.color = new Color(1f, 0.9f, 0.3f);
+                    }
+                }
+            }
+            if(message == "PAGERIGHT")
+            {
+                for (int i = 0; i < this.roomButtons.Count; i++)
+                {
+                    roomButtons[i].pos.x += 3042f;
+                }
+                for (int i = 0; i < categoryLabels.Count; i++)
+                {
+                    categoryLabels[i].label.SetPosition(categoryLabels[i].label.x + 2000f, categoryLabels[i].label.y);
+                }
+                pageRight.buttonBehav.greyedOut = true;
+                pageRight.color = new Color(0.3f, 0.3f, 0.3f);
+                for (int i = 0; i < this.subObjects.Count; i++)
+                {
+                    if(this.subObjects[i] is WarpButton && (this.subObjects[i] as WarpButton).signalText == "PAGELEFT")
+                    {
+                        pageLeft.buttonBehav.greyedOut = false;
+                        pageLeft.color = new Color(1f, 0.9f, 0.3f);
+                    }
+                }
+            }
             if (message == "LOADALL")
             {
                 loadAll = true;
@@ -681,6 +746,7 @@ public class WarpModMenu
 
         public void RefreshRoomButtons()
         {
+
             if (newRegion != "")
             {
                 if (!masterRoomList.ContainsKey(newRegion))
@@ -717,6 +783,15 @@ public class WarpModMenu
                 if (warpColor != null)
                 {
                     return;
+                }
+                if (pageLeft != null || pageRight != null)
+                {
+                    this.pageLeft.RemoveSprites();
+                    this.RemoveSubObject(pageLeft);
+                    pageLeft = null;
+                    this.pageRight.RemoveSprites();
+                    this.RemoveSubObject(pageRight);
+                    pageRight = null;
                 }
                 //Remove existing buttons and labels
                 if (roomButtons != null)
@@ -890,8 +965,14 @@ public class WarpModMenu
                     }
                 }
                 //Add buttons
+                bool largeRegion = false;
                 for (int i = 0; i < roomButtons.Count; i++)
                 {
+                    if(roomButtons[i].pos.x < 250f)
+                    {
+                        largeRegion = true;
+                        roomButtons[i].pos.x -= 2000f;
+                    }
                     this.subObjects.Add(roomButtons[i]);
                 }
 
@@ -998,9 +1079,22 @@ public class WarpModMenu
                         this.subObjects.Add(subregionLabels[i]);
                     }
                 }
+                //TODO - this doesn't work
                 for (int i = 0; i < categoryLabels.Count; i++)
                 {
+                    if(categoryLabels[i].label.x < 250f)
+                    {
+                        categoryLabels[i].label.SetPosition(categoryLabels[i].label.x - 2000f, categoryLabels[i].label.y);
+                    }
                     this.subObjects.Add(categoryLabels[i]);
+                }
+                if (largeRegion && (pageLeft == null || pageRight == null))
+                {
+                    pageLeft = new WarpButton(menu, this, "LEFT", "PAGELEFT", new Vector2(screenWidth - 135f, 55f), new Vector2(50f, 25f), new Color(0.3f, 0.3f, 0.3f));
+                    pageRight = new WarpButton(menu, this, "RIGHT", "PAGERIGHT", new Vector2(screenWidth - 80f, 55f), new Vector2(50f, 25f), new Color(1f, 0.9f, 0f));
+                    pageLeft.buttonBehav.greyedOut = true;
+                    this.subObjects.Add(pageLeft);
+                    this.subObjects.Add(pageRight);
                 }
             }
             catch

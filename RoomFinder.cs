@@ -9,6 +9,36 @@ using UnityEngine;
 
 class RoomFinder
 {
+    public List<RoomInfo> DebugList(int rooms, int cameras)
+    {
+        List<RoomInfo> debugList = new List<RoomInfo>();
+        for (int i = 0; i < cameras; i++)
+        {
+            for (int c = 0; c < rooms; c++)
+            {
+                RoomInfo info = new RoomInfo()
+                {
+                    name = "XX_00",
+                    cameras = i+1,
+                    type = RoomInfo.RoomType.Room,
+                    color = new Color(1f, 1f, 1f),
+                    subregion = 0,
+                    subregionName = "A"
+                };
+                debugList.Add(info);
+            }
+        }
+        if (WarpModMenu.masterRoomList.ContainsKey("XX"))
+        {
+            WarpModMenu.masterRoomList["XX"] = debugList;
+        }
+        else
+        {
+            WarpModMenu.masterRoomList.Add("XX", debugList);
+        }
+        return debugList;
+    }
+
     public List<string> RoomList(string region, bool CRS)
     {
         string[] array = new string[]
@@ -562,7 +592,16 @@ class RoomFinder
                             info.subregion = subRegion;
                             if (subRegion > 0)
                             {
-                                info.subregionName = subregionNames[subRegion - 1];
+                                try
+                                {
+                                    info.subregionName = subregionNames[subRegion - 1];
+                                }
+                                catch
+                                {
+                                    info.subregionName = "None";
+                                    info.subregion = 0;
+                                    Debug.Log("WARP ERROR: " + info.name + " was assigned Subregion number " + subRegion + " which is out of range!");
+                                }
                             }
                             else
                             {
@@ -659,7 +698,16 @@ class RoomFinder
                                     info.subregion = subRegion;
                                     if (subRegion > 0)
                                     {
-                                        info.subregionName = subregionNames[subRegion - 1];
+                                        try
+                                        {
+                                            info.subregionName = subregionNames[subRegion - 1];
+                                        }
+                                        catch
+                                        {
+                                            info.subregionName = "None";
+                                            info.subregion = 0;
+                                            Debug.Log("WARP ERROR: " + info.name + " was assigned Subregion number " + subRegion + " which is out of range!");
+                                        }
                                     }
                                     else
                                     {
