@@ -34,7 +34,6 @@ public class WarpMod : PartialityMod
     public int version = 0;
     public string keyE = "AQAB";
     public string keyN = "st3BC7gf2eDIQAxPg4qLtTermfWIQv6D96LdTdurG+wIgGw3ntnWRb2SSaICj1QooD/zPGV4FIrq1oeNvnpou8v3ztpuq82mH3beaX5VD+w7jQ05dukS+szpiVjrpxrM7Xs6C/NXUJZ5hERwnOUMb0BdhCRbo2WHu3MM5vXHHHoqu/QbcsJpzfaU9lIlB7/sYRcDkzG35t2wM2qayaNH6yvNFy07PYrvQJtPGJ+W193+VtkBEnrcUUJYd3vPetnInxlXMjyXKpYontEJY752ICSJ4fegxIDnXjNJi7lsM99wWO71dNOCFLEwGZghEoaniU2l3PF4FBHIy3IvVvg6C7ULhKAx2VM0VqA358yARIfA5ug/q20rl/RAk29K+5D0XrPnlz8BlUlI5FpGqwzwit4NIKQMho7ErmrBU0UuXmy0bEy+cpo46gTFKHeZFvuZ4awH/shdG/LSRGH1P32uLq3yk8BdQThnrIYXr1joV8HzCzbhstaUfb/VwC/SqRq1R6FW4ipIJGyCTPESDAeu9DvB3gfN6WROfqBiOmud8CyalCvpnzgIfnEpvWFqx2rNNBqCfFc5ujnYvMnEj7t48oRpqIvDxTQC+/gRHNqRmgMkLiG/ABPcTUYAXIq52r/XjVRPxmjjgy9Cdbw9/6yO1wJhsI/EThq9RNjoXzfIJzU=";
-    // ------------------------------------------------
     public static PartialityMod mod;
     //Mod Support Toggles
     public static bool customRegions = false;
