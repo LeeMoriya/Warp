@@ -46,6 +46,13 @@ public static class WarpConsole
                         //Load room names for region
                         new RoomFinder().Generate(args[0], WarpMod.customRegions);
                         int rooms = WarpModMenu.masterRoomList[args[0]].Count;
+                        for (int i = 0; i < WarpModMenu.masterRoomList[args[0]].Count; i++)
+                        {
+                            if (!warpAutoComplete.Contains(WarpModMenu.masterRoomList[args[0]][i].name))
+                            {
+                                warpAutoComplete.Add(WarpModMenu.masterRoomList[args[0]][i].name);
+                            }
+                        }
                         GameConsole.WriteLine(rooms.ToString() + " rooms from " + args[0] + " added to auto-complete");
                     }
                     else
@@ -119,7 +126,7 @@ public static class WarpConsole
                     }
                 }
             }
-        }).AutoComplete(delegate(string[] args) 
+        }).AutoComplete(delegate(string[] args)
         {
             return warpAutoComplete.ToArray();
         }).Register();

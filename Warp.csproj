@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\..\Program Files %28x86%29\Steam\steamapps\common\Rain World - Backup\Mods\</OutputPath>
+    <OutputPath>E:\Games\Rain World\Mods\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -36,7 +36,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="DevConsole">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World - Backup\Mods\DevConsole.dll</HintPath>
+      <HintPath>E:\Games\Rain World\Mods\DevConsole.dll</HintPath>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Rain World - Backup\Mods\HOOKS-Assembly-CSharp.dll</HintPath>

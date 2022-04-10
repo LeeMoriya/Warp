@@ -167,6 +167,7 @@ public class RegionSwitcher
                 realPly.enteringShortCut = null;
             }
 
+            //Transfer connected objects to new world/room
             List<AbstractPhysicalObject> objs = ply.GetAllConnectedObjects();
             for (int i = 0; i < objs.Count; i++)
             {
@@ -185,6 +186,7 @@ public class RegionSwitcher
                 (ply.realizedCreature as Player).objectInStomach.world = newWorld;
                 stomachObject = (ply.realizedCreature as Player).objectInStomach;
             }
+            //Re-add backspears
             if (ply.realizedCreature != null && (ply.realizedCreature as Player).spearOnBack != null)
             {
                 if ((ply.realizedCreature as Player).spearOnBack.spear != null)
@@ -193,21 +195,12 @@ public class RegionSwitcher
                 }
             }
 
-            //Abstracize the player and Realize them in the new room
+            //Move player to new room
             ply.timeSpentHere = 0;
             ply.distanceToMyNode = 0;
             oldRoom.realizedRoom.RemoveObject(ply.realizedCreature);
             ply.Move(newRoom.realizedRoom.LocalCoordinateOfNode(0));
-            if (ply.creatureTemplate.grasps > 0)
-            {
-                for (int i = 0; i < ply.creatureTemplate.grasps; i++)
-                {
-                    if (ply.realizedCreature.grasps[i] != null)
-                    {
-                        ply.realizedCreature.grasps[i].grabbed.abstractPhysicalObject.Abstractize(newRoom.realizedRoom.LocalCoordinateOfNode(0));
-                    }
-                }
-            }
+
             if (ply.creatureTemplate.AI && ply.abstractAI.RealAI != null && ply.abstractAI.RealAI.pathFinder != null)
             {
                 ply.abstractAI.SetDestination(QuickConnectivity.DefineNodeOfLocalCoordinate(ply.abstractAI.destination, ply.world, ply.creatureTemplate));
@@ -230,8 +223,24 @@ public class RegionSwitcher
                 }
                 ply.abstractAI.RealAI = null;
             }
-            //ply.realizedCreature = null;
             ply.RealizeInRoom();
+
+            //Remove duplicate objects in updateList
+            for (int i = 0; i < objs.Count; i++)
+            {
+                int num = 0;
+                for (int s = 0; s < newRoom.realizedRoom.updateList.Count; s++)
+                {
+                    if(objs[i].realizedObject == newRoom.realizedRoom.updateList[s])
+                    {
+                        num++;
+                    }
+                    if(num > 1)
+                    {
+                        newRoom.realizedRoom.updateList.RemoveAt(s);
+                    }
+                }
+            }
 
             this.error = ErrorKey.MoveObjects;
             //Re-add any backspears
@@ -298,7 +307,9 @@ public class RegionSwitcher
             }
         }
 
-        game.cameras[0].virtualMicrophone.AllQuiet();
+
+
+        game.cameras[0].virtualMicrophone.NewRoom(game.cameras[0].room);
 
         // Adapt the region state to the new world
         oldWorld.regionState.AdaptRegionStateToWorld(-1, newRoom.index);
