@@ -4,8 +4,6 @@ Warp is a utility mod for Rain World that allows you to teleport the player to a
 
 The Warp menu is accessed via the Pause screen. Rooms in your current region are displayed on the right while a list of vanilla and modded regions are displayed on the left. Clicking on a room button will warp the player to that room. Clicking on a region button will change the list of room buttons to that of the selected region so that you can warp to rooms in different regions without the use of gates.
 
-As of version 1.6, Warp now also features 'Map Warping'. This allows you to teleport to different rooms (and exact positions in rooms) by clicking on their preview image in the Dev Tools Map tab. There are also new buttons in the map tab that will warp you to different regions. MapWarp was created by [Henpemaz](https://github.com/henpemaz) and was integrated with their permission.
-
 ![Warp](https://i.imgur.com/sse46qV.png)
 
 Warp supports three sorting options for rooms:
@@ -15,16 +13,26 @@ Warp supports three sorting options for rooms:
 
 Room buttons can be colored independently of the current sorting option, for example you can sort rooms by their subregion, but color them by their type.
 
+Warp also features a color customiser so that you can adjust the colors used for showing room types and sizes as well as the colors of different subregions for each region. These colors are saved in your Rain World\UserData\Warp folder.
+
 ![Colors](https://i.imgur.com/BxFdGyq.png)
 
-Warp also features a color customiser so that you can adjust the colors used for showing room types and sizes as well as the colors of different subregions for each region. These colors are saved in your Rain World\UserData\Warp folder.
+### MapWarp
+Warp v1.6 and up features MapWarp, created by [Henpemaz](https://github.com/henpemaz). This allows you to warp to rooms at the exact coordinates you click on via the Dev Tools Map tab.
+
+### DevConsole Support
+Warp v1.65 and up features support for Slime_Cubed's [DevConsole](https://github.com/SlimeCubed/DevConsole/releases) mod, allowing you to use the following commands:
+- `warp help` - Show the following commands and their usage:
+- `warp all` - Parses all installed regions for room names and adds them to auto-complete.
+- `warp XX` - Where XX is a region acronym, adds that region's rooms to auto-complete.
+- `warp` - Followed by the name of the room you wish to warp to (case-sensitive!).
 
 ## Requirements:
 Extended DevTools is not required but is recommended [Link](https://drive.google.com/file/d/1X9EQbZ__lla36YLKYijvwsshyEwy7QA7/view)
 
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.6)
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.7)
 
 This mod also supports AutoUpdate.
 
