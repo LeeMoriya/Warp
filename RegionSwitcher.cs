@@ -5,8 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
-using Partiality;
-using Partiality.Modloader;
 using Menu;
 
 public class RegionSwitcher
@@ -27,53 +25,39 @@ public class RegionSwitcher
     private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod("LoadWorld", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     public void SwitchRegions(RainWorldGame game, string destWorld, string destRoom, IntVector2 destPos)
     {
-        this.error = ErrorKey.LoadWorld;
+        error = ErrorKey.LoadWorld;
         Debug.Log("WARP: Loading room " + destRoom + " from region " + destWorld + "!");
-        AbstractCreature absPly = (game.Players.Count <= 0) ? null : (game.Players[0] as AbstractCreature);
-        if (absPly != null)
-        {
-            Debug.Log("WARP: Initiating region warp.");
-            AbstractRoom oldRoom = absPly.Room;
-            if (WarpMod.customRegions)
-            {
-                if (Type.GetType("CustomRegions.OverWorldHook, CustomRegions") != null)
-                {
-                    Type.GetType("CustomRegions.OverWorldHook, CustomRegions").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
-                }
-                else
-                {
-                    if (Type.GetType("CustomRegions.CWorld.OverWorldHook, CustomRegionsSupport") != null)
-                    {
-                        Type.GetType("CustomRegions.CWorld.OverWorldHook, CustomRegionsSupport").GetField("textLoadWorld", BindingFlags.Public | BindingFlags.Static).SetValue(null, destWorld);
-                    }
-                }
-            }
 
-            try
-            {
-                // Load the new world
-                Debug.Log("WARP: Invoking original LoadWorld method for new region.");
-                World oldWorld = game.overWorld.activeWorld;
-                _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
-
-                // Move the player and held items to the new room
-                Debug.Log("WARP: Moving player to new region.");
-                WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
-            }
-            catch(Exception e)
-            {
-                Debug.LogException(e);
-                Debug.Log("WARP ERROR: " + this.GetErrorText(error));
-                WarpModMenu.warpError = this.GetErrorText(error);
-                game.pauseMenu = new PauseMenu(game.manager, game);
-            };
-        }
-        else
+        for (int i = 0; i < game.Players.Count; i++)
         {
-            Debug.Log("WARP: Cannot initiate region warp, player is null!");
+            AbstractCreature absPly = game.Players[i] as AbstractCreature;
+            if (absPly != null)
+            {
+                Debug.Log("WARP: Initiating region warp.");
+                AbstractRoom oldRoom = absPly.Room;
+
+                try
+                {
+                    // Load the new world
+                    Debug.Log("WARP: Invoking original LoadWorld method for new region.");
+                    World oldWorld = game.overWorld.activeWorld;
+                    _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
+
+                    // Move the player and held items to the new room
+                    Debug.Log("WARP: Moving player to new region.");
+                    WorldLoaded(game, oldRoom, oldWorld, destRoom, destPos);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    Debug.Log("WARP ERROR: " + this.GetErrorText(error));
+                    WarpModMenu.warpError = this.GetErrorText(error);
+                    game.pauseMenu = new PauseMenu(game.manager, game);
+                    break;
+                };
+            }
         }
     }
-
     public AbstractRoom GetFirstRoom(AbstractRoom[] abstractRooms, string regionName)
     {
         for (int i = 0; i < abstractRooms.Length; i++)
@@ -134,6 +118,7 @@ public class RegionSwitcher
             }
         }
 
+        game.cameras[0].virtualMicrophone.AllQuiet();
         for (int i = 0; i < game.cameras[0].hud.fContainers.Length; i++)
         {
             game.cameras[0].hud.fContainers[i].RemoveAllChildren();
@@ -144,29 +129,31 @@ public class RegionSwitcher
         for (int j = 0; j < game.Players.Count; j++)
         {
             this.error = ErrorKey.MovePlayer;
-            if (game.Players[j].realizedCreature.grasps != null)
+            AbstractCreature ply = game.Players[j];
+            if (ply.realizedCreature.grasps != null)
             {
-                for (int g = 0; g < game.Players[j].realizedCreature.grasps.Length; g++)
+                for (int g = 0; g < ply.realizedCreature.grasps.Length; g++)
                 {
-                    if (game.Players[j].realizedCreature.grasps[g] != null && game.Players[j].realizedCreature.grasps[g].grabbed != null && !game.Players[j].realizedCreature.grasps[g].discontinued && game.Players[j].realizedCreature.grasps[g].grabbed is Creature)
+                    if (ply.realizedCreature.grasps[g] != null && ply.realizedCreature.grasps[g].grabbed != null && !ply.realizedCreature.grasps[g].discontinued && ply.realizedCreature.grasps[g].grabbed is Creature)
                     {
-                        game.Players[j].realizedCreature.ReleaseGrasp(g);
+                        ply.realizedCreature.ReleaseGrasp(g);
                     }
                 }
             }
-            AbstractCreature ply = game.Players[j];
             ply.world = newWorld;
             ply.pos.room = newRoom.index;
             ply.pos.abstractNode = abstractNode;
             ply.pos.x = newPos.x;
             ply.pos.y = newPos.y;
-            newRoom.realizedRoom.aimap.NewWorld(newRoom.index);
+            if (j == 0)
+                newRoom.realizedRoom.aimap.NewWorld(newRoom.index);
 
-            if (ply.realizedObject is Player realPly)
+            if (ply.realizedObject is Player)
             {
-                realPly.enteringShortCut = null;
+                (ply.realizedObject as Player).enteringShortCut = null;
             }
 
+            //Transfer connected objects to new world/room
             List<AbstractPhysicalObject> objs = ply.GetAllConnectedObjects();
             for (int i = 0; i < objs.Count; i++)
             {
@@ -185,6 +172,7 @@ public class RegionSwitcher
                 (ply.realizedCreature as Player).objectInStomach.world = newWorld;
                 stomachObject = (ply.realizedCreature as Player).objectInStomach;
             }
+            //Re-add backspears
             if (ply.realizedCreature != null && (ply.realizedCreature as Player).spearOnBack != null)
             {
                 if ((ply.realizedCreature as Player).spearOnBack.spear != null)
@@ -193,21 +181,12 @@ public class RegionSwitcher
                 }
             }
 
-            //Abstracize the player and Realize them in the new room
+            //Move player to new room
             ply.timeSpentHere = 0;
             ply.distanceToMyNode = 0;
             oldRoom.realizedRoom.RemoveObject(ply.realizedCreature);
             ply.Move(newRoom.realizedRoom.LocalCoordinateOfNode(0));
-            if (ply.creatureTemplate.grasps > 0)
-            {
-                for (int i = 0; i < ply.creatureTemplate.grasps; i++)
-                {
-                    if (ply.realizedCreature.grasps[i] != null)
-                    {
-                        ply.realizedCreature.grasps[i].grabbed.abstractPhysicalObject.Abstractize(newRoom.realizedRoom.LocalCoordinateOfNode(0));
-                    }
-                }
-            }
+
             if (ply.creatureTemplate.AI && ply.abstractAI.RealAI != null && ply.abstractAI.RealAI.pathFinder != null)
             {
                 ply.abstractAI.SetDestination(QuickConnectivity.DefineNodeOfLocalCoordinate(ply.abstractAI.destination, ply.world, ply.creatureTemplate));
@@ -230,8 +209,27 @@ public class RegionSwitcher
                 }
                 ply.abstractAI.RealAI = null;
             }
-            //ply.realizedCreature = null;
             ply.RealizeInRoom();
+
+            //Remove duplicate objects in updateList
+            if (j == 0)
+            {
+                for (int i = 0; i < objs.Count; i++)
+                {
+                    int num = 0;
+                    for (int s = 0; s < newRoom.realizedRoom.updateList.Count; s++)
+                    {
+                        if (objs[i].realizedObject == newRoom.realizedRoom.updateList[s])
+                        {
+                            num++;
+                        }
+                        if (num > 1)
+                        {
+                            newRoom.realizedRoom.updateList.RemoveAt(s);
+                        }
+                    }
+                }
+            }
 
             this.error = ErrorKey.MoveObjects;
             //Re-add any backspears
@@ -241,7 +239,7 @@ public class RegionSwitcher
                 (ply.realizedCreature as Player).abstractPhysicalObject.stuckObjects.Add((ply.realizedCreature as Player).spearOnBack.abstractStick);
             }
             //Re-add any stomach objects
-            if(stomachObject != null && (ply.realizedCreature as Player).objectInStomach == null)
+            if (stomachObject != null && (ply.realizedCreature as Player).objectInStomach == null)
             {
                 (ply.realizedCreature as Player).objectInStomach = stomachObject;
             }
@@ -257,7 +255,8 @@ public class RegionSwitcher
                     kpginw.Invoke(game.overWorld, new object[] { newWorld, ply as AbstractCreature });
                 }
             }
-            newRoom.world.game.roomRealizer.followCreature = ply;
+            if (j == 0)
+                newRoom.world.game.roomRealizer.followCreature = ply;
             Debug.Log("Player " + j + " Moved to new Region");
         }
         // Cut transport vessels from the old region
@@ -285,7 +284,7 @@ public class RegionSwitcher
         this.error = ErrorKey.MoveCamera;
         // Make sure the camera moves too
         game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
-        game.cameras[0].ApplyPositionChange();
+        //game.cameras[0].ApplyPositionChange();
         game.cameras[0].FireUpSinglePlayerHUD(game.Players[0].realizedCreature as Player);
 
         // Move the camera
@@ -298,7 +297,9 @@ public class RegionSwitcher
             }
         }
 
-        game.cameras[0].virtualMicrophone.AllQuiet();
+
+
+        game.cameras[0].virtualMicrophone.NewRoom(game.cameras[0].room);
 
         // Adapt the region state to the new world
         oldWorld.regionState.AdaptRegionStateToWorld(-1, newRoom.index);

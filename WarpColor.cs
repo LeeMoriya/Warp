@@ -139,7 +139,7 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             if (!WarpModMenu.masterRoomList.ContainsKey(currentRegion))
             {
                 RoomFinder rf = new RoomFinder();
-                List<RoomInfo> roomList = rf.Generate(currentRegion, WarpMod.customRegions);
+                List<RoomInfo> roomList = rf.Generate(currentRegion, false);
                 warpContainer.GenerateRoomButtons(roomList, WarpModMenu.sortType, WarpModMenu.viewType);
             }
             else

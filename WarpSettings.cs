@@ -11,7 +11,8 @@ public static class WarpSettings
 {
     public static void Load()
     {
-        string path = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Settings.txt";
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Settings.txt";
         if (!File.Exists(path))
         {
             Save();
@@ -19,7 +20,7 @@ public static class WarpSettings
         else
         {
             char[] data = File.ReadAllText(path).ToCharArray();
-            if(data.Length == 0)
+            if (data.Length == 0)
             {
                 return;
             }
@@ -57,25 +58,18 @@ public static class WarpSettings
     }
     public static void Save()
     {
-        string path = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Settings.txt";
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Settings.txt";
         StringBuilder sb = new StringBuilder();
         sb.Append(Convert.ToInt32(WarpModMenu.showMenu));
         sb.Append(Convert.ToInt32(WarpModMenu.showStats));
         sb.Append((int)WarpModMenu.sortType);
         sb.Append((int)WarpModMenu.viewType);
         string text = sb.ToString();
-        if (!Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+        if (!Directory.Exists(rootFolder + "Warp"))
         {
-            Directory.CreateDirectory(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp");
+            Directory.CreateDirectory(rootFolder + "Warp");
         }
         File.WriteAllText(path, text);
     }
 }
-public class WarpFavourites : RectangularMenuObject
-{
-    public WarpFavourites(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
-    {
-
-    }
-}
-

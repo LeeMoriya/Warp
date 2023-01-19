@@ -19,7 +19,7 @@ class RoomFinder
                 RoomInfo info = new RoomInfo()
                 {
                     name = "XX_00",
-                    cameras = i+1,
+                    cameras = i + 1,
                     type = RoomInfo.RoomType.Room,
                     color = new Color(1f, 1f, 1f),
                     subregion = 0,
@@ -45,13 +45,12 @@ class RoomFinder
         {
             string.Empty
         };
+        string rootFolder = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar;
         //Vanilla region
         if (File.Exists(string.Concat(new object[]
         {
-            Custom.RootFolderDirectory(),
+            rootFolder,
             "World",
-            Path.DirectorySeparatorChar,
-            "Regions",
             Path.DirectorySeparatorChar,
             region,
             Path.DirectorySeparatorChar,
@@ -62,10 +61,8 @@ class RoomFinder
         {
             array = File.ReadAllLines(string.Concat(new object[]
             {
-                Custom.RootFolderDirectory(),
+                rootFolder,
                 "World",
-                Path.DirectorySeparatorChar,
-                "Regions",
                 Path.DirectorySeparatorChar,
                 region,
                 Path.DirectorySeparatorChar,
@@ -102,21 +99,21 @@ class RoomFinder
         {
             if (Directory.Exists(string.Concat(new object[]
             {
-                Custom.RootFolderDirectory(),
+                rootFolder,
                 "Mods",
                 Path.DirectorySeparatorChar,
                 "CustomResources"
             })))
             {
-                foreach (string dir in Directory.GetDirectories(Custom.RootFolderDirectory() + "Mods" + Path.DirectorySeparatorChar + "CustomResources"))
+                foreach (string dir in Directory.GetDirectories(rootFolder + "Mods" + Path.DirectorySeparatorChar + "CustomResources"))
                 {
-                    if (Directory.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar + region))
+                    if (Directory.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region))
                     {
-                        if (File.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "world_" + region + ".txt"))
+                        if (File.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "world_" + region + ".txt"))
                         {
                             array = File.ReadAllLines(string.Concat(new object[]
                             {
-                            dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" +Path.DirectorySeparatorChar + region,
+                            dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region,
                             Path.DirectorySeparatorChar,
                             "world_",
                             region,
@@ -152,6 +149,8 @@ class RoomFinder
 
     public List<RoomInfo> Generate(string region, bool CRS)
     {
+        string rootFolder = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar;
+        CRS = true;
         List<RoomInfo> roomList = new List<RoomInfo>();
         List<RoomInfo> crsRoomList = new List<RoomInfo>();
 
@@ -163,10 +162,8 @@ class RoomFinder
         //Check Region is Vanilla
         if (File.Exists(string.Concat(new object[]
         {
-            Custom.RootFolderDirectory(),
+            rootFolder,
             "World",
-            Path.DirectorySeparatorChar,
-            "Regions",
             Path.DirectorySeparatorChar,
             region,
             Path.DirectorySeparatorChar,
@@ -178,10 +175,8 @@ class RoomFinder
         {
             array = File.ReadAllLines(string.Concat(new object[]
             {
-                Custom.RootFolderDirectory(),
+                rootFolder,
                 "World",
-                Path.DirectorySeparatorChar,
-                "Regions",
                 Path.DirectorySeparatorChar,
                 region,
                 Path.DirectorySeparatorChar,
@@ -256,58 +251,11 @@ class RoomFinder
         List<string> moddedPaths = new List<string>();
         if (CRS)
         {
-            if (Directory.Exists(string.Concat(new object[]
+            string dir = rootFolder + "mods" + Path.DirectorySeparatorChar + "moreslugcats";
+            //Region pack is activated, check if matching region XX is found in pack Regions folder
+            if (File.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "World_" + region + ".txt"))
             {
-            Custom.RootFolderDirectory(),
-            "Mods",
-            Path.DirectorySeparatorChar,
-            "CustomResources"
-            })))
-            {
-                string customResources = Custom.RootFolderDirectory() + "Mods" + Path.DirectorySeparatorChar + "CustomResources";
-                foreach (string dir in Directory.GetDirectories(customResources))
-                {
-                    //Check whether CRS version is using regionInfo or packInfo
-                    string jsonType = "";
-                    if (Directory.GetFiles(dir).Contains(dir + Path.DirectorySeparatorChar + "packInfo.json"))
-                    {
-                        jsonType = "packInfo.json";
-                    }
-                    else if (Directory.GetFiles(dir).Contains(dir + Path.DirectorySeparatorChar + "regionInfo.json"))
-                    {
-                        jsonType = "regionInfo.json";
-                    }
-                    if (jsonType != "")
-                    {
-                        string[] crsRegion = new string[]
-                        {
-                            string.Empty
-                        };
-                        crsRegion = File.ReadAllLines(dir + Path.DirectorySeparatorChar + jsonType);
-                        for (int i = 0; i < crsRegion.Length; i++)
-                        {
-                            if (crsRegion[i].Contains("activated"))
-                            {
-                                string[] crsLine = Regex.Split(crsRegion[i], ": ");
-                                if (crsLine.Length > 0)
-                                {
-                                    if (crsLine[1].StartsWith("true"))
-                                    {
-                                        //Region pack is activated, check if matching region XX is found in pack Regions folder
-                                        if (File.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "World_" + region + ".txt"))
-                                        {
-                                            moddedPaths.Add(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + "Regions" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Debug.Log(".json file not found in: " + dir);
-                    }
-                }
+                moddedPaths.Add(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region);
             }
             //Add modded rooms to roomList
             List<string> vanillaRoomNames = new List<string>();
@@ -322,7 +270,7 @@ class RoomFinder
             for (int i = 0; i < moddedPaths.Count; i++)
             {
                 bool crsRoomSection = false;
-                string[] crsWorldFile = File.ReadAllLines(moddedPaths[i] + "World_" + region + ".txt");
+                string[] crsWorldFile = File.ReadAllLines(moddedPaths[i] + Path.DirectorySeparatorChar + "World_" + region + ".txt");
                 for (int l = 0; l < crsWorldFile.Length; l++)
                 {
                     if (crsWorldFile[l] == "END ROOMS")
@@ -347,6 +295,11 @@ class RoomFinder
                                 {
                                     info.name = roomLine[0];
                                 }
+                                // hide easter egg maps from warp menu
+                                if (info.name.ToLowerInvariant() == "hr_layers_of_reality"
+                                    || info.name.ToLowerInvariant() == "vs_basement01"
+                                    || info.name.ToLowerInvariant() == "vs_basement02")
+                                    continue;
                                 //Check Room Tag - Default = Room
                                 info.type = RoomInfo.RoomType.Room;
                                 if (roomLine.Length > 2)
@@ -400,14 +353,10 @@ class RoomFinder
             //Check if Room .txt Exists
             if (File.Exists(string.Concat(new object[]
             {
-            Custom.RootFolderDirectory(),
+            rootFolder,
             "World",
             Path.DirectorySeparatorChar,
-            "Regions",
-            Path.DirectorySeparatorChar,
-            region,
-            Path.DirectorySeparatorChar,
-            "Rooms",
+            region + "-Rooms",
             Path.DirectorySeparatorChar,
             info.name + ".txt"
             })))
@@ -415,14 +364,10 @@ class RoomFinder
             {
                 roomFile = File.ReadAllLines(string.Concat(new object[]
                 {
-                Custom.RootFolderDirectory(),
+                rootFolder,
                 "World",
                 Path.DirectorySeparatorChar,
-                "Regions",
-                Path.DirectorySeparatorChar,
-                region,
-                Path.DirectorySeparatorChar,
-                "Rooms",
+                region + "-Rooms",
                 Path.DirectorySeparatorChar,
                 info.name + ".txt"
                 }));
@@ -454,13 +399,13 @@ class RoomFinder
                     //Check if Room .txt Exists
                     if (File.Exists(string.Concat(new object[]
                     {
-                        moddedPaths[i] + "Rooms" + Path.DirectorySeparatorChar +  info.name + ".txt"
+                        moddedPaths[i] + "-Rooms" + Path.DirectorySeparatorChar +  info.name + ".txt"
                     })))
                     //Load Room .txt into Array
                     {
                         crsRoomFile = File.ReadAllLines(string.Concat(new object[]
                         {
-                            moddedPaths[i] + "Rooms" + Path.DirectorySeparatorChar + info.name + ".txt"
+                            moddedPaths[i] + "-Rooms" + Path.DirectorySeparatorChar + info.name + ".txt"
                         }));
                         //Split line with camera info
                         if (crsRoomFile != new string[] { string.Empty } && crsRoomFile.Length > 3)
@@ -487,10 +432,8 @@ class RoomFinder
         //Check Properties .txt exists
         if (File.Exists(string.Concat(new object[]
         {
-            Custom.RootFolderDirectory(),
+            rootFolder,
             "World",
-            Path.DirectorySeparatorChar,
-            "Regions",
             Path.DirectorySeparatorChar,
             region,
             Path.DirectorySeparatorChar,
@@ -500,10 +443,8 @@ class RoomFinder
         {
             propFile = File.ReadAllLines(string.Concat(new object[]
             {
-                Custom.RootFolderDirectory(),
+                rootFolder,
                 "World",
-                Path.DirectorySeparatorChar,
-                "Regions",
                 Path.DirectorySeparatorChar,
                 region,
                 Path.DirectorySeparatorChar,
@@ -517,7 +458,7 @@ class RoomFinder
                     if (propFile[i].StartsWith("Subregion"))
                     {
                         //[0] Room Name - [1] prop Data
-                        string[] subName = Regex.Split(propFile[i], ": ");
+                        string[] subName = Regex.Split(Custom.ValidateSpacedDelimiter(propFile[i], ":"), ": ");
                         if (subName.Length > 0)
                         {
                             subregionNames.Add(subName[1]);
@@ -542,10 +483,8 @@ class RoomFinder
         //Check Map .txt exists
         if (File.Exists(string.Concat(new object[]
         {
-            Custom.RootFolderDirectory(),
+            rootFolder,
             "World",
-            Path.DirectorySeparatorChar,
-            "Regions",
             Path.DirectorySeparatorChar,
             region,
             Path.DirectorySeparatorChar,
@@ -557,10 +496,8 @@ class RoomFinder
         {
             mapFile = File.ReadAllLines(string.Concat(new object[]
             {
-                Custom.RootFolderDirectory(),
+                rootFolder,
                 "World",
-                Path.DirectorySeparatorChar,
-                "Regions",
                 Path.DirectorySeparatorChar,
                 region,
                 Path.DirectorySeparatorChar,
@@ -572,40 +509,32 @@ class RoomFinder
             {
                 for (int i = 0; i < mapFile.Length; i++)
                 {
-                    if (mapFile[i].StartsWith("Off"))
+                    if (mapFile[i].StartsWith("Off") || mapFile[i].StartsWith("Connection"))
                     {
-                        break;
+                        continue;
                     }
                     //[0] Room Name - [1] Map Data
-                    string[] nameAndInfo = Regex.Split(mapFile[i], ": ");
-                    //Split Map Data by comma, last item in the array is subregion number
-                    int subRegion = -1;
-                    if (Regex.Split(nameAndInfo[1], ",").Length >= 6)
-                    {
-                        subRegion = int.Parse(Regex.Split(nameAndInfo[1], ",")[5]);
-                    }
+                    string[] nameAndInfo = Regex.Split(Custom.ValidateSpacedDelimiter(mapFile[i], ":"), ": ");
                     //Find matching room in RoomList and give it its subregion number
                     foreach (RoomInfo info in roomList)
                     {
                         if (info.name == nameAndInfo[0])
                         {
-                            info.subregion = subRegion;
-                            if (subRegion > 0)
+                            //Split Map Data by delimiter, last item in the array is subregion number
+                            string subRegionName = null;
+                            string[] spl = Regex.Split(nameAndInfo[1], "><");
+                            if (spl.Length >= 6)
+                                subRegionName = (spl[5].Trim() == "" ? null : spl[5].Trim());
+
+                            info.subregion = 0;
+                            info.subregionName = "None";
+                            for (int j = 1; j < subregionNames.Count; j++)
                             {
-                                try
+                                if (subregionNames[j] == subRegionName)
                                 {
-                                    info.subregionName = subregionNames[subRegion - 1];
+                                    info.subregionName = subRegionName;
+                                    info.subregion = j;
                                 }
-                                catch
-                                {
-                                    info.subregionName = "None";
-                                    info.subregion = 0;
-                                    Debug.Log("WARP ERROR: " + info.name + " was assigned Subregion number " + subRegion + " which is out of range!");
-                                }
-                            }
-                            else
-                            {
-                                info.subregionName = "None";
                             }
                         }
                     }
@@ -624,13 +553,13 @@ class RoomFinder
                 //Check Properties .txt exists
                 if (File.Exists(string.Concat(new object[]
                 {
-                    moddedPaths[c] + "Properties.txt",
+                    moddedPaths[c] + Path.DirectorySeparatorChar + "Properties.txt",
                 })))
                 //Load Properties .txt into String Array
                 {
                     crsPropFile = File.ReadAllLines(string.Concat(new object[]
                     {
-                        moddedPaths[c] + "Properties.txt",
+                        moddedPaths[c] + Path.DirectorySeparatorChar + "Properties.txt",
                     }));
                     if (crsPropFile != new string[] { string.Empty })
                     {
@@ -641,7 +570,7 @@ class RoomFinder
                             if (crsPropFile[i].StartsWith("Subregion"))
                             {
                                 //[0] Room Name - [1] prop Data
-                                string[] subName = Regex.Split(crsPropFile[i], ": ");
+                                string[] subName = Regex.Split(Custom.ValidateSpacedDelimiter(crsPropFile[i], ":"), ": ");
                                 if (subName.Length > 0)
                                 {
                                     subregionNames.Add(subName[1]);
@@ -666,52 +595,44 @@ class RoomFinder
                 //Check Map .txt exists
                 if (File.Exists(string.Concat(new object[]
                 {
-                    moddedPaths[c] + "map_" + region + ".txt"
+                    moddedPaths[c] + Path.DirectorySeparatorChar + "map_" + region + ".txt"
                 })))
                 //Load Map .txt into String Array
                 {
                     crsMapFile = File.ReadAllLines(string.Concat(new object[]
                     {
-                        moddedPaths[c] + "map_" + region + ".txt"
+                        moddedPaths[c] + Path.DirectorySeparatorChar + "map_" + region + ".txt"
                     }));
                     if (crsMapFile != new string[] { string.Empty })
                     {
                         for (int i = 0; i < crsMapFile.Length; i++)
                         {
-                            if (crsMapFile[i].StartsWith("Off"))
+                            if (crsMapFile[i].StartsWith("Off") || crsMapFile[i].StartsWith("Connection"))
                             {
-                                break;
+                                continue;
                             }
                             //[0] Room Name - [1] Map Data
-                            string[] nameAndInfo = Regex.Split(crsMapFile[i], ": ");
-                            //Split Map Data by comma, last item in the array is subregion number
-                            int subRegion = -1;
-                            if (Regex.Split(nameAndInfo[1], ",").Length >= 6)
-                            {
-                                subRegion = int.Parse(Regex.Split(nameAndInfo[1], ",")[5]);
-                            }
+                            string[] nameAndInfo = Regex.Split(Custom.ValidateSpacedDelimiter(crsMapFile[i], ":"), ": ");
                             //Find matching room in RoomList and give it its subregion number
                             foreach (RoomInfo info in crsRoomList)
                             {
                                 if (info.name == nameAndInfo[0])
                                 {
-                                    info.subregion = subRegion;
-                                    if (subRegion > 0)
+                                    //Split Map Data by delimiter, last item in the array is subregion number
+                                    string subRegionName = null;
+                                    string[] spl = Regex.Split(nameAndInfo[1], "><");
+                                    if (spl.Length >= 6)
+                                        subRegionName = (spl[5].Trim() == "" ? null : spl[5].Trim());
+
+                                    info.subregion = 0;
+                                    info.subregionName = "None";
+                                    for (int j = 1; j < subregionNames.Count; j++)
                                     {
-                                        try
+                                        if (subregionNames[j] == subRegionName)
                                         {
-                                            info.subregionName = subregionNames[subRegion - 1];
+                                            info.subregionName = subRegionName;
+                                            info.subregion = j;
                                         }
-                                        catch
-                                        {
-                                            info.subregionName = "None";
-                                            info.subregion = 0;
-                                            Debug.Log("WARP ERROR: " + info.name + " was assigned Subregion number " + subRegion + " which is out of range!");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        info.subregionName = "None";
                                     }
                                 }
                             }
@@ -753,9 +674,9 @@ class RoomFinder
                 ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
             }
         }
-        else if(subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
+        else if (subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
         {
-            while(subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
+            while (subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
             {
                 ColorInfo.customSubregionColors[region].Add(new HSLColor(0.5f, 0f, 1f));
             }
@@ -772,6 +693,7 @@ class RoomFinder
         return roomList;
     }
 }
+
 
 public class RoomInfo : IComparable<RoomInfo>, IEquatable<RoomInfo>
 {
@@ -924,7 +846,8 @@ public static class ColorInfo
 
     public static void Save()
     {
-        string savePath = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string savePath = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
         StringBuilder sb = new StringBuilder();
         //Type
         sb.Append("[TYPE]");
@@ -956,9 +879,9 @@ public static class ColorInfo
         }
         sb.Append("[END]");
         string text = sb.ToString();
-        if (!Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+        if (!Directory.Exists(rootFolder + "Warp"))
         {
-            Directory.CreateDirectory(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp");
+            Directory.CreateDirectory(rootFolder + "Warp");
         }
         File.WriteAllText(savePath, text);
         Debug.Log("Custom Warp colors saved");
@@ -966,7 +889,8 @@ public static class ColorInfo
 
     public static void Load()
     {
-        string savePath = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string savePath = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
         if (File.Exists(savePath))
         {
             string[] array = new string[]
@@ -1074,13 +998,13 @@ public static class ColorInfo
         }
         else
         {
-            if (!Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+            if (!Directory.Exists(rootFolder + "Warp"))
             {
-                Directory.CreateDirectory(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp");
+                Directory.CreateDirectory(rootFolder + "Warp");
             }
-            if (Directory.Exists(Custom.RootFolderDirectory() + Path.DirectorySeparatorChar + "UserData" + Path.DirectorySeparatorChar + "Warp"))
+            if (Directory.Exists(rootFolder + "Warp"))
             {
-                File.WriteAllText(savePath, Warp.Resources.Colors);
+                //File.WriteAllText(savePath, Warp.Resources.Colors);
             }
             Load();
             Debug.Log("Custom Warp colors loaded");
