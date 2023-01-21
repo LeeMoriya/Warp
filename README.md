@@ -19,6 +19,7 @@ Warp also features a color customiser so that you can adjust the colors used for
 
 ## Requirements:
 Warp versions v1.71 and above are for Rain World Remix (1.9)
+
 Warp version v1.7 and below are for Rain World 1.5 (Available as a beta branch in Steam)
 
 ## Download:
