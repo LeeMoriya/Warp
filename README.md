@@ -17,26 +17,10 @@ Warp also features a color customiser so that you can adjust the colors used for
 
 ![Colors](https://i.imgur.com/BxFdGyq.png)
 
-### MapWarp
-Warp v1.6 and up features MapWarp, created by [Henpemaz](https://github.com/henpemaz). This allows you to warp to rooms at the exact coordinates you click on via the Dev Tools Map tab.
-
-### DevConsole Support
-Warp v1.65 and up features support for Slime_Cubed's [DevConsole](https://github.com/SlimeCubed/DevConsole/releases) mod, allowing you to use the following commands:
-- `warp help` - Show the following commands and their usage:
-- `warp all` - Parses all installed regions for room names and adds them to auto-complete.
-- `warp XX` - Where XX is a region acronym, adds that region's rooms to auto-complete.
-- `warp` - Followed by the name of the room you wish to warp to (case-sensitive!).
-
 ## Requirements:
-Extended DevTools is not required but is recommended [Link](https://drive.google.com/file/d/1X9EQbZ__lla36YLKYijvwsshyEwy7QA7/view)
+Warp versions v1.71 and above are for Rain World Remix (1.9)
+Warp version v1.7 and below are for Rain World 1.5 (Available as a beta branch in Steam)
 
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.7)
-
-This mod also supports AutoUpdate.
-
-## Special Thanks:
-Slime_Cubed - For contributing the initial seamless region switching code.
-
-Henpemaz - For creating MapWarp
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.71)
