@@ -9,6 +9,12 @@ using UnityEngine;
 
 class RoomFinder
 {
+    public List<string> blacklist = new List<string>()
+    {
+        "hr_layers_of_reality",
+        "vs_basement01",
+        "vs_basement02"
+    };
     public List<RoomInfo> DebugList(int rooms, int cameras)
     {
         List<RoomInfo> debugList = new List<RoomInfo>();
@@ -39,120 +45,22 @@ class RoomFinder
         return debugList;
     }
 
-    public List<string> RoomList(string region, bool CRS)
+    public bool RoomBlacklist(string roomName)
     {
-        string[] array = new string[]
+        if (blacklist.Contains(roomName))
         {
-            string.Empty
-        };
-        string rootFolder = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar;
-        //Vanilla region
-        if (File.Exists(string.Concat(new object[]
-        {
-            rootFolder,
-            "World",
-            Path.DirectorySeparatorChar,
-            region,
-            Path.DirectorySeparatorChar,
-            "world_",
-            region,
-            ".txt"
-        })))
-        {
-            array = File.ReadAllLines(string.Concat(new object[]
-            {
-                rootFolder,
-                "World",
-                Path.DirectorySeparatorChar,
-                region,
-                Path.DirectorySeparatorChar,
-                "world_",
-                region,
-                ".txt"
-            }));
+            return true;
         }
-        //Get list of rooms between ROOMS and END ROOMS
-        bool flag = false;
-        List<string> roomList = new List<string>();
-        for (int i = 0; i < array.Length; i++)
-        {
-            if (array[i] == "END ROOMS")
-            {
-                break;
-            }
-            if (flag && array[i].Length > 0 && array[i][0] != ' ' && array[i][0] != '/')
-            {
-                string[] roomName = Regex.Split(array[i], " : ");
-                if (roomName != null)
-                {
-                    roomList.Add(roomName[0]);
-                }
-            }
-            //ROOMS section starts
-            if (array[i] == "ROOMS")
-            {
-                flag = true;
-            }
-        }
-        //Custom Region
-        if (CRS)
-        {
-            if (Directory.Exists(string.Concat(new object[]
-            {
-                rootFolder,
-                "Mods",
-                Path.DirectorySeparatorChar,
-                "CustomResources"
-            })))
-            {
-                foreach (string dir in Directory.GetDirectories(rootFolder + "Mods" + Path.DirectorySeparatorChar + "CustomResources"))
-                {
-                    if (Directory.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region))
-                    {
-                        if (File.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "world_" + region + ".txt"))
-                        {
-                            array = File.ReadAllLines(string.Concat(new object[]
-                            {
-                            dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region,
-                            Path.DirectorySeparatorChar,
-                            "world_",
-                            region,
-                            ".txt"
-                            }));
-                            bool flag2 = false;
-                            for (int i = 0; i < array.Length; i++)
-                            {
-                                if (array[i] == "END ROOMS")
-                                {
-                                    break;
-                                }
-                                if (flag2)
-                                {
-                                    string[] roomName = Regex.Split(array[i], " : ");
-                                    if (roomName != null && !roomList.Contains(roomName[0]) && (roomName[0].StartsWith(region) || roomName[0].StartsWith("GATE")))
-                                    {
-                                        roomList.Add(roomName[0]);
-                                    }
-                                }
-                                if (array[i] == "ROOMS")
-                                {
-                                    flag2 = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return roomList;
+        return false;
     }
 
-    public List<RoomInfo> Generate(string region, bool CRS)
+    public List<RoomInfo> Generate(string region)
     {
         string rootFolder = Custom.RootFolderDirectory() + Path.DirectorySeparatorChar;
-        CRS = true;
         List<RoomInfo> roomList = new List<RoomInfo>();
-        List<RoomInfo> crsRoomList = new List<RoomInfo>();
+        List<RoomInfo> moddedRoomList = new List<RoomInfo>();
+
+        //-----VANILLA-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
         //Vanilla Rooms
         string[] array = new string[]
@@ -244,18 +152,20 @@ class RoomFinder
                 }
             }
         }
-        //Check the CustomResources folder for custom regions
-        //Check that the region is activated in the .json file
-        //If it is, check that the chosen region exists in this regionPack
-        //If it does, add a path to this modded region folder to a list
+
+        //-----MOD FOLDERS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        //check mods folder for new regions
         List<string> moddedPaths = new List<string>();
-        if (CRS)
+
+        string dir = rootFolder + "mods";
+        string[] modFolders = Directory.GetDirectories(dir);
+
+        for (int m = 0; m < modFolders.Length; m++)
         {
-            string dir = rootFolder + "mods" + Path.DirectorySeparatorChar + "moreslugcats";
-            //Region pack is activated, check if matching region XX is found in pack Regions folder
-            if (File.Exists(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "World_" + region + ".txt"))
+            if (File.Exists(modFolders[m] + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "World_" + region + ".txt"))
             {
-                moddedPaths.Add(dir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region);
+                moddedPaths.Add(modFolders[m] + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region);
             }
             //Add modded rooms to roomList
             List<string> vanillaRoomNames = new List<string>();
@@ -269,20 +179,20 @@ class RoomFinder
 
             for (int i = 0; i < moddedPaths.Count; i++)
             {
-                bool crsRoomSection = false;
-                string[] crsWorldFile = File.ReadAllLines(moddedPaths[i] + Path.DirectorySeparatorChar + "World_" + region + ".txt");
-                for (int l = 0; l < crsWorldFile.Length; l++)
+                bool modRoomSection = false;
+                string[] modWorldFile = File.ReadAllLines(moddedPaths[i] + Path.DirectorySeparatorChar + "World_" + region + ".txt");
+                for (int l = 0; l < modWorldFile.Length; l++)
                 {
-                    if (crsWorldFile[l] == "END ROOMS")
+                    if (modWorldFile[l] == "END ROOMS")
                     {
                         break;
                     }
-                    if (crsRoomSection)
+                    if (modRoomSection)
                     {
                         RoomInfo info = new RoomInfo();
-                        if (crsWorldFile[l].Length > 0 && !crsWorldFile[l].StartsWith("//"))
+                        if (modWorldFile[l].Length > 0 && !modWorldFile[l].StartsWith("//"))
                         {
-                            string[] roomLine = Regex.Split(crsWorldFile[l], " : ");
+                            string[] roomLine = Regex.Split(modWorldFile[l], " : ");
                             if (roomLine != null)
                             {
                                 //Assign Room Name
@@ -296,10 +206,10 @@ class RoomFinder
                                     info.name = roomLine[0];
                                 }
                                 // hide easter egg maps from warp menu
-                                if (info.name.ToLowerInvariant() == "hr_layers_of_reality"
-                                    || info.name.ToLowerInvariant() == "vs_basement01"
-                                    || info.name.ToLowerInvariant() == "vs_basement02")
+                                if (RoomBlacklist(info.name.ToLowerInvariant()))
+                                {
                                     continue;
+                                }
                                 //Check Room Tag - Default = Room
                                 info.type = RoomInfo.RoomType.Room;
                                 if (roomLine.Length > 2)
@@ -326,23 +236,121 @@ class RoomFinder
                                 //If this room isn't vanilla, add it
                                 if (!vanillaRoomNames.Contains(info.name))
                                 {
-                                    crsRoomList.Add(info);
+                                    moddedRoomList.Add(info);
                                 }
                                 //if there is already a room with this name but the type is different, add it
                                 else if (roomList.Exists(x => x.name == info.name && x.type != info.type))
                                 {
-                                    crsRoomList.Add(info);
+                                    moddedRoomList.Add(info);
                                 }
                             }
                         }
                     }
-                    if (crsWorldFile[l] == "ROOMS")
+                    if (modWorldFile[l] == "ROOMS")
                     {
-                        crsRoomSection = true;
+                        modRoomSection = true;
                     }
                 }
             }
         }
+
+        //-----MERGE MODS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+        //check mergemods folder for rooms added to existing regions
+        List<string> mergePaths = new List<string>();
+
+        string mergeDir = rootFolder + "mergedmods";
+
+        if (File.Exists(mergeDir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region + Path.DirectorySeparatorChar + "World_" + region + ".txt"))
+        {
+            mergePaths.Add(mergeDir + Path.DirectorySeparatorChar + "World" + Path.DirectorySeparatorChar + region);
+        }
+        //Add modded rooms to roomList
+        List<string> roomNames = new List<string>();
+        if (roomList.Count > 0)
+        {
+            for (int i = 0; i < roomList.Count; i++)
+            {
+                roomNames.Add(roomList[i].name);
+            }
+        }
+
+        for (int i = 0; i < mergePaths.Count; i++)
+        {
+            bool modRoomSection = false;
+            string[] modWorldFile = File.ReadAllLines(mergePaths[i] + Path.DirectorySeparatorChar + "World_" + region + ".txt");
+            for (int l = 0; l < modWorldFile.Length; l++)
+            {
+                if (modWorldFile[l] == "END ROOMS")
+                {
+                    break;
+                }
+                if (modRoomSection)
+                {
+                    RoomInfo info = new RoomInfo();
+                    if (modWorldFile[l].Length > 0 && !modWorldFile[l].StartsWith("//"))
+                    {
+                        string[] roomLine = Regex.Split(modWorldFile[l], " : ");
+                        if (roomLine != null)
+                        {
+                            //Assign Room Name
+                            if (roomLine[0].Contains(")"))
+                            {
+                                info.name = Regex.Split(roomLine[0], "\\)")[1];
+                                Debug.Log(info.name);
+                            }
+                            else
+                            {
+                                info.name = roomLine[0];
+                            }
+                            // hide easter egg maps from warp menu
+                            if (RoomBlacklist(info.name.ToLowerInvariant()))
+                            {
+                                continue;
+                            }
+                            //Check Room Tag - Default = Room
+                            info.type = RoomInfo.RoomType.Room;
+                            if (roomLine.Length > 2)
+                            {
+                                switch (roomLine[2])
+                                {
+                                    case "GATE":
+                                        info.type = RoomInfo.RoomType.Gate;
+                                        break;
+                                    case "SHELTER":
+                                        info.type = RoomInfo.RoomType.Shelter;
+                                        break;
+                                    case "SWARMROOM":
+                                        info.type = RoomInfo.RoomType.SwarmRoom;
+                                        break;
+                                    case "SCAVTRADER":
+                                        info.type = RoomInfo.RoomType.ScavTrader;
+                                        break;
+                                    case "SCAVOUTPOST":
+                                        info.type = RoomInfo.RoomType.ScavOutpost;
+                                        break;
+                                }
+                            }
+                            //If this room isn't vanilla, add it
+                            if (!roomNames.Contains(info.name))
+                            {
+                                moddedRoomList.Add(info);
+                            }
+                            //if there is already a room with this name but the type is different, add it
+                            else if (roomList.Exists(x => x.name == info.name && x.type != info.type))
+                            {
+                                moddedRoomList.Add(info);
+                            }
+                        }
+                    }
+                }
+                if (modWorldFile[l] == "ROOMS")
+                {
+                    modRoomSection = true;
+                }
+            }
+        }
+
         //Grab number of cameras from each room file
         string[] roomFile = new string[]
         {
@@ -386,43 +394,42 @@ class RoomFinder
             }
         }
         //Check for cameras from modded regions
-        if (CRS)
+
+        string[] crsRoomFile = new string[]
         {
-            string[] crsRoomFile = new string[]
-            {
                 string.Empty
-            };
-            for (int i = 0; i < moddedPaths.Count; i++)
+        };
+        for (int i = 0; i < moddedPaths.Count; i++)
+        {
+            foreach (RoomInfo info in moddedRoomList)
             {
-                foreach (RoomInfo info in crsRoomList)
+                //Check if Room .txt Exists
+                if (File.Exists(string.Concat(new object[]
                 {
-                    //Check if Room .txt Exists
-                    if (File.Exists(string.Concat(new object[]
-                    {
                         moddedPaths[i] + "-Rooms" + Path.DirectorySeparatorChar +  info.name + ".txt"
-                    })))
-                    //Load Room .txt into Array
+                })))
+                //Load Room .txt into Array
+                {
+                    crsRoomFile = File.ReadAllLines(string.Concat(new object[]
                     {
-                        crsRoomFile = File.ReadAllLines(string.Concat(new object[]
-                        {
                             moddedPaths[i] + "-Rooms" + Path.DirectorySeparatorChar + info.name + ".txt"
-                        }));
-                        //Split line with camera info
-                        if (crsRoomFile != new string[] { string.Empty } && crsRoomFile.Length > 3)
+                    }));
+                    //Split line with camera info
+                    if (crsRoomFile != new string[] { string.Empty } && crsRoomFile.Length > 3)
+                    {
+                        string[] cameras = crsRoomFile[3].Split(new char[]
                         {
-                            string[] cameras = crsRoomFile[3].Split(new char[]
-                            {
                             '|'
-                            });
-                            if (cameras != null)
-                            {
-                                info.cameras = cameras.Length;
-                            }
+                        });
+                        if (cameras != null)
+                        {
+                            info.cameras = cameras.Length;
                         }
                     }
                 }
             }
         }
+
         //Grab each room's subregion from the map .txt
         List<string> subregionNames = new List<string>();
         string[] propFile = new string[]
@@ -541,98 +548,96 @@ class RoomFinder
                 }
             }
         }
-        if (CRS)
+
+        for (int c = 0; c < moddedPaths.Count; c++)
         {
-            for (int c = 0; c < moddedPaths.Count; c++)
+            //Grab each room's subregion from the map .txt
+            string[] crsPropFile = new string[]
             {
-                //Grab each room's subregion from the map .txt
-                string[] crsPropFile = new string[]
-                {
                     string.Empty
-                };
-                //Check Properties .txt exists
-                if (File.Exists(string.Concat(new object[]
-                {
+            };
+            //Check Properties .txt exists
+            if (File.Exists(string.Concat(new object[]
+            {
                     moddedPaths[c] + Path.DirectorySeparatorChar + "Properties.txt",
-                })))
-                //Load Properties .txt into String Array
+            })))
+            //Load Properties .txt into String Array
+            {
+                crsPropFile = File.ReadAllLines(string.Concat(new object[]
                 {
-                    crsPropFile = File.ReadAllLines(string.Concat(new object[]
-                    {
                         moddedPaths[c] + Path.DirectorySeparatorChar + "Properties.txt",
-                    }));
-                    if (crsPropFile != new string[] { string.Empty })
+                }));
+                if (crsPropFile != new string[] { string.Empty })
+                {
+                    subregionNames = new List<string>();
+                    subregionNames.Add("None");
+                    for (int i = 0; i < crsPropFile.Length; i++)
                     {
-                        subregionNames = new List<string>();
-                        subregionNames.Add("None");
-                        for (int i = 0; i < crsPropFile.Length; i++)
+                        if (crsPropFile[i].StartsWith("Subregion"))
                         {
-                            if (crsPropFile[i].StartsWith("Subregion"))
+                            //[0] Room Name - [1] prop Data
+                            string[] subName = Regex.Split(Custom.ValidateSpacedDelimiter(crsPropFile[i], ":"), ": ");
+                            if (subName.Length > 0)
                             {
-                                //[0] Room Name - [1] prop Data
-                                string[] subName = Regex.Split(Custom.ValidateSpacedDelimiter(crsPropFile[i], ":"), ": ");
-                                if (subName.Length > 0)
-                                {
-                                    subregionNames.Add(subName[1]);
-                                }
+                                subregionNames.Add(subName[1]);
                             }
-                        }
-                        if (!WarpModMenu.subregionNames.ContainsKey(region))
-                        {
-                            WarpModMenu.subregionNames.Add(region, subregionNames);
-                        }
-                        else
-                        {
-                            WarpModMenu.subregionNames[region] = subregionNames;
                         }
                     }
+                    if (!WarpModMenu.subregionNames.ContainsKey(region))
+                    {
+                        WarpModMenu.subregionNames.Add(region, subregionNames);
+                    }
+                    else
+                    {
+                        WarpModMenu.subregionNames[region] = subregionNames;
+                    }
                 }
-                //Grab each room's subregion from the map .txt
-                string[] crsMapFile = new string[]
-                {
+            }
+            //Grab each room's subregion from the map .txt
+            string[] crsMapFile = new string[]
+            {
                     string.Empty
-                };
-                //Check Map .txt exists
-                if (File.Exists(string.Concat(new object[]
-                {
+            };
+            //Check Map .txt exists
+            if (File.Exists(string.Concat(new object[]
+            {
                     moddedPaths[c] + Path.DirectorySeparatorChar + "map_" + region + ".txt"
-                })))
-                //Load Map .txt into String Array
+            })))
+            //Load Map .txt into String Array
+            {
+                crsMapFile = File.ReadAllLines(string.Concat(new object[]
                 {
-                    crsMapFile = File.ReadAllLines(string.Concat(new object[]
-                    {
                         moddedPaths[c] + Path.DirectorySeparatorChar + "map_" + region + ".txt"
-                    }));
-                    if (crsMapFile != new string[] { string.Empty })
+                }));
+                if (crsMapFile != new string[] { string.Empty })
+                {
+                    for (int i = 0; i < crsMapFile.Length; i++)
                     {
-                        for (int i = 0; i < crsMapFile.Length; i++)
+                        if (crsMapFile[i].StartsWith("Off") || crsMapFile[i].StartsWith("Connection"))
                         {
-                            if (crsMapFile[i].StartsWith("Off") || crsMapFile[i].StartsWith("Connection"))
+                            continue;
+                        }
+                        //[0] Room Name - [1] Map Data
+                        string[] nameAndInfo = Regex.Split(Custom.ValidateSpacedDelimiter(crsMapFile[i], ":"), ": ");
+                        //Find matching room in RoomList and give it its subregion number
+                        foreach (RoomInfo info in moddedRoomList)
+                        {
+                            if (info.name == nameAndInfo[0])
                             {
-                                continue;
-                            }
-                            //[0] Room Name - [1] Map Data
-                            string[] nameAndInfo = Regex.Split(Custom.ValidateSpacedDelimiter(crsMapFile[i], ":"), ": ");
-                            //Find matching room in RoomList and give it its subregion number
-                            foreach (RoomInfo info in crsRoomList)
-                            {
-                                if (info.name == nameAndInfo[0])
-                                {
-                                    //Split Map Data by delimiter, last item in the array is subregion number
-                                    string subRegionName = null;
-                                    string[] spl = Regex.Split(nameAndInfo[1], "><");
-                                    if (spl.Length >= 6)
-                                        subRegionName = (spl[5].Trim() == "" ? null : spl[5].Trim());
+                                //Split Map Data by delimiter, last item in the array is subregion number
+                                string subRegionName = null;
+                                string[] spl = Regex.Split(nameAndInfo[1], "><");
+                                if (spl.Length >= 6)
+                                    subRegionName = (spl[5].Trim() == "" ? null : spl[5].Trim());
 
-                                    info.subregion = 0;
-                                    info.subregionName = "None";
-                                    for (int j = 1; j < subregionNames.Count; j++)
+                                info.subregion = 0;
+                                info.subregionName = "None";
+                                for (int j = 1; j < subregionNames.Count; j++)
+                                {
+                                    if (subregionNames[j] == subRegionName)
                                     {
-                                        if (subregionNames[j] == subRegionName)
-                                        {
-                                            info.subregionName = subRegionName;
-                                            info.subregion = j;
-                                        }
+                                        info.subregionName = subRegionName;
+                                        info.subregion = j;
                                     }
                                 }
                             }
@@ -642,10 +647,11 @@ class RoomFinder
             }
         }
 
-        if (CRS)
+
+        if (moddedRoomList != null && moddedRoomList.Count > 0)
         {
             //Combining the two lists
-            foreach (RoomInfo info in crsRoomList)
+            foreach (RoomInfo info in moddedRoomList)
             {
                 if (info.subregionName == "Null")
                 {
@@ -693,7 +699,6 @@ class RoomFinder
         return roomList;
     }
 }
-
 
 public class RoomInfo : IComparable<RoomInfo>, IEquatable<RoomInfo>
 {

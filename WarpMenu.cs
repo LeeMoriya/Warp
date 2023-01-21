@@ -79,9 +79,9 @@ public class WarpModMenu
     private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
     {
         orig.Invoke(self, str, game);
-        if (game != null && WarpModMenu.WarpEnabled(game) && WarpModMenu.denPos != "NONE")
+        if (game != null && WarpEnabled(game) && denPos != "NONE")
         {
-            self.denPosition = WarpModMenu.denPos;
+            self.denPosition = denPos;
         }
     }
 
@@ -106,18 +106,18 @@ public class WarpModMenu
 
     public static void WarpPreInit(RainWorldGame game)
     {
-        if (WarpModMenu.WarpEnabled(game))
+        if (WarpEnabled(game))
         {
             WarpSettings.Load();
-            WarpModMenu.warpActive = false;
+            warpActive = false;
         }
     }
 
     public static void WarpInit(RainWorldGame game, PauseMenu self)
     {
-        if (WarpModMenu.WarpEnabled(game) && game.IsStorySession)
+        if (WarpEnabled(game) && game.IsStorySession)
         {
-            if (self.controlMap != null && WarpModMenu.showMenu)
+            if (self.controlMap != null && showMenu)
             {
                 self.controlMap.pos.y = -2000f;
                 self.controlMap.lastPos.y = -2000f;
@@ -126,57 +126,71 @@ public class WarpModMenu
             if (game.Players.Count > 0 && game.Players[0] != null && game.Players[0].realizedCreature != null && !game.Players[0].realizedCreature.inShortcut)
             {
                 Vector2 offset = new Vector2();
-                if (!WarpModMenu.showMenu)
+                if (!showMenu)
                 {
                     offset.y = -2000f;
                 }
-                WarpModMenu.warpContainer = new WarpModMenu.WarpContainer(self, self.pages[0], self.pages[0].pos + offset, new Vector2());
-                self.pages[0].subObjects.Add(WarpModMenu.warpContainer);
+                try
+                {
+                    warpContainer = new WarpContainer(self, self.pages[0], self.pages[0].pos + offset, new Vector2());
+                    self.pages[0].subObjects.Add(warpContainer);
 
-                WarpButton toggle = new WarpButton(self, self.pages[0], "HIDE", "toggleWarp", new Vector2(21f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20), new Color(1f, 0f, 0f));
-                if (WarpModMenu.showMenu)
-                {
-                    toggle.menuLabel.text = "HIDE";
-                    toggle.color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
+                    WarpButton toggle = new WarpButton(self, self.pages[0], "HIDE", "toggleWarp", new Vector2(21f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20), new Color(1f, 0f, 0f));
+                    if (showMenu)
+                    {
+                        toggle.menuLabel.text = "HIDE";
+                        toggle.color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
+                    }
+                    else
+                    {
+                        toggle.menuLabel.text = "WARP";
+                        toggle.color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.VeryDarkGrey);
+                    }
+                    self.pages[0].subObjects.Add(toggle);
                 }
-                else
+                catch (Exception e)
                 {
-                    toggle.menuLabel.text = "WARP";
-                    toggle.color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.VeryDarkGrey);
+                    MenuLabel errorLabel = new MenuLabel(self, self.pages[0], "WARP ENCOUNTERED AN ERROR DURING INITIALIZATION", new Vector2(683f, 400f), new Vector2(), true);
+                    self.pages[0].subObjects.Add(errorLabel);
+
+                    MenuLabel error = new MenuLabel(self, self.pages[0], e.Message, new Vector2(683f, 365f), new Vector2(), true);
+                    error.label.anchorY = 1f;
+                    self.pages[0].subObjects.Add(error);
+
+                    Debug.LogException(e);
                 }
-                self.pages[0].subObjects.Add(toggle);
             }
         }
     }
 
     public static void WarpUpdate(RainWorldGame game, PauseMenu self)
     {
-        if (WarpModMenu.WarpEnabled(game))
+        if (WarpEnabled(game))
         {
             self.pages[0].pos.x = 0f;
-            if (Input.GetKey(KeyCode.C) && WarpModMenu.denPos != "NONE")
+            if (Input.GetKey(KeyCode.C) && denPos != "NONE")
             {
-                WarpModMenu.denPos = "NONE";
-                WarpModMenu.updateDenText = true;
+                denPos = "NONE";
+                updateDenText = true;
             }
-            if (WarpModMenu.updateRoomButtons)
+            if (updateRoomButtons)
             {
-                WarpModMenu.updateRoomButtons = false;
+                updateRoomButtons = false;
                 self.init = false;
-                if (!WarpModMenu.masterRoomList.ContainsKey(WarpModMenu.newRegion))
+                if (!masterRoomList.ContainsKey(newRegion))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(WarpModMenu.newRegion, false);
-                    WarpModMenu.warpContainer.GenerateRoomButtons(roomList, WarpModMenu.sortType, WarpModMenu.viewType);
+                    List<RoomInfo> roomList = rf.Generate(newRegion);
+                    warpContainer.GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
                 {
-                    WarpModMenu.warpContainer.GenerateRoomButtons(WarpModMenu.masterRoomList[WarpModMenu.newRegion], WarpModMenu.sortType, WarpModMenu.viewType);
+                    warpContainer.GenerateRoomButtons(masterRoomList[newRegion], sortType, viewType);
                 }
                 //Stats
-                if (WarpModMenu.warpContainer != null && WarpModMenu.warpContainer.warpStats != null)
+                if (warpContainer != null && warpContainer.warpStats != null)
                 {
-                    WarpModMenu.warpContainer.warpStats.GenerateStats(WarpModMenu.newRegion, "");
+                    warpContainer.warpStats.GenerateStats(newRegion, "");
                 }
             }
         }
@@ -184,54 +198,54 @@ public class WarpModMenu
 
     public static void WarpSignal(PauseMenu self, RainWorldGame game, MenuObject sender, string message)
     {
-        if (WarpModMenu.WarpEnabled(game))
+        if (WarpEnabled(game))
         {
             if (message.EndsWith("warp"))
             {
                 string room = message.Remove(message.Length - 4, 4);
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 {
-                    WarpModMenu.denPos = room;
+                    denPos = room;
                     self.PlaySound(SoundID.MENU_Player_Join_Game);
-                    WarpModMenu.updateDenText = true;
+                    updateDenText = true;
                 }
                 else
                 {
-                    //if (WarpModMenu.mode == Mode.Warp)
+                    //if (mode == Mode.Warp)
                     //{
-                    WarpModMenu.newRoom = room;
-                    WarpModMenu.warpActive = true;
+                    newRoom = room;
+                    warpActive = true;
                     Debug.Log("WARP: Room warp initiated for: " + room);
                     self.Singal(null, "CONTINUE");
                     //}
                     //else
                     //{
-                    //    if(WarpModMenu.warpContainer.warpStats != null)
+                    //    if(warpContainer.warpStats != null)
                     //    {
-                    //        WarpModMenu.warpContainer.warpStats.RemoveSprites();
-                    //        WarpModMenu.warpContainer.RemoveSubObject(WarpModMenu.warpContainer.warpStats);
+                    //        warpContainer.warpStats.RemoveSprites();
+                    //        warpContainer.RemoveSubObject(warpContainer.warpStats);
                     //    }
-                    //    WarpModMenu.warpContainer.warpStats = new WarpStats(self, WarpModMenu.warpContainer, new Vector2(), new Vector2());
-                    //    WarpModMenu.warpContainer.warpStats.GenerateStats(newRegion, room);
-                    //    WarpModMenu.warpContainer.subObjects.Add(WarpModMenu.warpContainer.warpStats);
+                    //    warpContainer.warpStats = new WarpStats(self, warpContainer, new Vector2(), new Vector2());
+                    //    warpContainer.warpStats.GenerateStats(newRegion, room);
+                    //    warpContainer.subObjects.Add(warpContainer.warpStats);
                     //}
                 }
                 WarpSettings.Save();
             }
             else if (message.EndsWith("reg"))
             {
-                WarpModMenu.newRegion = message.Remove(message.Length - 3, 3);
-                WarpModMenu.warpActive = false;
-                Debug.Log("WARP: Loading room list for: " + WarpModMenu.newRegion);
+                newRegion = message.Remove(message.Length - 3, 3);
+                warpActive = false;
+                Debug.Log("WARP: Loading room list for: " + newRegion);
                 self.PlaySound(SoundID.MENU_Add_Level);
-                WarpModMenu.updateRoomButtons = true;
+                updateRoomButtons = true;
                 WarpSettings.Save();
             }
             else if (message == "toggleWarp")
             {
-                if (WarpModMenu.showMenu)
+                if (showMenu)
                 {
-                    WarpModMenu.showMenu = false;
+                    showMenu = false;
                     (sender as WarpButton).color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.VeryDarkGrey);
                     (sender as WarpButton).menuLabel.text = "WARP";
                     if (self.controlMap != null)
@@ -242,7 +256,7 @@ public class WarpModMenu
                 }
                 else
                 {
-                    WarpModMenu.showMenu = true;
+                    showMenu = true;
                     (sender as WarpButton).color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
                     (sender as WarpButton).menuLabel.text = "HIDE";
                     if (self.controlMap != null)
@@ -258,49 +272,49 @@ public class WarpModMenu
 
     public static void WarpOverworldUpdate(OverWorld self, RainWorldGame game)
     {
-        if (WarpModMenu.WarpEnabled(game))
+        if (WarpEnabled(game))
         {
             Player player = (self.game.Players.Count <= 0) ? null : (self.game.Players[0].realizedCreature as Player);
-            if (WarpModMenu.warpActive)
+            if (warpActive)
             {
                 if (player == null || player.inShortcut)
                 {
                     return;
                 }
                 //New region selected, initiate Region Switcher
-                if ((WarpModMenu.newRegion != null && WarpModMenu.newRegion.Length == 2 && WarpModMenu.newRegion != self.activeWorld.region.name))
+                if ((newRegion != null && newRegion.Length == 2 && newRegion != self.activeWorld.region.name))
                 {
                     RegionSwitcher rs = new RegionSwitcher();
                     try
                     {
-                        WarpModMenu.warpError = "";
-                        rs.SwitchRegions(self.game, WarpModMenu.newRegion, WarpModMenu.newRoom, new IntVector2(0, 0));
+                        warpError = "";
+                        rs.SwitchRegions(self.game, newRegion, newRoom, new IntVector2(0, 0));
                     }
                     catch (Exception e)
                     {
                         Debug.LogException(e);
                         Debug.Log("WARP ERROR: " + rs.GetErrorText(rs.error));
-                        WarpModMenu.warpError = rs.GetErrorText(rs.error);
+                        warpError = rs.GetErrorText(rs.error);
                         self.game.pauseMenu = new Menu.PauseMenu(self.game.manager, self.game);
 
                     }
-                    WarpModMenu.warpActive = false;
+                    warpActive = false;
                 }
                 //New room in same region selected
                 else
                 {
                     //Get the abstract room
-                    if (WarpModMenu.switchRoom == null || WarpModMenu.switchRoom.name != WarpModMenu.newRoom)
+                    if (switchRoom == null || switchRoom.name != newRoom)
                     {
-                        WarpModMenu.switchRoom = self.game.world.GetAbstractRoom(WarpModMenu.newRoom);
+                        switchRoom = self.game.world.GetAbstractRoom(newRoom);
                     }
                     //Realise it if its still abstract
-                    if (WarpModMenu.switchRoom != null && WarpModMenu.switchRoom.realizedRoom == null)
+                    if (switchRoom != null && switchRoom.realizedRoom == null)
                     {
-                        WarpModMenu.switchRoom.RealizeRoom(self.game.world, self.game);
+                        switchRoom.RealizeRoom(self.game.world, self.game);
                     }
                     //Move each player to the new room
-                    if (WarpModMenu.switchRoom.realizedRoom != null && WarpModMenu.switchRoom.realizedRoom.ReadyForPlayer && player != null && player.room != WarpModMenu.switchRoom.realizedRoom)
+                    if (switchRoom.realizedRoom != null && switchRoom.realizedRoom.ReadyForPlayer && player != null && player.room != switchRoom.realizedRoom)
                     {
                         for (int i = 0; i < self.game.Players.Count; i++)
                         {
@@ -314,8 +328,8 @@ public class WarpModMenu
                                     }
                                 }
                             }
-                            self.game.Players[i].realizedCreature.abstractCreature.Move(WarpModMenu.switchRoom.realizedRoom.LocalCoordinateOfNode(0));
-                            self.game.Players[i].realizedCreature.PlaceInRoom(WarpModMenu.switchRoom.realizedRoom);
+                            self.game.Players[i].realizedCreature.abstractCreature.Move(switchRoom.realizedRoom.LocalCoordinateOfNode(0));
+                            self.game.Players[i].realizedCreature.PlaceInRoom(switchRoom.realizedRoom);
                             self.game.Players[i].realizedCreature.abstractCreature.ChangeRooms(player.room.GetWorldCoordinate(player.mainBodyChunk.pos));
                         }
                     }
@@ -326,18 +340,18 @@ public class WarpModMenu
                         {
                             if ((self.game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
                             {
-                                (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(WarpModMenu.switchRoom.realizedRoom);
+                                (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(switchRoom.realizedRoom);
                                 (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.room = (self.game.Players[i].realizedCreature as Player).room;
                             }
                         }
                     }
                     //Move players to the first entrance, move the room camera
-                    if (player != null && player.room == WarpModMenu.switchRoom.realizedRoom)
+                    if (player != null && player.room == switchRoom.realizedRoom)
                     {
                         self.game.cameras[0].virtualMicrophone.AllQuiet();
                         self.game.cameras[0].MoveCamera(player.room, 0);
-                        WarpModMenu.warpActive = false;
-                        WarpModMenu.switchRoom = null;
+                        warpActive = false;
+                        switchRoom = null;
                     }
                 }
             }
@@ -346,7 +360,7 @@ public class WarpModMenu
 
     public static bool WarpEnabled(RainWorldGame game)
     {
-        return ModManager.DevTools && game.devToolsActive && game.IsStorySession && (!ModManager.MSC || !game.rainWorld.safariMode);
+        return game.IsStorySession && (!ModManager.MSC || !game.rainWorld.safariMode);
     }
 
     public class WarpContainer : RectangularMenuObject
@@ -470,7 +484,7 @@ public class WarpModMenu
                 if (!masterRoomList.ContainsKey(game.world.region.name))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(game.world.region.name, true);
+                    List<RoomInfo> roomList = rf.Generate(game.world.region.name);
                     GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
@@ -558,7 +572,7 @@ public class WarpModMenu
                         if (!masterRoomList.ContainsKey(game.overWorld.regions[loadCount].name))
                         {
                             RoomFinder rf = new RoomFinder();
-                            List<RoomInfo> temp = rf.Generate(game.overWorld.regions[loadCount].name, true);
+                            List<RoomInfo> temp = rf.Generate(game.overWorld.regions[loadCount].name);
                             menu.PlaySound(SoundID.MENU_Add_Level);
                         }
                         else
@@ -679,7 +693,7 @@ public class WarpModMenu
             }
             if (message == "STATS")
             {
-                if (WarpModMenu.mode == Mode.Warp)
+                if (mode == Mode.Warp)
                 {
                     //Enable Stats mode
                     if (warpStats != null)
@@ -688,7 +702,7 @@ public class WarpModMenu
                         warpStats.RemoveSprites();
                         warpStats = null;
                     }
-                    WarpModMenu.mode = Mode.Stats;
+                    mode = Mode.Stats;
                     (sender as WarpButton).color = new Color(1f, 0.85f, 0f);
                     warpStats = new WarpStats(menu, this, new Vector2(), new Vector2());
                     warpStats.GenerateStats(newRegion, "");
@@ -699,7 +713,7 @@ public class WarpModMenu
                 else
                 {
                     //Disable Stats mode
-                    WarpModMenu.mode = Mode.Warp;
+                    mode = Mode.Warp;
                     (sender as WarpButton).color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
                     //(sender as WarpButton).menuLabel.text = "WARP";
                     if (warpStats != null)
@@ -776,7 +790,7 @@ public class WarpModMenu
                 if (!masterRoomList.ContainsKey(newRegion))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(newRegion, true);
+                    List<RoomInfo> roomList = rf.Generate(newRegion);
                     GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
@@ -789,7 +803,7 @@ public class WarpModMenu
                 if (!masterRoomList.ContainsKey(game.world.region.name))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(game.world.region.name, true);
+                    List<RoomInfo> roomList = rf.Generate(game.world.region.name);
                     GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
@@ -889,9 +903,9 @@ public class WarpModMenu
                             }
                         case ViewType.Subregion:
                             {
-                                if (ColorInfo.customSubregionColors.ContainsKey(WarpModMenu.newRegion))
+                                if (ColorInfo.customSubregionColors.ContainsKey(newRegion))
                                 {
-                                    color = ColorInfo.customSubregionColors[WarpModMenu.newRegion][info.subregion].rgb;
+                                    color = ColorInfo.customSubregionColors[newRegion][info.subregion].rgb;
                                 }
                                 else
                                 {
@@ -1051,11 +1065,11 @@ public class WarpModMenu
                             {
                                 MenuLabel label = new MenuLabel(menu, this, WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
                                 label.label.alignment = FLabelAlignment.Left;
-                                while (WarpModMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[WarpModMenu.newRegion].Count)
+                                while (WarpModMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[newRegion].Count)
                                 {
-                                    ColorInfo.customSubregionColors[WarpModMenu.newRegion].Add(new HSLColor(1f, 1f, 1f));
+                                    ColorInfo.customSubregionColors[newRegion].Add(new HSLColor(1f, 1f, 1f));
                                 }
-                                label.label.color = ColorInfo.customSubregionColors[WarpModMenu.newRegion][i].rgb;
+                                label.label.color = ColorInfo.customSubregionColors[newRegion][i].rgb;
                                 colorKey.Add(label);
                             }
                             break;
