@@ -4,7 +4,7 @@ Warp is a utility mod for Rain World that allows you to teleport the player to a
 
 The Warp menu is accessed via the Pause screen. Rooms in your current region are displayed on the right while a list of vanilla and modded regions are displayed on the left. Clicking on a room button will warp the player to that room. Clicking on a region button will change the list of room buttons to that of the selected region so that you can warp to rooms in different regions without the use of gates.
 
-![Warp](https://i.imgur.com/sse46qV.png)
+![Warp](https://imgur.com/elocb5B.png)
 
 Warp supports three sorting options for rooms:
 - Type: Room, Shelter, Gate, Scavenger Trader, etc.
