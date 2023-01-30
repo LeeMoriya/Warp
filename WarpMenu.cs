@@ -166,7 +166,8 @@ public class WarpModMenu
                 if (!WarpModMenu.masterRoomList.ContainsKey(WarpModMenu.newRegion))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(WarpModMenu.newRegion, false);
+                    List<RoomInfo> roomList = rf.GetRegionInfo(WarpModMenu.newRegion);
+                    rf.GetRegionInfo(newRegion);
                     WarpModMenu.warpContainer.GenerateRoomButtons(roomList, WarpModMenu.sortType, WarpModMenu.viewType);
                 }
                 else
@@ -465,24 +466,15 @@ public class WarpModMenu
                 colorConfig = new WarpButton(menu, this, "COLORS", "COLORS", new Vector2(21f, regionHeight - 137f), new Vector2(100f, 20f), new Color(1f, 0.4f, 0.4f));
                 this.subObjects.Add(colorConfig);
             }
-            if (!debugMode)
+            if (!masterRoomList.ContainsKey(game.world.region.name))
             {
-                if (!masterRoomList.ContainsKey(game.world.region.name))
-                {
-                    RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(game.world.region.name, true);
-                    GenerateRoomButtons(roomList, sortType, viewType);
-                }
-                else
-                {
-                    GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
-                }
+                RoomFinder rf = new RoomFinder();
+                List<RoomInfo> roomList = rf.GetRegionInfo(game.world.region.name);
+                GenerateRoomButtons(roomList, sortType, viewType);
             }
             else
             {
-                RoomFinder rf = new RoomFinder();
-                GenerateRoomButtons(rf.DebugList(58, 10), sortType, viewType);
-                newRegion = "XX";
+                GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
             }
             if (mode == Mode.Stats)
             {
@@ -501,17 +493,6 @@ public class WarpModMenu
         public override void Update()
         {
             base.Update();
-            //if (UnityEngine. GetKeyDown(KeyCode.Minus))
-            //{
-            //    if (debugMode)
-            //    {
-            //        debugMode = false;
-            //    }
-            //    else
-            //    {
-            //        debugMode = true;
-            //    }
-            //}
             if (warpError != "")
             {
                 this.menu.PlaySound(SoundID.HUD_Game_Over_Prompt);
@@ -558,7 +539,7 @@ public class WarpModMenu
                         if (!masterRoomList.ContainsKey(game.overWorld.regions[loadCount].name))
                         {
                             RoomFinder rf = new RoomFinder();
-                            List<RoomInfo> temp = rf.Generate(game.overWorld.regions[loadCount].name, true);
+                            List<RoomInfo> temp = rf.GetRegionInfo(game.overWorld.regions[loadCount].name);
                             menu.PlaySound(SoundID.MENU_Add_Level);
                         }
                         else
@@ -776,7 +757,7 @@ public class WarpModMenu
                 if (!masterRoomList.ContainsKey(newRegion))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(newRegion, true);
+                    List<RoomInfo> roomList = rf.GetRegionInfo(newRegion);
                     GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
@@ -789,7 +770,7 @@ public class WarpModMenu
                 if (!masterRoomList.ContainsKey(game.world.region.name))
                 {
                     RoomFinder rf = new RoomFinder();
-                    List<RoomInfo> roomList = rf.Generate(game.world.region.name, true);
+                    List<RoomInfo> roomList = rf.GetRegionInfo(game.world.region.name);
                     GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
