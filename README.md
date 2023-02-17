@@ -24,4 +24,4 @@ Warp version v1.7 and below are for Rain World 1.5 (Available as a beta branch i
 
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.8)
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.81)
