@@ -347,7 +347,7 @@ public class WarpModMenu
 
     public static bool WarpEnabled(RainWorldGame game)
     {
-        return ModManager.DevTools && game.devToolsActive && game.IsStorySession && (!ModManager.MSC || !game.rainWorld.safariMode);
+        return game.IsStorySession && (!ModManager.MSC || !game.rainWorld.safariMode);
     }
 
     public class WarpContainer : RectangularMenuObject

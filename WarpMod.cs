@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Reflection;
 using BepInEx;
 
-[BepInPlugin("LeeMoriya.Warp", "Warp", "1.8")]
+[BepInPlugin("LeeMoriya.Warp", "Warp", "1.81")]
 public class WarpMod : BaseUnityPlugin
 {
     public bool init = false;
@@ -14,17 +14,13 @@ public class WarpMod : BaseUnityPlugin
     {
 
     }
-    public void Awake()
+    public void OnEnable()
     {
-        On.RainWorld.OnModsInit += delegate (On.RainWorld.orig_OnModsInit orig, RainWorld self)
+        if (!init)
         {
-            orig.Invoke(self);
-            if (!init)
-            {
-                WarpModMenu.MenuHook();
-                init = true;
-            }
-        };
+            WarpModMenu.MenuHook();
+            init = true;
+        }
     }
 }
 
