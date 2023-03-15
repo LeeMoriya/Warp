@@ -28,12 +28,11 @@ public class WarpStats : RectangularMenuObject
         this.BG.alpha = 0f;
         this.Container.AddChild(this.BG);
         //Region Stats
-        regionLabel = new MenuLabel(menu, this, "", new Vector2(this.BG.x + 10.01f, this.BG.y - 15f), new Vector2(), true);
-        regionLabel.label.alignment = FLabelAlignment.Left;
-        this.subObjects.Add(regionLabel);
-        stats = new MenuLabel(menu, this, "", new Vector2(regionLabel.pos.x, regionLabel.pos.y + regionLabel.size.y - 20f), new Vector2(), false);
+        stats = new MenuLabel(menu, this, "", new Vector2(22f, (owner as WarpModMenu.WarpContainer).colorKey.Last().pos.y - 20f), new Vector2(), false);
+        stats.label.color = new Color(0.65f, 0.65f, 0.65f);
         this.subObjects.Add(stats);
         stats2 = new MenuLabel(menu, this, "", new Vector2(), new Vector2(), false);
+        stats2.label.color = new Color(0.65f, 0.65f, 0.65f);
         this.subObjects.Add(stats2);
         //Room Stats
         //roomLabel = new MenuLabel(menu, this, "", new Vector2(550f, 625f), new Vector2(), true);
@@ -92,7 +91,6 @@ public class WarpStats : RectangularMenuObject
             }
             screenCount[item.cameras]++;
         }
-        regionLabel.label.text = "REGION: " + region;
         data = "ROOMS: " + rooms + Environment.NewLine + "SCREENS: " + screens;
         data += Environment.NewLine + Environment.NewLine;
         //data += "Subregions:" + Environment.NewLine;
