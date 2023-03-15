@@ -9,6 +9,8 @@ using RWCustom;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using Menu.Remix.MixedUI;
+using Menu.Remix;
 
 public class WarpModMenu
 {
@@ -125,7 +127,7 @@ public class WarpModMenu
 
             if (game.Players.Count > 0 && game.Players[0] != null && game.Players[0].realizedCreature != null && !game.Players[0].realizedCreature.inShortcut)
             {
-                Vector2 offset = new Vector2();
+                Vector2 offset = new Vector2(20f,0f);
                 if (!WarpModMenu.showMenu)
                 {
                     offset.y = -2000f;
@@ -133,7 +135,7 @@ public class WarpModMenu
                 WarpModMenu.warpContainer = new WarpModMenu.WarpContainer(self, self.pages[0], self.pages[0].pos + offset, new Vector2());
                 self.pages[0].subObjects.Add(WarpModMenu.warpContainer);
 
-                WarpButton toggle = new WarpButton(self, self.pages[0], "HIDE", "toggleWarp", new Vector2(21f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20), new Color(1f, 0f, 0f));
+                WarpButton toggle = new WarpButton(self, self.pages[0], "HIDE", "toggleWarp", new Vector2(41f, game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20), new Color(1f, 0f, 0f));
                 if (WarpModMenu.showMenu)
                 {
                     toggle.menuLabel.text = "HIDE";
@@ -376,6 +378,11 @@ public class WarpModMenu
         public WarpStats warpStats;
         public MenuLabel errorMessage;
         public bool debugMode = false;
+
+        public MenuTabWrapper tabWrapper;
+        public OpComboBox regionDropdown;
+        public Configurable<string> currentRegion;
+
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
             game = (menu as PauseMenu).game;
@@ -410,9 +417,23 @@ public class WarpModMenu
             //Region Title
             MenuLabel regionLabel = new MenuLabel(menu, this, "REGION LIST", new Vector2(70f, game.rainWorld.options.ScreenSize.y - 40f), new Vector2(), false);
             this.subObjects.Add(regionLabel);
+
+            currentRegion = new Configurable<string>(newRegion);
+            List<ListItem> regs = new List<ListItem>();
+            foreach (Region reg in game.overWorld.regions)
+            {
+                regs.Add(new ListItem(reg.name, Region.GetRegionFullName(reg.name, game.StoryCharacter)));
+            };
+
+            tabWrapper = new MenuTabWrapper(menu, this);
+            subObjects.Add(tabWrapper);
+
+            regionDropdown = new OpComboBox(currentRegion, new Vector2(0f, regionLabel.pos.y - 65f), 150f, regs);
+            UIelementWrapper wrapper = new UIelementWrapper(tabWrapper, regionDropdown);
+
+            //TODO - Events for dropdown
+
             //Region Buttons
-            regionButtons = new List<WarpButton>();
-            regOffset = new IntVector2();
             if (game.overWorld.regions != null)
             {
                 Color statColor;
@@ -430,19 +451,7 @@ public class WarpModMenu
                 }
                 this.statButton = new WarpButton(menu, this, statText, "STATS", new Vector2(20f + ((hOffset - 25f) * 1), game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20f), statColor);
                 this.subObjects.Add(statButton);
-                for (int r = 0; r < this.game.overWorld.regions.Length; r++)
-                {
-                    WarpButton region = new WarpButton(menu, this, this.game.overWorld.regions[r].name, this.game.overWorld.regions[r].name + "reg", new Vector2(20f + ((hOffset - 45f) * regOffset.x), game.rainWorld.options.ScreenSize.y - 105f - ((vOffset) * regOffset.y)), new Vector2(30f, 23f), new Color(0.8f, 0.8f, 0.8f));
-                    regionButtons.Add(region);
-                    this.subObjects.Add(region);
-                    regOffset.x++;
-                    if (regOffset.x == 3)
-                    {
-                        regOffset.x = 0;
-                        regOffset.y++;
-                    }
-                }
-                float regionHeight = regionButtons.Last().pos.y;
+                float regionHeight = regionDropdown.PosY;
                 MenuLabel filterLabel = new MenuLabel(menu, this, "SORT     |     VIEW", new Vector2(71f, regionHeight - 15f), new Vector2(), false);
                 this.subObjects.Add(filterLabel);
                 //Sort By Buttons
@@ -507,52 +516,6 @@ public class WarpModMenu
             {
                 this.pos.y = -2000f;
                 this.lastPos.y = -2000f;
-            }
-            if (regionButtons != null)
-            {
-                //if (Input.GetKey(KeyCode.F5))
-                //{
-                //    loadAll = true;
-                //}
-                foreach (WarpButton but in regionButtons)
-                {
-                    if (newRegion == but.menuLabel.text)
-                    {
-                        but.color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else
-                    {
-                        if (!masterRoomList.ContainsKey(but.menuLabel.text))
-                        {
-                            but.color = new Color(0.45f, 0.45f, 0.45f);
-                        }
-                        else
-                        {
-                            but.color = new Color(0.8f, 0.8f, 0.8f);
-                        }
-                    }
-                }
-                if (loadAll)
-                {
-                    if (loadCount < game.overWorld.regions.Length)
-                    {
-                        if (!masterRoomList.ContainsKey(game.overWorld.regions[loadCount].name))
-                        {
-                            RoomFinder rf = new RoomFinder();
-                            List<RoomInfo> temp = rf.GetRegionInfo(game.overWorld.regions[loadCount].name);
-                            menu.PlaySound(SoundID.MENU_Add_Level);
-                        }
-                        else
-                        {
-                            loadCount++;
-                        }
-                    }
-                    else
-                    {
-                        loadAll = false;
-                        menu.PlaySound(SoundID.MENU_Start_New_Game);
-                    }
-                }
             }
             if (sortButtons != null)
             {
