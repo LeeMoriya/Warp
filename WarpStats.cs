@@ -20,7 +20,7 @@ public class WarpStats : RectangularMenuObject
     {
         this.BG = new FSprite("pixel", true);
         this.BG.SetAnchor(0f, 1f);
-        this.BG.x = 130f;
+        this.BG.x = 170f;
         this.BG.y = 724f;
         this.BG.scaleY = 400f;
         this.BG.scaleX = 150f;
