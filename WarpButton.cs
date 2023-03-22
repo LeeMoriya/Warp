@@ -10,6 +10,7 @@ using Menu;
 public class WarpButton : ButtonTemplate
 {
     public Color color;
+    public Color defaultColor;
     public MenuLabel menuLabel;
     public RoundedRect roundedRect;
     public RoundedRect selectRect;
@@ -18,6 +19,7 @@ public class WarpButton : ButtonTemplate
     public WarpButton(Menu.Menu menu, MenuObject owner, string displayText, string singalText, Vector2 pos, Vector2 size, Color color) : base(menu, owner, pos, size)
     {
         this.color = color;
+        this.defaultColor = color;
         this.signalText = singalText;
         this.roundedRect = new RoundedRect(menu, this, new Vector2(0f, 0f), size, true);
         this.subObjects.Add(this.roundedRect);

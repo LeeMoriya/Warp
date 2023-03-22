@@ -383,6 +383,7 @@ public class WarpModMenu
         public OpComboBox regionDropdown;
         public Configurable<string> currentRegion;
         public float dropOffset;
+        public int counter = 0;
 
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
@@ -416,16 +417,13 @@ public class WarpModMenu
             subObjects.Add(denLabel);
 
             currentRegion = new Configurable<string>(newRegion);
-            List<ListItem> regs = new List<ListItem>();
-            foreach (Region reg in game.overWorld.regions)
-            {
-                regs.Add(new ListItem(reg.name, Region.GetRegionFullName(reg.name, game.StoryCharacter)));
-            };
+            List<ListItem> regs = GetRegionListItems(game.overWorld.regions);
 
             tabWrapper = new MenuTabWrapper(menu, this);
             subObjects.Add(tabWrapper);
 
             regionDropdown = new OpComboBox(currentRegion, new Vector2(0f, labelOne.pos.y - 70f), 150f, regs);
+            regionDropdown.listHeight = 29;
             regionDropdown.OnListOpen += RegionDropdown_OnListOpen;
             regionDropdown.OnListClose += RegionDropdown_OnListClose;
             regionDropdown.OnValueChanged += RegionDropdown_OnValueChanged;
@@ -492,7 +490,7 @@ public class WarpModMenu
             if (mode == Mode.Stats)
             {
                 warpStats = new WarpStats(menu, this, new Vector2(), new Vector2());
-                warpStats.GenerateStats(currentRegion.key, "");
+                warpStats.GenerateStats(game.world.region.name, "");
                 subObjects.Add(warpStats);
             }
             if (warpError != "")
@@ -501,6 +499,27 @@ public class WarpModMenu
                 errorMessage.label.color = new Color(1f, 0f, 0f);
                 subObjects.Add(errorMessage);
             }
+        }
+
+        private List<ListItem> GetRegionListItems(Region[] regs)
+        {
+            Dictionary<string, string> regions = new Dictionary<string, string>();
+            foreach (Region r in regs)
+            {
+                regions.Add(r.name, Region.GetRegionFullName(r.name, game.StoryCharacter));
+            }
+            var regList = regions.OrderBy(x => x.Value).ToList();
+            for (int i = 0; i < regList.Count; i++)
+            {
+                Debug.Log("WARP: " + regList[i].Value);
+            }
+            List<ListItem> regionsList = new List<ListItem>();
+            for (int i = 0; i < regList.Count; i++)
+            {
+                ListItem item = new ListItem(regList[i].Key, regList[i].Value, i);
+                regionsList.Add(item);
+            }
+            return regionsList;
         }
 
         private void RegionDropdown_OnValueChanged(UIconfig config, string value, string oldValue)
@@ -525,7 +544,7 @@ public class WarpModMenu
 
         private void RegionDropdown_OnListOpen(UIfocusable trigger)
         {
-            dropOffset = 110f;
+            dropOffset = 1500f;
         }
 
         public override void Update()
@@ -546,6 +565,25 @@ public class WarpModMenu
                 pos.y = -2000f;
                 lastPos.y = -2000f;
             }
+            counter++;
+            if(roomButtons != null)
+            {
+                if (newRegion == game.cameras[0].room.world.name)
+                {
+                    for (int i = 0; i < roomButtons.Count; i++)
+                    {
+                        if (roomButtons[i].menuLabel.text == Regex.Split(game.cameras[0].room.abstractRoom.name, game.world.region.name + "_")[1])
+                        {
+                            roomButtons[i].color = new HSLColor(1f, 0f, 0.5f + Mathf.Sin(counter / 10f) * 0.4f).rgb;
+                        }
+                        else
+                        {
+                            roomButtons[i].color = roomButtons[i].defaultColor;
+                        }
+                    }
+                }
+            }
+
             filterLabel.pos.y = regionDropdown.PosY - (20f + dropOffset);
             filterLabel.lastPos = filterLabel.pos;
             if (sortButtons != null)
@@ -1068,7 +1106,7 @@ public class WarpModMenu
                 {
                     if (viewType == ViewType.Size)
                     {
-                        colorKey[i].pos = new Vector2(25f + (10f * i), sortHeight - 35f);
+                        colorKey[i].pos = new Vector2(25f + (10f * i), keyLabel.pos.y - 15f);
                     }
                     else
                     {
