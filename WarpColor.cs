@@ -148,7 +148,7 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             }
             if(WarpModMenu.mode == WarpModMenu.Mode.Stats)
             {
-                warpContainer.warpStats = new WarpStats(menu, warpContainer, new Vector2(), new Vector2());
+                warpContainer.warpStats = new WarpStats(menu, warpContainer);
                 warpContainer.warpStats.GenerateStats(WarpModMenu.newRegion, "");
                 warpContainer.subObjects.Add(warpContainer.warpStats);
             }

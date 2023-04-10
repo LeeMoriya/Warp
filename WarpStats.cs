@@ -16,40 +16,38 @@ public class WarpStats : RectangularMenuObject
     public string data;
     public string data2;
 
-    public WarpStats(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
+    public WarpStats(Menu.Menu menu, MenuObject owner) : base(menu, owner, new Vector2(), new Vector2())
     {
-        this.BG = new FSprite("pixel", true);
-        this.BG.SetAnchor(0f, 1f);
-        this.BG.x = 170f;
-        this.BG.y = 724f;
-        this.BG.scaleY = 400f;
-        this.BG.scaleX = 150f;
-        this.BG.color = new Color(0.1f, 0.1f, 0.1f);
-        this.BG.alpha = 0f;
-        this.Container.AddChild(this.BG);
+        BG = new FSprite("pixel", true);
+        BG.SetAnchor(0f, 1f);
+        BG.x = 170f;
+        BG.y = 724f;
+        BG.scaleY = 400f;
+        BG.scaleX = 150f;
+        BG.color = new Color(0.1f, 0.1f, 0.1f);
+        BG.alpha = 0f;
+        Container.AddChild(BG);
         //Region Stats
         stats = new MenuLabel(menu, this, "", new Vector2(22f, (owner as WarpModMenu.WarpContainer).colorKey.Last().pos.y - 20f), new Vector2(), false);
         stats.label.color = new Color(0.65f, 0.65f, 0.65f);
-        this.subObjects.Add(stats);
+        subObjects.Add(stats);
         stats2 = new MenuLabel(menu, this, "", new Vector2(), new Vector2(), false);
         stats2.label.color = new Color(0.65f, 0.65f, 0.65f);
-        this.subObjects.Add(stats2);
+        subObjects.Add(stats2);
         //Room Stats
         //roomLabel = new MenuLabel(menu, this, "", new Vector2(550f, 625f), new Vector2(), true);
         //roomLabel.label.alignment = FLabelAlignment.Left;
-        //this.subObjects.Add(roomLabel);
+        //subObjects.Add(roomLabel);
     }
 
     public override void Update()
     {
         base.Update();
-        //if(!this.BG.localRect.Contains(this.BG.GlobalToLocal(Input.mousePosition)) && Input.GetMouseButton(0))
-        //{
-        //    this.RemoveSprites();
-        //    (this.owner as WarpModMenu.WarpContainer).warpStats = null;
-        //    menu.PlaySound(SoundID.MENU_Greyed_Out_Button_Clicked);
-        //    (this.owner as WarpModMenu.WarpContainer).RemoveSubObject(this);
-        //}
+        if(stats != null && stats2 != null)
+        {
+            stats2.pos.y = stats.pos.y - stats.label.textRect.height;
+            stats2.lastPos.y = stats2.pos.y;
+        }
     }
 
     public void GenerateStats(string region, string room)
@@ -137,6 +135,8 @@ public class WarpStats : RectangularMenuObject
     public override void RemoveSprites()
     {
         base.RemoveSprites();
-        this.BG.RemoveFromContainer();
+        stats.RemoveSprites();
+        stats2.RemoveSprites();
+        BG.RemoveFromContainer();
     }
 }

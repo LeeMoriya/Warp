@@ -127,7 +127,7 @@ public class WarpModMenu
 
             if (game.Players.Count > 0 && game.Players[0] != null && game.Players[0].realizedCreature != null && !game.Players[0].realizedCreature.inShortcut)
             {
-                Vector2 offset = new Vector2(20f,0f);
+                Vector2 offset = new Vector2(20f, 0f);
                 if (!showMenu)
                 {
                     offset.y = -2000f;
@@ -489,7 +489,7 @@ public class WarpModMenu
             }
             if (mode == Mode.Stats)
             {
-                warpStats = new WarpStats(menu, this, new Vector2(), new Vector2());
+                warpStats = new WarpStats(menu, this);
                 warpStats.GenerateStats(game.world.region.name, "");
                 subObjects.Add(warpStats);
             }
@@ -535,6 +535,10 @@ public class WarpModMenu
             {
                 GenerateRoomButtons(masterRoomList[value], sortType, viewType);
             }
+            if(warpStats != null)
+            {
+                warpStats.GenerateStats(value, "");
+            }
         }
 
         private void RegionDropdown_OnListClose(UIfocusable trigger)
@@ -566,7 +570,7 @@ public class WarpModMenu
                 lastPos.y = -2000f;
             }
             counter++;
-            if(roomButtons != null)
+            if (roomButtons != null)
             {
                 if (newRegion == game.cameras[0].room.world.name)
                 {
@@ -634,12 +638,12 @@ public class WarpModMenu
                     }
                 }
             }
-            if(colorConfig != null)
+            if (colorConfig != null)
             {
                 colorConfig.pos.y = viewButtons.Last().pos.y - 30f;
                 colorConfig.lastPos = colorConfig.pos;
             }
-            if(keyLabel != null)
+            if (keyLabel != null)
             {
                 keyLabel.pos.y = colorConfig.pos.y - 15f;
                 keyLabel.lastPos = keyLabel.pos;
@@ -648,14 +652,49 @@ public class WarpModMenu
             {
                 for (int i = 0; i < colorKey.Count; i++)
                 {
-                    colorKey[i].pos.y = keyLabel.pos.y - (15f + (15f * i));
+                    colorKey[i].pos.y = keyLabel.pos.y - (viewType == ViewType.Size ? 15 : (15f + (15f * i)));
                     colorKey[i].lastPos = colorKey[i].pos;
                 }
             }
-            if(warpStats != null)
+            if (sortType == SortType.Subregion && viewType != ViewType.Subregion)
             {
-                warpStats.pos.y = -dropOffset;
-                warpStats.lastPos = warpStats.pos;
+                if (subLabel != null && subregionLabels != null && subregionLabels.Count > 0)
+                {
+                    subLabel.pos.y = colorKey.Last().pos.y - 25f;
+                    subLabel.lastPos.y = subLabel.pos.y;
+                    for (int i = 0; i < subregionLabels.Count; i++)
+                    {
+                        subregionLabels[i].pos.y = subLabel.pos.y - 20f - (15f * i);
+                        subregionLabels[i].lastPos.y = subregionLabels[i].pos.y;
+                    }
+                }
+            }
+
+            if (warpStats != null)
+            {
+                if (subregionLabels != null && subregionLabels.Count > 0 && subregionLabels.Last().pos.y < 320f)
+                {
+                    warpStats.pos.x = 160f;
+                    warpStats.pos.y = 0f;
+                    warpStats.lastPos = warpStats.pos;
+                    warpStats.stats.pos.y = statButton.pos.y + 20f;
+                    warpStats.stats.lastPos.y = warpStats.stats.pos.y;
+                }
+                else
+                {
+                    warpStats.pos.x = 0f;
+                    warpStats.pos.y = -dropOffset;
+                    warpStats.lastPos = warpStats.pos;
+                    if (subLabel != null && subregionLabels != null && subregionLabels.Count > 0)
+                    {
+                        warpStats.stats.pos.y = subregionLabels.Last().pos.y - 20f;
+                    }
+                    else
+                    {
+                        warpStats.stats.pos.y = colorKey.Last().pos.y - 20f;
+                    }
+                    warpStats.stats.lastPos.y = warpStats.stats.pos.y;
+                }
             }
         }
 
@@ -730,7 +769,7 @@ public class WarpModMenu
                     }
                     mode = Mode.Stats;
                     (sender as WarpButton).color = new Color(1f, 0.85f, 0f);
-                    warpStats = new WarpStats(menu, this, new Vector2(), new Vector2());
+                    warpStats = new WarpStats(menu, this);
                     warpStats.GenerateStats(newRegion, "");
                     subObjects.Add(warpStats);
                     //(sender as WarpButton).menuLabel.text = "STATS";
@@ -1012,7 +1051,6 @@ public class WarpModMenu
                                 }
                                 break;
                             }
-
                     }
                     string name = "";
                     name = Regex.Split(info.name, "_(.+)")[1];
@@ -1161,7 +1199,7 @@ public class WarpModMenu
                     subObjects.Add(pageRight);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.LogException(e);
             }
