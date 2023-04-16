@@ -129,7 +129,6 @@ public class WarpStats : RectangularMenuObject
         stats2.pos.y = stats.pos.y - stats.label.textRect.height;
         //Room Stats
         //roomLabel.label.text = "ROOM: " + room;
-        WarpModMenu.showStats = true;
     }
 
     public override void RemoveSprites()

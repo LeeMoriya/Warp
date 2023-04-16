@@ -7,7 +7,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 
-[BepInPlugin("LeeMoriya.Warp", "Warp", "1.82")]
+[BepInPlugin("LeeMoriya.Warp", "Warp", "1.83")]
 public class WarpMod : BaseUnityPlugin
 {
     public bool init = false;

@@ -842,6 +842,7 @@ public class WarpModMenu
                     dropdownToggle.menuLabel.text = "LIST VIEW";
                     dropOffset = 0f;
                 }
+                WarpSettings.Save();
             }
             if (message == "STATS")
             {
@@ -861,6 +862,7 @@ public class WarpModMenu
                     subObjects.Add(warpStats);
                     //(sender as WarpButton).menuLabel.text = "STATS";
                     menu.PlaySound(SoundID.MENU_Button_Successfully_Assigned);
+                    showStats = true;
                 }
                 else
                 {
@@ -875,7 +877,9 @@ public class WarpModMenu
                         warpStats = null;
                     }
                     menu.PlaySound(SoundID.MENU_Button_Successfully_Assigned);
+                    showStats = false;
                 }
+                WarpSettings.Save();
             }
             if (message == "STYPE")
             {
