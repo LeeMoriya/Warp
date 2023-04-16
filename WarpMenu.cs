@@ -365,7 +365,6 @@ public class WarpModMenu
         public WarpButton pageRight;
         public List<WarpButton> sortButtons;
         public List<WarpButton> viewButtons;
-        public WarpButton colorConfig;
         public MenuLabel keyLabel;
         public List<MenuLabel> colorKey;
         public MenuLabel subLabel;
@@ -380,13 +379,16 @@ public class WarpModMenu
         public MenuLabel filterLabel;
         public List<WarpButton> regionButtons;
         public bool debugMode = false;
-        public WarpButton dropdownToggle;
 
         public MenuTabWrapper tabWrapper;
         public OpComboBox regionDropdown;
         public Configurable<string> currentRegion;
         public float dropOffset;
         public int counter = 0;
+
+        public SymbolButton listToggle;
+        public SymbolButton colorToggle;
+        public SymbolButton favToggle;
 
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
@@ -425,7 +427,7 @@ public class WarpModMenu
             tabWrapper = new MenuTabWrapper(menu, this);
             subObjects.Add(tabWrapper);
 
-            regionDropdown = new OpComboBox(currentRegion, new Vector2(0f, labelOne.pos.y - 70f), 150f, regs);
+            regionDropdown = new OpComboBox(currentRegion, new Vector2(0f, labelOne.pos.y - 67f), 150f, regs);
             regionDropdown.listHeight = 29;
             regionDropdown.OnListOpen += RegionDropdown_OnListOpen;
             regionDropdown.OnListClose += RegionDropdown_OnListClose;
@@ -458,8 +460,26 @@ public class WarpModMenu
                     GenerateRegionButtons();
                 }
 
-                float regionHeight = dropdownMode ? regionDropdown.PosY : regionButtons.Last().pos.y;
-                filterLabel = new MenuLabel(menu, this, "SORT     |     VIEW", new Vector2(71f, regionHeight - 15f), new Vector2(), false);
+
+                float regionHeight = (dropdownMode ? regionDropdown.PosY : regionButtons.Last().pos.y) - 60f;
+
+                listToggle = new SymbolButton(menu, this, "warpList", "TOGGLE", new Vector2(22f, regionHeight + 20f));
+                listToggle.roundedRect.size = new Vector2(30f, 30f);
+                listToggle.size = listToggle.roundedRect.size;
+                subObjects.Add(listToggle);
+
+                colorToggle = new SymbolButton(menu, this, "warpColor", "COLORS", new Vector2(57f, regionHeight + 20f));
+                colorToggle.roundedRect.size = new Vector2(30f, 30f);
+                colorToggle.size = colorToggle.roundedRect.size;
+                subObjects.Add(colorToggle);
+
+                favToggle = new SymbolButton(menu, this, "warpFav", "FAV", new Vector2(92f, regionHeight + 20f));
+                favToggle.roundedRect.size = new Vector2(30f, 30f);
+                favToggle.size = favToggle.roundedRect.size;
+                subObjects.Add(favToggle);
+
+
+                filterLabel = new MenuLabel(menu, this, "SORT     |     VIEW", new Vector2(72f, regionHeight - 15f), new Vector2(), false);
                 subObjects.Add(filterLabel);
 
                 //Sort By Buttons
@@ -484,12 +504,6 @@ public class WarpModMenu
                 {
                     subObjects.Add(viewButtons[i]);
                 }
-
-                dropdownToggle = new WarpButton(menu, this, dropdownMode ? "LIST VIEW" : "BUTTON VIEW", "TOGGLE", new Vector2(21f, regionHeight - 137f), new Vector2(100f, 20f), dropdownMode ? new Color(0f, 1f, 1f) : new Color(1f,0.85f,0f));
-                subObjects.Add(dropdownToggle);
-
-                colorConfig = new WarpButton(menu, this, "COLORS", "COLORS", dropdownToggle.pos + new Vector2(0f, - 25f), new Vector2(100f, 20f), new Color(1f, 0.4f, 0.4f));
-                subObjects.Add(colorConfig);
             }
             if (!masterRoomList.ContainsKey(game.world.region.name))
             {
@@ -617,8 +631,16 @@ public class WarpModMenu
                 }
             }
 
-            filterLabel.pos.y = regionDropdown.PosY - (20f + dropOffset);
+            filterLabel.pos.y = regionDropdown.PosY - (55f + dropOffset);
             filterLabel.lastPos = filterLabel.pos;
+
+            listToggle.pos.y = filterLabel.pos.y + 15f;
+            listToggle.lastPos.y = listToggle.pos.y;
+            colorToggle.pos.y = listToggle.pos.y;
+            colorToggle.lastPos.y = colorToggle.pos.y;
+            favToggle.pos.y = colorToggle.pos.y;
+            favToggle.lastPos.y = favToggle.pos.y;
+
             if (sortButtons != null)
             {
                 for (int i = 0; i < sortButtons.Count; i++)
@@ -667,19 +689,9 @@ public class WarpModMenu
                     }
                 }
             }
-            if (dropdownToggle != null)
-            {
-                dropdownToggle.pos.y = viewButtons.Last().pos.y - 30f;
-                dropdownToggle.lastPos = dropdownToggle.pos;
-            }
-            if (colorConfig != null)
-            {
-                colorConfig.pos.y = dropdownToggle.pos.y - 26f;
-                colorConfig.lastPos = colorConfig.pos;
-            }
             if (keyLabel != null)
             {
-                keyLabel.pos.y = colorConfig.pos.y - 15f;
+                keyLabel.pos.y = viewButtons.Last().pos.y - 15f;
                 keyLabel.lastPos = keyLabel.pos;
             }
             if (colorKey != null)
@@ -825,8 +837,6 @@ public class WarpModMenu
                     WarpModMenu.dropdownMode = false;
                     regionDropdown.Hide();
                     GenerateRegionButtons();
-                    dropdownToggle.color = new Color(1f, 0.85f, 0f);
-                    dropdownToggle.menuLabel.text = "BUTTON VIEW";
                 }
                 else if(regionButtons != null)
                 {
@@ -838,8 +848,6 @@ public class WarpModMenu
                     }
                     regionButtons = null;
                     regionDropdown.Show();
-                    dropdownToggle.color = new Color(0f, 1f, 1f);
-                    dropdownToggle.menuLabel.text = "LIST VIEW";
                     dropOffset = 0f;
                 }
                 WarpSettings.Save();
@@ -1022,7 +1030,7 @@ public class WarpModMenu
                 }
                 IntVector2 offset = new IntVector2();
                 gateOffset = new IntVector2();
-                float regionHeight = colorConfig.pos.y;
+                float regionHeight = sortButtons.Last().pos.y;
                 float categoryOffset = 0f;
                 float screenWidth = game.rainWorld.options.ScreenSize.x - 20f;
                 float screenHeight = game.rainWorld.options.ScreenSize.y;
