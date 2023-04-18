@@ -81,6 +81,7 @@
     <Compile Include="WarpMod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WarpStats.cs" />
+    <Compile Include="WarpSymbolButton.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

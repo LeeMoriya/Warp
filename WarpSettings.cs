@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 using RWCustom;
 using System.IO;
+using System.Text.RegularExpressions;
 
 public static class WarpSettings
 {
@@ -76,5 +77,37 @@ public static class WarpSettings
             Directory.CreateDirectory(rootFolder + "Warp");
         }
         File.WriteAllText(path, text);
+    }
+
+    public static void LoadFavourites()
+    {
+        WarpModMenu.favourites = new HashSet<string>();
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Favourites.txt";
+        if (File.Exists(path))
+        {
+            string favString = File.ReadAllText(path);
+            string[] favs = Regex.Split(favString, ":");
+            for (int i = 0; i < favs.Length; i++)
+            {
+                WarpModMenu.favourites.Add(favs[i]);
+                Debug.Log("Loading Fav: " + favs[i]);
+            }
+        }
+    }
+
+    public static void SaveFavourites()
+    {
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Favourites.txt";
+        if (WarpModMenu.favourites != null && WarpModMenu.favourites.Count > 0)
+        {
+            string favString = String.Join(":", WarpModMenu.favourites);
+            if (!Directory.Exists(rootFolder + "Warp"))
+            {
+                Directory.CreateDirectory(rootFolder + "Warp");
+            }
+            File.WriteAllText(path, favString);
+        }
     }
 }

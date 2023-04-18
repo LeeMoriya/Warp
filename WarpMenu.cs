@@ -41,6 +41,7 @@ public class WarpModMenu
     public static bool showMenu = true;
     public static bool showStats = false;
     public static bool dropdownMode = true;
+    public static HashSet<string> favourites = new HashSet<string>();
     public static SortType sortType = SortType.Type;
     public static ViewType viewType = ViewType.Type;
     public static Mode mode = Mode.Warp;
@@ -386,12 +387,13 @@ public class WarpModMenu
         public float dropOffset;
         public int counter = 0;
 
-        public SymbolButton listToggle;
-        public SymbolButton colorToggle;
-        public SymbolButton favToggle;
+        public WarpSymbolButton listToggle;
+        public WarpSymbolButton colorToggle;
+        public WarpSymbolButton favToggle;
 
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
+            WarpSettings.LoadFavourites();
             game = (menu as PauseMenu).game;
             newRegion = game.world.region.name;
             //try
@@ -413,8 +415,9 @@ public class WarpModMenu
             float hOffset = 80f;
             //Menu Text
             string title = "Warp Menu";// + " - v1.7";
-            MenuLabel labelOne = new MenuLabel(menu, this, title, new Vector2(35f, game.rainWorld.options.ScreenSize.y - 40f), new Vector2(), false);
-            labelOne.label.alignment = FLabelAlignment.Left;
+            MenuLabel labelOne = new MenuLabel(menu, this, title, new Vector2(70f, game.rainWorld.options.ScreenSize.y - 39f), new Vector2(), false);
+            labelOne.label.alignment = FLabelAlignment.Center;
+            labelOne.label.color = new Color(0.33f, 0.33f, 0.33f);
             subObjects.Add(labelOne);
             //Den pos
             denLabel = new MenuLabel(menu, this, "Den Position: NONE", new Vector2(game.rainWorld.options.ScreenSize.x - 42f, game.rainWorld.options.ScreenSize.y - 20f), new Vector2(), false);
@@ -427,7 +430,7 @@ public class WarpModMenu
             tabWrapper = new MenuTabWrapper(menu, this);
             subObjects.Add(tabWrapper);
 
-            regionDropdown = new OpComboBox(currentRegion, new Vector2(0f, labelOne.pos.y - 67f), 150f, regs);
+            regionDropdown = new OpComboBox(currentRegion, new Vector2(0f, labelOne.pos.y - 65f), 150f, regs);
             regionDropdown.listHeight = 29;
             regionDropdown.OnListOpen += RegionDropdown_OnListOpen;
             regionDropdown.OnListClose += RegionDropdown_OnListClose;
@@ -463,17 +466,17 @@ public class WarpModMenu
 
                 float regionHeight = (dropdownMode ? regionDropdown.PosY : regionButtons.Last().pos.y) - 60f;
 
-                listToggle = new SymbolButton(menu, this, "warpList", "TOGGLE", new Vector2(22f, regionHeight + 20f));
+                listToggle = new WarpSymbolButton(menu, this, "warpList", "TOGGLE", new Vector2(22f, regionHeight + 20f));
                 listToggle.roundedRect.size = new Vector2(30f, 30f);
                 listToggle.size = listToggle.roundedRect.size;
                 subObjects.Add(listToggle);
 
-                colorToggle = new SymbolButton(menu, this, "warpColor", "COLORS", new Vector2(57f, regionHeight + 20f));
+                colorToggle = new WarpSymbolButton(menu, this, "warpColor", "COLORS", new Vector2(57f, regionHeight + 20f));
                 colorToggle.roundedRect.size = new Vector2(30f, 30f);
                 colorToggle.size = colorToggle.roundedRect.size;
                 subObjects.Add(colorToggle);
 
-                favToggle = new SymbolButton(menu, this, "warpFav", "FAV", new Vector2(92f, regionHeight + 20f));
+                favToggle = new WarpSymbolButton(menu, this, "warpFav", "FAV", new Vector2(92f, regionHeight + 20f));
                 favToggle.roundedRect.size = new Vector2(30f, 30f);
                 favToggle.size = favToggle.roundedRect.size;
                 subObjects.Add(favToggle);
@@ -534,13 +537,10 @@ public class WarpModMenu
             Dictionary<string, string> regions = new Dictionary<string, string>();
             foreach (Region r in regs)
             {
-                regions.Add(r.name, Region.GetRegionFullName(r.name, game.StoryCharacter));
+                string name = favourites.Contains(r.name) ? $"> {Region.GetRegionFullName(r.name, game.StoryCharacter)}" : Region.GetRegionFullName(r.name, game.StoryCharacter);
+                regions.Add(r.name, name);
             }
             var regList = regions.OrderBy(x => x.Value).ToList();
-            for (int i = 0; i < regList.Count; i++)
-            {
-                Debug.Log("WARP: " + regList[i].Value);
-            }
             List<ListItem> regionsList = new List<ListItem>();
             for (int i = 0; i < regList.Count; i++)
             {
@@ -620,18 +620,33 @@ public class WarpModMenu
             {
                 for (int i = 0; i < regionButtons.Count; i++)
                 {
-                    if (masterRoomList.ContainsKey(regionButtons[i].menuLabel.text))
+                    string text = regionButtons[i].menuLabel.text;
+                    if (masterRoomList.ContainsKey(text))
                     {
-                        regionButtons[i].color = new Color(0.8f, 0.8f, 0.8f);
+                        if (favourites.Contains(text))
+                        {
+                            regionButtons[i].color = new Color(1f, 0.3f, 0.3f);
+                        }
+                        else
+                        {
+                            regionButtons[i].color = new Color(0.8f, 0.8f, 0.8f);
+                        }
                     }
                     else
                     {
-                        regionButtons[i].color = new Color(0.35f, 0.35f, 0.35f);
+                        if (favourites.Contains(text))
+                        {
+                            regionButtons[i].color = new Color(0.45f, 0.35f, 0.35f);
+                        }
+                        else
+                        {
+                            regionButtons[i].color = new Color(0.35f, 0.35f, 0.35f);
+                        }
                     }
                 }
             }
 
-            filterLabel.pos.y = regionDropdown.PosY - (55f + dropOffset);
+            filterLabel.pos.y = dropdownMode ? regionDropdown.PosY - (55f + dropOffset) : regionDropdown.PosY - (65f + dropOffset);
             filterLabel.lastPos = filterLabel.pos;
 
             listToggle.pos.y = filterLabel.pos.y + 15f;
@@ -640,6 +655,23 @@ public class WarpModMenu
             colorToggle.lastPos.y = colorToggle.pos.y;
             favToggle.pos.y = colorToggle.pos.y;
             favToggle.lastPos.y = favToggle.pos.y;
+            if(favourites!= null)
+            {
+                if(favourites.Contains(newRegion))
+                {
+                    if (favToggle.color != new Color(1f, 0.3f, 0.3f))
+                    {
+                        favToggle.color = new Color(1f, 0.3f, 0.3f);
+                    }
+                }
+                else
+                {
+                    if (favToggle.color != new Color(0.7f, 0.7f, 0.7f))
+                    {
+                        favToggle.color = new Color(0.7f, 0.7f, 0.7f);
+                    }
+                }
+            }
 
             if (sortButtons != null)
             {
@@ -850,6 +882,7 @@ public class WarpModMenu
                     regionDropdown.Show();
                     dropOffset = 0f;
                 }
+                menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 WarpSettings.Save();
             }
             if (message == "STATS")
@@ -868,8 +901,6 @@ public class WarpModMenu
                     warpStats = new WarpStats(menu, this);
                     warpStats.GenerateStats(newRegion, "");
                     subObjects.Add(warpStats);
-                    //(sender as WarpButton).menuLabel.text = "STATS";
-                    menu.PlaySound(SoundID.MENU_Button_Successfully_Assigned);
                     showStats = true;
                 }
                 else
@@ -877,17 +908,61 @@ public class WarpModMenu
                     //Disable Stats mode
                     mode = Mode.Warp;
                     (sender as WarpButton).color = Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey);
-                    //(sender as WarpButton).menuLabel.text = "WARP";
                     if (warpStats != null)
                     {
                         RemoveSubObject(warpStats);
                         warpStats.RemoveSprites();
                         warpStats = null;
                     }
-                    menu.PlaySound(SoundID.MENU_Button_Successfully_Assigned);
                     showStats = false;
                 }
+                menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 WarpSettings.Save();
+            }
+            if(message == "FAV")
+            {
+                if (!favourites.Contains(newRegion))
+                {
+                    Debug.Log("Fav region: " + newRegion);
+                    favourites.Add(newRegion);
+                    menu.PlaySound(SoundID.MENU_Player_Join_Game);
+                }
+                else
+                {
+                    Debug.Log("Unfav region: " + newRegion);
+                    favourites.Remove(newRegion);
+                    menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
+                }
+                WarpSettings.SaveFavourites();
+
+                if (!dropdownMode)
+                {
+                    for (int i = 0; i < regionButtons.Count; i++)
+                    {
+                        regionButtons[i].RemoveSprites();
+                        RemoveSubObject(regionButtons[i]);
+                    }
+                    GenerateRegionButtons();
+                }
+                else
+                {
+                    ListItem[] old = regionDropdown.GetItemList();
+                    List<string> oldRegs = new List<string>();
+                    foreach(ListItem item in old)
+                    {
+                        oldRegs.Add(item.name);
+                    }
+                    List<ListItem> newRegs = GetRegionListItems(game.overWorld.regions);
+                    ListItem[] dummy = new ListItem[1]
+                    {
+                        new ListItem("TOPI PLEASE", 0)
+                    };
+                    regionDropdown.AddItems(false, dummy);
+                    regionDropdown.RemoveItems(false, oldRegs.ToArray());
+                    regionDropdown.AddItems(false, newRegs.ToArray());
+                    regionDropdown.RemoveItems(false, new string[1] { "TOPI PLEASE" });
+                    regionDropdown.ForceValue(newRegion);
+                }
             }
             if (message == "STYPE")
             {
@@ -937,7 +1012,7 @@ public class WarpModMenu
                     }
                     warpColor = new WarpColor(menu, this, new Vector2(0f, 0f), new Vector2());
                     subObjects.Add(warpColor);
-                    menu.PlaySound(SoundID.MENU_Player_Join_Game);
+                    menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 }
                 else
                 {
@@ -951,9 +1026,33 @@ public class WarpModMenu
             regionButtons = new List<WarpButton>();
             int column = 0;
             int row = 0;
+            List<string> favRegions = new List<string>();
+            List<string> regions = new List<string>();
             for (int i = 0; i < game.overWorld.regions.Length; i++)
             {
-                WarpButton button = new WarpButton(menu, this, game.overWorld.regions[i].name, $"reg-{game.overWorld.regions[i]}", statButton.pos + new Vector2(-55f + (35f * column), -(40f + (27f * row))), new Vector2(30f, 23f), Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey));
+                if (favourites.Contains(game.overWorld.regions[i].name))
+                {
+                    favRegions.Add(game.overWorld.regions[i].name);
+                }
+            }
+            for (int i = 0; i < game.overWorld.regions.Length; i++)
+            {
+                if (!favRegions.Contains(game.overWorld.regions[i].name))
+                {
+                    regions.Add(game.overWorld.regions[i].name);
+                }
+            }
+            regions.Sort();
+            if (favRegions.Count > 0)
+            {
+                favRegions.Sort();
+                regions.InsertRange(0,favRegions);
+            }
+
+
+            for (int i = 0; i < regions.Count; i++)
+            {
+                WarpButton button = new WarpButton(menu, this, regions[i], $"reg-{regions[i]}", statButton.pos + new Vector2(-55f + (35f * column), -(35f + (27f * row))), new Vector2(30f, 23f), Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey));
                 subObjects.Add(button);
                 regionButtons.Add(button);
                 column++;
