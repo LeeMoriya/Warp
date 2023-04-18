@@ -57,6 +57,10 @@ public static class WarpSettings
                     case 4:
                         WarpModMenu.dropdownMode = Convert.ToBoolean(int.Parse(data[i].ToString()));
                         break;
+                    //List mode
+                    case 5:
+                        WarpModMenu.alphabetical = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                        break;
                 }
             }
         }
@@ -71,6 +75,7 @@ public static class WarpSettings
         sb.Append((int)WarpModMenu.sortType);
         sb.Append((int)WarpModMenu.viewType);
         sb.Append(Convert.ToInt32(WarpModMenu.dropdownMode));
+        sb.Append(Convert.ToInt32(WarpModMenu.alphabetical));
         string text = sb.ToString();
         if (!Directory.Exists(rootFolder + "Warp"))
         {

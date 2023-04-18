@@ -41,6 +41,7 @@ public class WarpModMenu
     public static bool showMenu = true;
     public static bool showStats = false;
     public static bool dropdownMode = true;
+    public static bool alphabetical = true;
     public static HashSet<string> favourites = new HashSet<string>();
     public static SortType sortType = SortType.Type;
     public static ViewType viewType = ViewType.Type;
@@ -437,8 +438,6 @@ public class WarpModMenu
             regionDropdown.OnValueChanged += RegionDropdown_OnValueChanged;
             UIelementWrapper wrapper = new UIelementWrapper(tabWrapper, regionDropdown);
 
-            
-
             if (game.overWorld.regions != null)
             {
                 Color statColor;
@@ -604,7 +603,7 @@ public class WarpModMenu
                 {
                     for (int i = 0; i < roomButtons.Count; i++)
                     {
-                        if (roomButtons[i].menuLabel.text == Regex.Split(game.cameras[0].room.abstractRoom.name, game.world.region.name + "_")[1])
+                        if (roomButtons[i].menuLabel.text == game.cameras[0].room.abstractRoom.name.Split(new char[] {'_'}, 2)[1])
                         {
                             roomButtons[i].color = new HSLColor(1f, 0f, 0.5f + Mathf.Sin(counter / 10f) * 0.4f).rgb;
                         }
@@ -868,7 +867,19 @@ public class WarpModMenu
                 {
                     WarpModMenu.dropdownMode = false;
                     regionDropdown.Hide();
+                    if(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    {
+                        if (!alphabetical)
+                        {
+                            alphabetical= true;
+                        }
+                        else
+                        {
+                            alphabetical= false;
+                        }
+                    }
                     GenerateRegionButtons();
+                    WarpSettings.Save();
                 }
                 else if(regionButtons != null)
                 {
@@ -1042,7 +1053,10 @@ public class WarpModMenu
                     regions.Add(game.overWorld.regions[i].name);
                 }
             }
-            regions.Sort();
+            if (alphabetical)
+            {
+                regions.Sort();
+            }
             if (favRegions.Count > 0)
             {
                 favRegions.Sort();
