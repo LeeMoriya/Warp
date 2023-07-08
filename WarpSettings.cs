@@ -20,48 +20,55 @@ public static class WarpSettings
         }
         else
         {
-            char[] data = File.ReadAllText(path).ToCharArray();
-            if (data.Length == 0)
+            try
             {
-                return;
-            }
-            for (int i = 0; i < data.Length; i++)
-            {
-                switch (i)
+                char[] data = File.ReadAllText(path).ToCharArray();
+                if (data.Length == 0)
                 {
-                    //Menu Display
-                    case 0:
-                        WarpModMenu.showMenu = Convert.ToBoolean(int.Parse(data[i].ToString()));
-                        break;
-                    //Favourites Display
-                    case 1:
-                        WarpModMenu.showStats = Convert.ToBoolean(int.Parse(data[i].ToString()));
-                        if (WarpModMenu.showStats)
-                        {
-                            WarpModMenu.mode = WarpModMenu.Mode.Stats;
-                        }
-                        else
-                        {
-                            WarpModMenu.mode = WarpModMenu.Mode.Warp;
-                        }
-                        break;
-                    //Sort Type
-                    case 2:
-                        WarpModMenu.sortType = (WarpModMenu.SortType)int.Parse(data[i].ToString());
-                        break;
-                    //View Type
-                    case 3:
-                        WarpModMenu.viewType = (WarpModMenu.ViewType)int.Parse(data[i].ToString());
-                        break;
-                    //List mode
-                    case 4:
-                        WarpModMenu.dropdownMode = Convert.ToBoolean(int.Parse(data[i].ToString()));
-                        break;
-                    //List mode
-                    case 5:
-                        WarpModMenu.alphabetical = Convert.ToBoolean(int.Parse(data[i].ToString()));
-                        break;
+                    return;
                 }
+                for (int i = 0; i < data.Length; i++)
+                {
+                    switch (i)
+                    {
+                        //Menu Display
+                        case 0:
+                            WarpModMenu.showMenu = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                            break;
+                        //Favourites Display
+                        case 1:
+                            WarpModMenu.showStats = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                            if (WarpModMenu.showStats)
+                            {
+                                WarpModMenu.mode = WarpModMenu.Mode.Stats;
+                            }
+                            else
+                            {
+                                WarpModMenu.mode = WarpModMenu.Mode.Warp;
+                            }
+                            break;
+                        //Sort Type
+                        case 2:
+                            WarpModMenu.sortType = (WarpModMenu.SortType)int.Parse(data[i].ToString());
+                            break;
+                        //View Type
+                        case 3:
+                            WarpModMenu.viewType = (WarpModMenu.ViewType)int.Parse(data[i].ToString());
+                            break;
+                        //List mode
+                        case 4:
+                            WarpModMenu.dropdownMode = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                            break;
+                        //List mode
+                        case 5:
+                            WarpModMenu.alphabetical = Convert.ToBoolean(int.Parse(data[i].ToString()));
+                            break;
+                    }
+                }
+            }
+            catch
+            {
+                Save();
             }
         }
     }
@@ -91,13 +98,17 @@ public static class WarpSettings
         string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Favourites.txt";
         if (File.Exists(path))
         {
-            string favString = File.ReadAllText(path);
-            string[] favs = Regex.Split(favString, ":");
-            for (int i = 0; i < favs.Length; i++)
+            try
             {
-                WarpModMenu.favourites.Add(favs[i]);
-                Debug.Log("Loading Fav: " + favs[i]);
+                string favString = File.ReadAllText(path);
+                string[] favs = Regex.Split(favString, ":");
+                for (int i = 0; i < favs.Length; i++)
+                {
+                    WarpModMenu.favourites.Add(favs[i]);
+                    Debug.Log("Loading Fav: " + favs[i]);
+                }
             }
+            catch { }
         }
     }
 

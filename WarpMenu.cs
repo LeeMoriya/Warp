@@ -72,22 +72,40 @@ public class WarpModMenu
         On.Menu.PauseMenu.Update += PauseMenu_Update;
         On.OverWorld.Update += OverWorld_Update;
         On.SaveState.LoadGame += SaveState_LoadGame;
-        //On.RoomSpecificScript.SU_C04StartUp.Update += SU_C04StartUp_Update;
+        On.Menu.TutorialControlsPage.GrafUpdate += TutorialControlsPage_GrafUpdate;
+        //Testing
+        On.AbstractCreature.Realize += AbstractCreature_Realize;
+    }
+
+    private static void AbstractCreature_Realize(On.AbstractCreature.orig_Realize orig, AbstractCreature self)
+    {
+        orig.Invoke(self);
+        Debug.Log("WARP: Creature realized: " + self.creatureTemplate.name + " ID: " + self.ID);
+    }
+
+    private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
+    {
+        orig.Invoke(self, str, game);
+        if(denPos != "NONE")
+        {
+            self.denPosition = denPos;
+            self.lastVanillaDen = self.denPosition;
+        }
+    }
+
+    private static void TutorialControlsPage_GrafUpdate(On.Menu.TutorialControlsPage.orig_GrafUpdate orig, TutorialControlsPage self, float timeStacker)
+    {
+        orig.Invoke(self, timeStacker);
+        if (warpActive)
+        {
+            self.ShutDownProcess();
+        }
     }
 
     private static void OverWorld_Update(On.OverWorld.orig_Update orig, OverWorld self)
     {
         orig.Invoke(self);
         WarpOverworldUpdate(self, self.game);
-    }
-
-    private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
-    {
-        orig.Invoke(self, str, game);
-        if (game != null && WarpEnabled(game) && denPos != "NONE")
-        {
-            self.denPosition = denPos;
-        }
     }
 
     private static void PauseMenu_Update(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
@@ -198,29 +216,16 @@ public class WarpModMenu
                 if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 {
                     denPos = room;
+                    //RainWorldGame.ForceSaveNewDenLocation(game, denPos, false);
                     self.PlaySound(SoundID.MENU_Player_Join_Game);
                     updateDenText = true;
                 }
                 else
                 {
-                    //if (mode == Mode.Warp)
-                    //{
                     newRoom = room;
                     warpActive = true;
                     Debug.Log("WARP: Room warp initiated for: " + room);
                     self.Singal(null, "CONTINUE");
-                    //}
-                    //else
-                    //{
-                    //    if(warpContainer.warpStats != null)
-                    //    {
-                    //        warpContainer.warpStats.RemoveSprites();
-                    //        warpContainer.RemoveSubObject(warpContainer.warpStats);
-                    //    }
-                    //    warpContainer.warpStats = new WarpStats(self, warpContainer, new Vector2(), new Vector2());
-                    //    warpContainer.warpStats.GenerateStats(newRegion, room);
-                    //    warpContainer.subObjects.Add(warpContainer.warpStats);
-                    //}
                 }
                 WarpSettings.Save();
             }
@@ -274,7 +279,7 @@ public class WarpModMenu
                     return;
                 }
                 //New region selected, initiate Region Switcher
-                if ((newRegion != null && newRegion.Length == 2 && newRegion != self.activeWorld.region.name))
+                if ((newRegion != null && newRegion != self.activeWorld.region.name))
                 {
                     RegionSwitcher rs = new RegionSwitcher();
                     try
@@ -308,15 +313,22 @@ public class WarpModMenu
                     //Move each player to the new room
                     if (switchRoom.realizedRoom != null && switchRoom.realizedRoom.ReadyForPlayer && player != null && player.room != switchRoom.realizedRoom)
                     {
+                        List<Player> attachedPups = new List<Player>();
                         for (int i = 0; i < self.game.Players.Count; i++)
                         {
                             if (self.game.Players[i].realizedCreature.grasps != null)
                             {
+                                //Checking all grasps
                                 for (int g = 0; g < self.game.Players[i].realizedCreature.grasps.Length; g++)
                                 {
-                                    if (self.game.Players[i].realizedCreature.grasps[g] != null && self.game.Players[i].realizedCreature.grasps[g].grabbed != null && !self.game.Players[i].realizedCreature.grasps[g].discontinued && self.game.Players[i].realizedCreature.grasps[g].grabbed is Creature)
+                                    //If it's a creature, let it go
+                                    if (self.game.Players[i].realizedCreature.grasps[g] != null && self.game.Players[i].realizedCreature.grasps[g].grabbed != null && !self.game.Players[i].realizedCreature.grasps[g].discontinued && (self.game.Players[i].realizedCreature.grasps[g].grabbed is Creature))
                                     {
-                                        self.game.Players[i].realizedCreature.ReleaseGrasp(g);
+                                        //But only if its not another Player/Slugpup
+                                        if (!(self.game.Players[i].realizedCreature.grasps[g].grabbed is Player && (self.game.Players[i].realizedCreature.grasps[g].grabbed as Player).isSlugpup))
+                                        {
+                                            self.game.Players[i].realizedCreature.ReleaseGrasp(g);
+                                        }
                                     }
                                 }
                             }
@@ -325,7 +337,7 @@ public class WarpModMenu
                             self.game.Players[i].realizedCreature.abstractCreature.ChangeRooms(player.room.GetWorldCoordinate(player.mainBodyChunk.pos));
                         }
                     }
-                    //Move player backspears to new room and release creature grasps
+                    //Move player backspears to new room
                     for (int i = 0; i < self.game.Players.Count; i++)
                     {
                         if (self.game.Players[i].realizedCreature != null && (self.game.Players[i].realizedCreature as Player).spearOnBack != null)
@@ -537,6 +549,7 @@ public class WarpModMenu
             foreach (Region r in regs)
             {
                 string name = favourites.Contains(r.name) ? $"> {Region.GetRegionFullName(r.name, game.StoryCharacter)}" : Region.GetRegionFullName(r.name, game.StoryCharacter);
+                if(name == "Unknown Region") { name = r.name; }
                 regions.Add(r.name, name);
             }
             var regList = regions.OrderBy(x => x.Value).ToList();

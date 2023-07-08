@@ -168,10 +168,13 @@ class RoomFinder
                         if (roomLine != null)
                         {
                             //Assign Room Name
-                            if (roomLine[0].Contains(")"))
+                            if (roomLine[0].Contains("}"))
+                            {
+                                info.name = Regex.Split(roomLine[0], "\\}")[1];
+                            }
+                            else if (roomLine[0].Contains(")"))
                             {
                                 info.name = Regex.Split(roomLine[0], "\\)")[1];
-                                Debug.Log(info.name);
                             }
                             else
                             {
@@ -200,7 +203,11 @@ class RoomFinder
                                         break;
                                 }
                             }
-                            roomInfo.Add(info);
+                            //Check that a room with this name doesn't already exist
+                            if(roomInfo.Find(x => x.name == info.name) == null)
+                            {
+                                roomInfo.Add(info);
+                            }
                         }
                     }
                 }

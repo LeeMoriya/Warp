@@ -28,9 +28,9 @@ public class RegionSwitcher
         error = ErrorKey.LoadWorld;
         Debug.Log("WARP: Loading room " + destRoom + " from region " + destWorld + "!");
 
-        for (int i = 0; i < game.Players.Count; i++)
+        for (int i = 0; i < game.AlivePlayers.Count; i++)
         {
-            AbstractCreature absPly = game.Players[i] as AbstractCreature;
+            AbstractCreature absPly = game.AlivePlayers[i] as AbstractCreature;
             if (absPly != null)
             {
                 Debug.Log("WARP: Initiating region warp.");
@@ -126,17 +126,22 @@ public class RegionSwitcher
         game.cameras[0].hud = null;
 
         // Transfer entities between rooms
-        for (int j = 0; j < game.Players.Count; j++)
+        List<Player> slugpups = new List<Player>();
+        for (int j = 0; j < game.AlivePlayers.Count; j++)
         {
             this.error = ErrorKey.MovePlayer;
-            AbstractCreature ply = game.Players[j];
+            AbstractCreature ply = game.AlivePlayers[j];
             if (ply.realizedCreature.grasps != null)
             {
                 for (int g = 0; g < ply.realizedCreature.grasps.Length; g++)
                 {
-                    if (ply.realizedCreature.grasps[g] != null && ply.realizedCreature.grasps[g].grabbed != null && !ply.realizedCreature.grasps[g].discontinued && ply.realizedCreature.grasps[g].grabbed is Creature)
+                    //If it's a creature, let it go
+                    if (ply.realizedCreature.grasps[g] != null && ply.realizedCreature.grasps[g].grabbed != null && !ply.realizedCreature.grasps[g].discontinued && (ply.realizedCreature.grasps[g].grabbed is Creature))
                     {
-                        ply.realizedCreature.ReleaseGrasp(g);
+                        if (!(ply.realizedCreature.grasps[g].grabbed is Player && (ply.realizedCreature.grasps[g].grabbed as Player).isSlugpup))
+                        {
+                            ply.realizedCreature.ReleaseGrasp(g);
+                        }
                     }
                 }
             }
@@ -146,7 +151,9 @@ public class RegionSwitcher
             ply.pos.x = newPos.x;
             ply.pos.y = newPos.y;
             if (j == 0)
+            {
                 newRoom.realizedRoom.aimap.NewWorld(newRoom.index);
+            }
 
             if (ply.realizedObject is Player)
             {
@@ -162,6 +169,7 @@ public class RegionSwitcher
                 objs[i].Room.RemoveEntity(objs[i]);
                 newRoom.AddEntity(objs[i]);
                 objs[i].realizedObject.sticksRespawned = true;
+                
             }
 
             Spear hasSpear = null;
@@ -172,7 +180,7 @@ public class RegionSwitcher
                 (ply.realizedCreature as Player).objectInStomach.world = newWorld;
                 stomachObject = (ply.realizedCreature as Player).objectInStomach;
             }
-            //Re-add backspears
+            //Check for backspears
             if (ply.realizedCreature != null && (ply.realizedCreature as Player).spearOnBack != null)
             {
                 if ((ply.realizedCreature as Player).spearOnBack.spear != null)
@@ -259,6 +267,7 @@ public class RegionSwitcher
                 newRoom.world.game.roomRealizer.followCreature = ply;
             Debug.Log("Player " + j + " Moved to new Region");
         }
+
         // Cut transport vessels from the old region
         for (int i = game.shortcuts.transportVessels.Count - 1; i >= 0; i--)
         {
@@ -285,7 +294,7 @@ public class RegionSwitcher
         // Make sure the camera moves too
         game.cameras[0].MoveCamera(newRoom.realizedRoom, 0);
         //game.cameras[0].ApplyPositionChange();
-        game.cameras[0].FireUpSinglePlayerHUD(game.Players[0].realizedCreature as Player);
+        game.cameras[0].FireUpSinglePlayerHUD(game.AlivePlayers[0].realizedCreature as Player);
 
         // Move the camera
         for (int i = 0; i < game.cameras.Length; i++)
