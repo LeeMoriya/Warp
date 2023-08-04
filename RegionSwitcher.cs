@@ -169,7 +169,6 @@ public class RegionSwitcher
                 objs[i].Room.RemoveEntity(objs[i]);
                 newRoom.AddEntity(objs[i]);
                 objs[i].realizedObject.sticksRespawned = true;
-                
             }
 
             Spear hasSpear = null;
