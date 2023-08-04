@@ -6,22 +6,9 @@ The Warp menu is accessed via the Pause screen. Rooms in your current region are
 
 ![Warp](https://imgur.com/elocb5B.png)
 
-Warp supports three sorting options for rooms:
-- Type: Room, Shelter, Gate, Scavenger Trader, etc.
-- Size: The number of screens a room has.
-- Subregion: Which subregion the room belongs to.
-
-Room buttons can be colored independently of the current sorting option, for example you can sort rooms by their subregion, but color them by their type.
-
-Warp also features a color customiser so that you can adjust the colors used for showing room types and sizes as well as the colors of different subregions for each region. These colors are saved in your Rain World\UserData\Warp folder.
-
-![Colors](https://i.imgur.com/BxFdGyq.png)
-
 ## Requirements:
 Warp versions v1.71 and above are for Rain World Remix (1.9)
 
-Warp version v1.7 and below are for Rain World 1.5 (Available as a beta branch in Steam)
-
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.83)
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.83.5)
