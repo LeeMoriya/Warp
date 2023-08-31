@@ -11,4 +11,4 @@ Warp versions v1.71 and above are for Rain World Remix (1.9)
 
 ## Download:
 
-Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.83.5)
+Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.83.6)
