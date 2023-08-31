@@ -116,7 +116,7 @@ public static class WarpSettings
     {
         string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
         string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Favourites.txt";
-        if (WarpModMenu.favourites != null && WarpModMenu.favourites.Count > 0)
+        if (WarpModMenu.favourites != null)
         {
             string favString = String.Join(":", WarpModMenu.favourites);
             if (!Directory.Exists(rootFolder + "Warp"))
