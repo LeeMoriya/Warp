@@ -8,14 +8,16 @@ using BepInEx;
 using BepInEx.Logging;
 using System.IO;
 
-[BepInPlugin("LeeMoriya.Warp", "Warp", "1.83.6")]
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+
+[BepInPlugin("LeeMoriya.Warp", "Warp", "1.84.1")]
 public class WarpMod : BaseUnityPlugin
 {
     public bool init = false;
-    public ManualLogSource logger;
     public WarpMod()
     {
-        logger = new ManualLogSource("Warp");
+
     }
     public void OnEnable()
     {

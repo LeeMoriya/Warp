@@ -75,6 +75,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="RoomFinder.cs" />
+    <Compile Include="RoomPreview.cs" />
     <Compile Include="WarpButton.cs" />
     <Compile Include="WarpColor.cs" />
     <Compile Include="WarpSettings.cs" />

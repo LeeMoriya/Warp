@@ -51,6 +51,7 @@ public class WarpModMenu
     public static Dictionary<string, List<RoomInfo>> masterRoomList = new Dictionary<string, List<RoomInfo>>();
     public static Dictionary<string, List<string>> subregionNames = new Dictionary<string, List<string>>();
     public static WarpContainer warpContainer;
+    public static RoomPreview roomPreview;
 
     //Old
     public static bool warpActive = false;
@@ -64,6 +65,7 @@ public class WarpModMenu
     public static bool updateDenText = false;
     public static bool denMode = false;
     public static string denPos = "NONE";
+    public static IntVector2 coords = new IntVector2(-1, -1);
 
     public static void MenuHook()
     {
@@ -73,20 +75,26 @@ public class WarpModMenu
         On.OverWorld.Update += OverWorld_Update;
         On.SaveState.LoadGame += SaveState_LoadGame;
         On.Menu.TutorialControlsPage.GrafUpdate += TutorialControlsPage_GrafUpdate;
-        //Testing
-        On.AbstractCreature.Realize += AbstractCreature_Realize;
+        On.RainWorldGame.ContinuePaused += RainWorldGame_ContinuePaused;
     }
 
-    private static void AbstractCreature_Realize(On.AbstractCreature.orig_Realize orig, AbstractCreature self)
+    private static void RainWorldGame_ContinuePaused(On.RainWorldGame.orig_ContinuePaused orig, RainWorldGame self)
     {
+        if(roomPreview != null)
+        {
+            if(self.pauseMenu != null)
+            {
+                self.pauseMenu.wantToContinue = false;
+            }
+            return;
+        }
         orig.Invoke(self);
-        Debug.Log("WARP: Creature realized: " + self.creatureTemplate.name + " ID: " + self.ID);
     }
 
     private static void SaveState_LoadGame(On.SaveState.orig_LoadGame orig, SaveState self, string str, RainWorldGame game)
     {
         orig.Invoke(self, str, game);
-        if(denPos != "NONE")
+        if (denPos != "NONE")
         {
             self.denPosition = denPos;
             self.lastVanillaDen = self.denPosition;
@@ -110,7 +118,10 @@ public class WarpModMenu
 
     private static void PauseMenu_Update(On.Menu.PauseMenu.orig_Update orig, PauseMenu self)
     {
-        orig.Invoke(self);
+        if (roomPreview == null)
+        {
+            orig.Invoke(self);
+        }
         WarpUpdate(self.game, self);
     }
 
@@ -208,6 +219,19 @@ public class WarpModMenu
 
     public static void WarpSignal(PauseMenu self, RainWorldGame game, MenuObject sender, string message)
     {
+        if(message == "CONTINUE")
+        {
+            if(roomPreview != null)
+            {
+                roomPreview.bg?.RemoveFromContainer();
+                roomPreview.previewSprite?.RemoveFromContainer();
+                roomPreview.instructions?.RemoveFromContainer();
+            }
+        }
+        if (warpActive)
+        {
+            return;
+        }
         if (WarpEnabled(game))
         {
             if (message.EndsWith("warp"))
@@ -227,7 +251,6 @@ public class WarpModMenu
                     Debug.Log("WARP: Room warp initiated for: " + room);
                     self.Singal(null, "CONTINUE");
                 }
-                WarpSettings.Save();
             }
             else if (message.EndsWith("reg"))
             {
@@ -236,7 +259,6 @@ public class WarpModMenu
                 Debug.Log("WARP: Loading room list for: " + newRegion);
                 self.PlaySound(SoundID.MENU_Add_Level);
                 updateRoomButtons = true;
-                WarpSettings.Save();
             }
             else if (message == "toggleWarp")
             {
@@ -262,8 +284,8 @@ public class WarpModMenu
                         self.controlMap.lastPos.y = -2000f;
                     }
                 }
-                WarpSettings.Save();
             }
+            WarpSettings.Save();
         }
     }
 
@@ -271,7 +293,7 @@ public class WarpModMenu
     {
         if (WarpEnabled(game))
         {
-            Player player = (self.game.Players.Count <= 0) ? null : (self.game.Players[0].realizedCreature as Player);
+            Player player = (self.game.AlivePlayers.Count <= 0) ? null : (self.game.AlivePlayers[0].realizedCreature as Player);
             if (warpActive)
             {
                 if (player == null || player.inShortcut)
@@ -293,7 +315,6 @@ public class WarpModMenu
                         Debug.Log("WARP ERROR: " + rs.GetErrorText(rs.error));
                         warpError = rs.GetErrorText(rs.error);
                         self.game.pauseMenu = new Menu.PauseMenu(self.game.manager, self.game);
-
                     }
                     warpActive = false;
                 }
@@ -311,41 +332,58 @@ public class WarpModMenu
                         switchRoom.RealizeRoom(self.game.world, self.game);
                     }
                     //Move each player to the new room
-                    if (switchRoom.realizedRoom != null && switchRoom.realizedRoom.ReadyForPlayer && player != null && player.room != switchRoom.realizedRoom)
+                    if (switchRoom.realizedRoom != null && switchRoom.realizedRoom.ReadyForPlayer && player != null)
                     {
-                        List<Player> attachedPups = new List<Player>();
-                        for (int i = 0; i < self.game.Players.Count; i++)
+                        if (player.room != switchRoom.realizedRoom)
                         {
-                            if (self.game.Players[i].realizedCreature.grasps != null)
+                            for (int i = 0; i < self.game.AlivePlayers.Count; i++)
                             {
-                                //Checking all grasps
-                                for (int g = 0; g < self.game.Players[i].realizedCreature.grasps.Length; g++)
+                                if (self.game.AlivePlayers[i].realizedCreature.grasps != null)
                                 {
-                                    //If it's a creature, let it go
-                                    if (self.game.Players[i].realizedCreature.grasps[g] != null && self.game.Players[i].realizedCreature.grasps[g].grabbed != null && !self.game.Players[i].realizedCreature.grasps[g].discontinued && (self.game.Players[i].realizedCreature.grasps[g].grabbed is Creature))
+                                    //Checking all grasps
+                                    for (int g = 0; g < self.game.AlivePlayers[i].realizedCreature.grasps.Length; g++)
                                     {
-                                        //But only if its not another Player/Slugpup
-                                        if (!(self.game.Players[i].realizedCreature.grasps[g].grabbed is Player && (self.game.Players[i].realizedCreature.grasps[g].grabbed as Player).isSlugpup))
+                                        //If it's a creature, let it go
+                                        if (self.game.AlivePlayers[i].realizedCreature.grasps[g] != null && self.game.AlivePlayers[i].realizedCreature.grasps[g].grabbed != null && !self.game.AlivePlayers[i].realizedCreature.grasps[g].discontinued && (self.game.AlivePlayers[i].realizedCreature.grasps[g].grabbed is Creature))
                                         {
-                                            self.game.Players[i].realizedCreature.ReleaseGrasp(g);
+                                            //But only if its not another Player/Slugpup
+                                            if (!(self.game.AlivePlayers[i].realizedCreature.grasps[g].grabbed is Player && (self.game.AlivePlayers[i].realizedCreature.grasps[g].grabbed as Player).isSlugpup))
+                                            {
+                                                self.game.AlivePlayers[i].realizedCreature.ReleaseGrasp(g);
+                                            }
                                         }
                                     }
                                 }
+                                self.game.AlivePlayers[i].realizedCreature.abstractCreature.Move(coords != new IntVector2(-1, -1) ? new WorldCoordinate(switchRoom.index, coords.x, coords.y, -1) : switchRoom.realizedRoom.LocalCoordinateOfNode(0));
+                                self.game.AlivePlayers[i].realizedCreature.PlaceInRoom(switchRoom.realizedRoom);
+                                self.game.AlivePlayers[i].realizedCreature.abstractCreature.ChangeRooms(player.room.GetWorldCoordinate(player.mainBodyChunk.pos));
+                                coords = new IntVector2(-1, -1);
                             }
-                            self.game.Players[i].realizedCreature.abstractCreature.Move(switchRoom.realizedRoom.LocalCoordinateOfNode(0));
-                            self.game.Players[i].realizedCreature.PlaceInRoom(switchRoom.realizedRoom);
-                            self.game.Players[i].realizedCreature.abstractCreature.ChangeRooms(player.room.GetWorldCoordinate(player.mainBodyChunk.pos));
+                        }
+                        else if(coords != new IntVector2(-1, -1))
+                        {
+                            for (int i = 0; i < self.game.AlivePlayers.Count; i++)
+                            {
+                                for (int s = 0; s < self.game.AlivePlayers[i].realizedCreature.bodyChunks.Length; s++)
+                                {
+                                    self.game.AlivePlayers[i].realizedCreature.bodyChunks[s].pos = self.game.AlivePlayers[i].Room.realizedRoom.MiddleOfTile(coords.x, coords.y);
+                                    self.game.AlivePlayers[i].realizedCreature.bodyChunks[s].lastPos = self.game.AlivePlayers[i].realizedCreature.bodyChunks[s].pos;
+                                }
+                            }
+                            warpActive = false;
+                            switchRoom = null;
+                            return;
                         }
                     }
                     //Move player backspears to new room
-                    for (int i = 0; i < self.game.Players.Count; i++)
+                    for (int i = 0; i < self.game.AlivePlayers.Count; i++)
                     {
-                        if (self.game.Players[i].realizedCreature != null && (self.game.Players[i].realizedCreature as Player).spearOnBack != null)
+                        if (self.game.AlivePlayers[i].realizedCreature != null && (self.game.AlivePlayers[i].realizedCreature as Player).spearOnBack != null)
                         {
-                            if ((self.game.Players[i].realizedCreature as Player).spearOnBack.spear != null)
+                            if ((self.game.AlivePlayers[i].realizedCreature as Player).spearOnBack.spear != null)
                             {
-                                (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(switchRoom.realizedRoom);
-                                (self.game.Players[i].realizedCreature as Player).spearOnBack.spear.room = (self.game.Players[i].realizedCreature as Player).room;
+                                (self.game.AlivePlayers[i].realizedCreature as Player).spearOnBack.spear.PlaceInRoom(switchRoom.realizedRoom);
+                                (self.game.AlivePlayers[i].realizedCreature as Player).spearOnBack.spear.room = (self.game.AlivePlayers[i].realizedCreature as Player).room;
                             }
                         }
                     }
@@ -403,6 +441,10 @@ public class WarpModMenu
         public WarpSymbolButton listToggle;
         public WarpSymbolButton colorToggle;
         public WarpSymbolButton favToggle;
+
+        public string roomPreview;
+        public int previewCounter;
+        public bool previewVisible;
 
         public WarpContainer(Menu.Menu menu, MenuObject owner, Vector2 pos, Vector2 size) : base(menu, owner, pos, size)
         {
@@ -474,7 +516,6 @@ public class WarpModMenu
                     GenerateRegionButtons();
                 }
 
-
                 float regionHeight = (dropdownMode ? regionDropdown.PosY : regionButtons.Last().pos.y) - 60f;
 
                 listToggle = new WarpSymbolButton(menu, this, "warpList", "TOGGLE", new Vector2(22f, regionHeight + 20f));
@@ -541,6 +582,7 @@ public class WarpModMenu
                 errorMessage.label.color = new Color(1f, 0f, 0f);
                 subObjects.Add(errorMessage);
             }
+            UpdateSettingPositions();
         }
 
         private List<ListItem> GetRegionListItems(Region[] regs)
@@ -549,7 +591,7 @@ public class WarpModMenu
             foreach (Region r in regs)
             {
                 string name = favourites.Contains(r.name) ? $"> {Region.GetRegionFullName(r.name, game.StoryCharacter)}" : Region.GetRegionFullName(r.name, game.StoryCharacter);
-                if(name == "Unknown Region") { name = r.name; }
+                if (name == "Unknown Region") { name = r.name; }
                 regions.Add(r.name, name);
             }
             var regList = regions.OrderBy(x => x.Value).ToList();
@@ -575,114 +617,38 @@ public class WarpModMenu
             {
                 GenerateRoomButtons(masterRoomList[value], sortType, viewType);
             }
-            if(warpStats != null)
-            {
-                warpStats.GenerateStats(value, "");
-            }
+            warpStats?.GenerateStats(value, "");
         }
 
         private void RegionDropdown_OnListClose(UIfocusable trigger)
         {
             dropOffset = 0f;
+            UpdateSettingPositions();
         }
 
         private void RegionDropdown_OnListOpen(UIfocusable trigger)
         {
             dropOffset = 1500f;
+            UpdateSettingPositions();
         }
 
-        public override void Update()
+        public void UpdateSettingPositions()
         {
-            base.Update();
-            if (warpError != "")
+            if(previewVisible)
             {
-                menu.PlaySound(SoundID.HUD_Game_Over_Prompt);
-                warpError = "";
+                return;
             }
-            if (showMenu)
+            if (filterLabel != null)
             {
-                pos.y = 0f;
-                lastPos.y = 0f;
-            }
-            else
-            {
-                pos.y = -2000f;
-                lastPos.y = -2000f;
-            }
-            counter++;
-            if (roomButtons != null)
-            {
-                if (newRegion == game.cameras[0].room.world.name)
-                {
-                    for (int i = 0; i < roomButtons.Count; i++)
-                    {
-                        if (roomButtons[i].menuLabel.text == game.cameras[0].room.abstractRoom.name.Split(new char[] {'_'}, 2)[1])
-                        {
-                            roomButtons[i].color = new HSLColor(1f, 0f, 0.5f + Mathf.Sin(counter / 10f) * 0.4f).rgb;
-                        }
-                        else
-                        {
-                            roomButtons[i].color = roomButtons[i].defaultColor;
-                        }
-                    }
-                }
-            }
+                filterLabel.pos.y = dropdownMode ? regionDropdown.PosY - (55f + dropOffset) : regionDropdown.PosY - (65f + dropOffset);
+                filterLabel.lastPos = filterLabel.pos;
 
-            if(regionButtons != null && regionButtons.Count > 0)
-            {
-                for (int i = 0; i < regionButtons.Count; i++)
-                {
-                    string text = regionButtons[i].menuLabel.text;
-                    if (masterRoomList.ContainsKey(text))
-                    {
-                        if (favourites.Contains(text))
-                        {
-                            regionButtons[i].color = new Color(1f, 0.3f, 0.3f);
-                        }
-                        else
-                        {
-                            regionButtons[i].color = new Color(0.8f, 0.8f, 0.8f);
-                        }
-                    }
-                    else
-                    {
-                        if (favourites.Contains(text))
-                        {
-                            regionButtons[i].color = new Color(0.45f, 0.35f, 0.35f);
-                        }
-                        else
-                        {
-                            regionButtons[i].color = new Color(0.35f, 0.35f, 0.35f);
-                        }
-                    }
-                }
-            }
-
-            filterLabel.pos.y = dropdownMode ? regionDropdown.PosY - (55f + dropOffset) : regionDropdown.PosY - (65f + dropOffset);
-            filterLabel.lastPos = filterLabel.pos;
-
-            listToggle.pos.y = filterLabel.pos.y + 15f;
-            listToggle.lastPos.y = listToggle.pos.y;
-            colorToggle.pos.y = listToggle.pos.y;
-            colorToggle.lastPos.y = colorToggle.pos.y;
-            favToggle.pos.y = colorToggle.pos.y;
-            favToggle.lastPos.y = favToggle.pos.y;
-            if(favourites!= null)
-            {
-                if(favourites.Contains(newRegion))
-                {
-                    if (favToggle.color != new Color(1f, 0.3f, 0.3f))
-                    {
-                        favToggle.color = new Color(1f, 0.3f, 0.3f);
-                    }
-                }
-                else
-                {
-                    if (favToggle.color != new Color(0.7f, 0.7f, 0.7f))
-                    {
-                        favToggle.color = new Color(0.7f, 0.7f, 0.7f);
-                    }
-                }
+                listToggle.pos.y = filterLabel.pos.y + 15f;
+                listToggle.lastPos.y = listToggle.pos.y;
+                colorToggle.pos.y = listToggle.pos.y;
+                colorToggle.lastPos.y = colorToggle.pos.y;
+                favToggle.pos.y = colorToggle.pos.y;
+                favToggle.lastPos.y = favToggle.pos.y;
             }
 
             if (sortButtons != null)
@@ -691,48 +657,18 @@ public class WarpModMenu
                 {
                     sortButtons[i].pos.y = filterLabel.pos.y - 35f - (30f * i);
                     sortButtons[i].lastPos = sortButtons[i].pos;
-                    if (i == 0 && sortType == SortType.Type)
-                    {
-                        sortButtons[i].color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else if (i == 1 && sortType == SortType.Size)
-                    {
-                        sortButtons[i].color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else if (i == 2 && sortType == SortType.Subregion)
-                    {
-                        sortButtons[i].color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else
-                    {
-                        sortButtons[i].color = new Color(0.4f, 0.4f, 0.4f);
-                    }
                 }
             }
+
             if (viewButtons != null)
             {
                 for (int i = 0; i < viewButtons.Count; i++)
                 {
                     viewButtons[i].pos.y = filterLabel.pos.y - 35f - (30f * i);
                     viewButtons[i].lastPos = viewButtons[i].pos;
-                    if (i == 0 && viewType == ViewType.Type)
-                    {
-                        viewButtons[i].color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else if (i == 1 && viewType == ViewType.Size)
-                    {
-                        viewButtons[i].color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else if (i == 2 && viewType == ViewType.Subregion)
-                    {
-                        viewButtons[i].color = new Color(0.2f, 1f, 0.2f);
-                    }
-                    else
-                    {
-                        viewButtons[i].color = new Color(0.4f, 0.4f, 0.4f);
-                    }
                 }
             }
+
             if (keyLabel != null)
             {
                 keyLabel.pos.y = viewButtons.Last().pos.y - 15f;
@@ -764,7 +700,7 @@ public class WarpModMenu
             {
                 if (regionButtons != null || (subregionLabels != null && subregionLabels.Count > 0 && subregionLabels.Last().pos.y < 320f))
                 {
-                    if(regionButtons != null)
+                    if (regionButtons != null)
                     {
                         warpStats.pos.x = 110f;
                     }
@@ -795,13 +731,167 @@ public class WarpModMenu
             }
         }
 
+        public override void Update()
+        {
+            base.Update();
+            if (warpError != "")
+            {
+                menu.PlaySound(SoundID.HUD_Game_Over_Prompt);
+                warpError = "";
+            }
+            if (showMenu)
+            {
+                pos.y = 0f;
+                lastPos.y = 0f;
+            }
+            else
+            {
+                pos.y = -2000f;
+                lastPos.y = -2000f;
+            }
+            counter++;
+
+            if (roomButtons != null)
+            {
+                if (newRegion == game.cameras[0].room.world.name)
+                {
+                    for (int i = 0; i < roomButtons.Count; i++)
+                    {
+                        if (roomButtons[i].menuLabel.text == game.cameras[0].room.abstractRoom.name.Split(new char[] { '_' }, 2)[1])
+                        {
+                            roomButtons[i].color = new HSLColor(1f, 0f, 0.5f + Mathf.Sin(counter / 10f) * 0.4f).rgb;
+                        }
+                        else
+                        {
+                            roomButtons[i].color = roomButtons[i].defaultColor;
+                        }
+                    }
+                }
+            }
+            if (regionButtons != null && regionButtons.Count > 0)
+            {
+                for (int i = 0; i < regionButtons.Count; i++)
+                {
+                    string text = regionButtons[i].menuLabel.text;
+                    if (masterRoomList.ContainsKey(text))
+                    {
+                        if (favourites.Contains(text))
+                        {
+                            regionButtons[i].color = new Color(1f, 0.3f, 0.3f);
+                        }
+                        else
+                        {
+                            regionButtons[i].color = new Color(0.8f, 0.8f, 0.8f);
+                        }
+                    }
+                    else
+                    {
+                        if (favourites.Contains(text))
+                        {
+                            regionButtons[i].color = new Color(0.45f, 0.35f, 0.35f);
+                        }
+                        else
+                        {
+                            regionButtons[i].color = new Color(0.35f, 0.35f, 0.35f);
+                        }
+                    }
+                }
+            }
+            if (favourites != null)
+            {
+                if (favourites.Contains(newRegion))
+                {
+                    if (favToggle.color != new Color(1f, 0.3f, 0.3f))
+                    {
+                        favToggle.color = new Color(1f, 0.3f, 0.3f);
+                    }
+                }
+                else
+                {
+                    if (favToggle.color != new Color(0.7f, 0.7f, 0.7f))
+                    {
+                        favToggle.color = new Color(0.7f, 0.7f, 0.7f);
+                    }
+                }
+            }
+            if (sortButtons != null)
+            {
+                for (int i = 0; i < sortButtons.Count; i++)
+                {
+                    if (i == 0 && sortType == SortType.Type)
+                    {
+                        sortButtons[i].color = new Color(0.2f, 1f, 0.2f);
+                    }
+                    else if (i == 1 && sortType == SortType.Size)
+                    {
+                        sortButtons[i].color = new Color(0.2f, 1f, 0.2f);
+                    }
+                    else if (i == 2 && sortType == SortType.Subregion)
+                    {
+                        sortButtons[i].color = new Color(0.2f, 1f, 0.2f);
+                    }
+                    else
+                    {
+                        sortButtons[i].color = new Color(0.4f, 0.4f, 0.4f);
+                    }
+                }
+            }
+            if (viewButtons != null)
+            {
+                for (int i = 0; i < viewButtons.Count; i++)
+                {
+                    if (i == 0 && viewType == ViewType.Type)
+                    {
+                        viewButtons[i].color = new Color(0.2f, 1f, 0.2f);
+                    }
+                    else if (i == 1 && viewType == ViewType.Size)
+                    {
+                        viewButtons[i].color = new Color(0.2f, 1f, 0.2f);
+                    }
+                    else if (i == 2 && viewType == ViewType.Subregion)
+                    {
+                        viewButtons[i].color = new Color(0.2f, 1f, 0.2f);
+                    }
+                    else
+                    {
+                        viewButtons[i].color = new Color(0.4f, 0.4f, 0.4f);
+                    }
+                }
+            }
+            for (int i = 0; i < roomButtons.Count; i++)
+            {
+                if (roomButtons[i].Selected || roomButtons[i].IsMouseOverMe)
+                {
+                    if (menu is PauseMenu)
+                    {
+                        (menu as PauseMenu).infoLabel.text = "Left click: Warp    -    Right click: Preview";
+                        (menu as PauseMenu).infoLabel.alpha = 1f;
+                    }
+                }
+            }
+            //Room Preview
+            if (!previewVisible && Input.GetMouseButton(1))
+            {
+                for (int i = 0; i < roomButtons.Count; i++)
+                {
+                    if (roomButtons[i].IsMouseOverMe)
+                    {
+                        previewVisible = true;
+                        (menu as PauseMenu).infoLabel.alpha = 0f;
+                        menu.PlaySound(SoundID.MENU_MultipleChoice_Clicked);
+                        UpdateSettingPositions();
+                        roomPreview = roomButtons[i].signalText.Substring(0, roomButtons[i].signalText.Length - 4);
+                        WarpModMenu.roomPreview = new RoomPreview(menu.manager, this, roomPreview, newRegion, menu as PauseMenu);
+                        menu.manager.ShowDialog(WarpModMenu.roomPreview);
+                    }
+                }
+            }
+        }
+
         public override void RemoveSprites()
         {
             base.RemoveSprites();
-            if (bg != null)
-            {
-                bg.RemoveFromContainer();
-            }
+            bg?.RemoveFromContainer();
         }
 
         public override void Singal(MenuObject sender, string message)
@@ -822,10 +912,7 @@ public class WarpModMenu
                 {
                     GenerateRoomButtons(masterRoomList[regionText], sortType, viewType);
                 }
-                if (warpStats != null)
-                {
-                    warpStats.GenerateStats(regionText, "");
-                }
+                warpStats?.GenerateStats(regionText, "");
                 menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
             }
             if (message == "PAGELEFT")
@@ -874,27 +961,27 @@ public class WarpModMenu
             {
                 loadAll = true;
             }
-            if(message == "TOGGLE")
+            if (message == "TOGGLE")
             {
                 if (WarpModMenu.dropdownMode)
                 {
                     WarpModMenu.dropdownMode = false;
                     regionDropdown.Hide();
-                    if(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     {
                         if (!alphabetical)
                         {
-                            alphabetical= true;
+                            alphabetical = true;
                         }
                         else
                         {
-                            alphabetical= false;
+                            alphabetical = false;
                         }
                     }
                     GenerateRegionButtons();
                     WarpSettings.Save();
                 }
-                else if(regionButtons != null)
+                else if (regionButtons != null)
                 {
                     WarpModMenu.dropdownMode = true;
                     for (int i = 0; i < regionButtons.Count; i++)
@@ -908,6 +995,7 @@ public class WarpModMenu
                 }
                 menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 WarpSettings.Save();
+                UpdateSettingPositions();
             }
             if (message == "STATS")
             {
@@ -943,7 +1031,7 @@ public class WarpModMenu
                 menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 WarpSettings.Save();
             }
-            if(message == "FAV")
+            if (message == "FAV")
             {
                 if (!favourites.Contains(newRegion))
                 {
@@ -972,7 +1060,7 @@ public class WarpModMenu
                 {
                     ListItem[] old = regionDropdown.GetItemList();
                     List<string> oldRegs = new List<string>();
-                    foreach(ListItem item in old)
+                    foreach (ListItem item in old)
                     {
                         oldRegs.Add(item.name);
                     }
@@ -1073,7 +1161,7 @@ public class WarpModMenu
             if (favRegions.Count > 0)
             {
                 favRegions.Sort();
-                regions.InsertRange(0,favRegions);
+                regions.InsertRange(0, favRegions);
             }
 
 
@@ -1083,7 +1171,7 @@ public class WarpModMenu
                 subObjects.Add(button);
                 regionButtons.Add(button);
                 column++;
-                if(column >= 3)
+                if (column >= 3)
                 {
                     column = 0;
                     row++;
@@ -1094,7 +1182,6 @@ public class WarpModMenu
 
         public void RefreshRoomButtons()
         {
-
             if (newRegion != "")
             {
                 if (!masterRoomList.ContainsKey(newRegion))
@@ -1121,6 +1208,7 @@ public class WarpModMenu
                     GenerateRoomButtons(masterRoomList[game.world.region.name], sortType, viewType);
                 }
             }
+            WarpSettings.Save();
         }
 
         public void GenerateRoomButtons(List<RoomInfo> roomList, SortType sort, ViewType view)

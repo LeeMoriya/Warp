@@ -150,6 +150,13 @@ public class RegionSwitcher
             ply.pos.abstractNode = abstractNode;
             ply.pos.x = newPos.x;
             ply.pos.y = newPos.y;
+
+            if(WarpModMenu.coords != new IntVector2(-1, -1))
+            {
+                ply.pos.x = WarpModMenu.coords.x;
+                ply.pos.y = WarpModMenu.coords.y;
+            }
+
             if (j == 0)
             {
                 newRoom.realizedRoom.aimap.NewWorld(newRoom.index);
@@ -165,7 +172,7 @@ public class RegionSwitcher
             for (int i = 0; i < objs.Count; i++)
             {
                 objs[i].world = newWorld;
-                objs[i].pos = newRoom.realizedRoom.LocalCoordinateOfNode(0);
+                objs[i].pos = ply.pos;
                 objs[i].Room.RemoveEntity(objs[i]);
                 newRoom.AddEntity(objs[i]);
                 objs[i].realizedObject.sticksRespawned = true;
@@ -192,7 +199,7 @@ public class RegionSwitcher
             ply.timeSpentHere = 0;
             ply.distanceToMyNode = 0;
             oldRoom.realizedRoom.RemoveObject(ply.realizedCreature);
-            ply.Move(newRoom.realizedRoom.LocalCoordinateOfNode(0));
+            ply.Move(WarpModMenu.coords != new IntVector2(-1,-1) ? new WorldCoordinate(newRoom.index, WarpModMenu.coords.x, WarpModMenu.coords.y, -1) : newRoom.realizedRoom.LocalCoordinateOfNode(0));
 
             if (ply.creatureTemplate.AI && ply.abstractAI.RealAI != null && ply.abstractAI.RealAI.pathFinder != null)
             {
@@ -305,8 +312,6 @@ public class RegionSwitcher
             }
         }
 
-
-
         game.cameras[0].virtualMicrophone.NewRoom(game.cameras[0].room);
 
         // Adapt the region state to the new world
@@ -314,6 +319,8 @@ public class RegionSwitcher
         oldWorld.regionState.world = null;
         newWorld.rainCycle.cycleLength = oldWorld.rainCycle.cycleLength;
         newWorld.rainCycle.timer = oldWorld.rainCycle.timer;
+
+        WarpModMenu.coords = new IntVector2(-1, -1);
     }
 
     public string GetErrorText(ErrorKey key)
