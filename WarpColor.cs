@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Menu;
 using UnityEngine;
 
@@ -479,6 +481,249 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             {
                 lit = Mathf.Lerp(0f, 0.99f, setValue);
             }
+        }
+    }
+}
+
+public static class ColorInfo
+{
+    public static HSLColor[] typeColors = new HSLColor[6]
+    {
+        //1 Room
+        new HSLColor(0.33f,0.99f,0.67f),
+        //2 Gate
+        new HSLColor(0.18f,0.99f,0.63f),
+        //3 Shelter
+        new HSLColor(0.51f,0.99f,0.61f),
+        //4 SwarmRoom
+        new HSLColor(0.73f,0.99f,0.76f),
+        //5 ScavTrader
+        new HSLColor(0.06f,0.99f,0.63f),
+        //6 ScavOutpost
+        new HSLColor(0.99f,0.99f,0.66f)
+    };
+    public static HSLColor[] sizeColors = new HSLColor[9]
+    {
+        //1 Cam
+        new HSLColor(0.33f,0.99f,0.67f),
+        //2 Cam
+        new HSLColor(0.18f,0.99f,0.68f),
+        //3 Cam
+        new HSLColor(0.08f,0.99f,0.61f),
+        //4 Cam
+        new HSLColor(0f,0.99f,0.69f),
+        //5 Cam
+        new HSLColor(0.82f,0.99f,0.73f),
+        //6 Cam
+        new HSLColor(0.71f,0.99f,0.66f),
+        //7 Cam
+        new HSLColor(0.6f,0.99f,0.59f),
+        //8 Cam
+        new HSLColor(0.54f,0.99f,0.65f),
+        //9+ Cam
+        new HSLColor(0.46f,0.99f,0.58f)
+    };
+    //Default subregion colors
+    public static HSLColor[] subregionColors = new HSLColor[15]
+    {
+        //Default
+        new HSLColor(0.46f,0.99f,0.99f),
+        //1 Subregion
+        new HSLColor(0.33f,0.99f,0.67f),
+        //2 Subregion
+        new HSLColor(0.18f,0.99f,0.68f),
+        //3 Subregion
+        new HSLColor(0.08f,0.99f,0.61f),
+        //4 Subregion
+        new HSLColor(0f,0.99f,0.69f),
+        //5 Subregion
+        new HSLColor(0.82f,0.99f,0.73f),
+        //6 Subregion
+        new HSLColor(0.71f,0.99f,0.66f),
+        //7 Subregion
+        new HSLColor(0.6f,0.99f,0.59f),
+        //8 Subregion
+        new HSLColor(0.54f,0.99f,0.65f),
+        //9 Subregion
+        new HSLColor(0.46f,0.99f,0.58f),
+        //10 Subregion
+        new HSLColor(0.82f,0.99f,0.73f),
+        //11 Subregion
+        new HSLColor(0.71f,0.99f,0.66f),
+        //12 Subregion
+        new HSLColor(0.6f,0.99f,0.59f),
+        //13 Subregion
+        new HSLColor(0.54f,0.99f,0.65f),
+        //14 Subregion
+        new HSLColor(0.46f,0.99f,0.58f),
+    };
+
+    public static Dictionary<string, List<HSLColor>> customSubregionColors = new Dictionary<string, List<HSLColor>>();
+
+    public static void Save()
+    {
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string savePath = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
+        StringBuilder sb = new StringBuilder();
+        //Type
+        sb.Append("[TYPE]");
+        sb.AppendLine();
+        for (int i = 0; i < typeColors.Length; i++)
+        {
+            sb.Append(Math.Round(typeColors[i].hue, 2) + ":" + Math.Round(typeColors[i].saturation, 2) + ":" + Math.Round(typeColors[i].lightness, 2));
+            sb.AppendLine();
+        }
+        //Size
+        sb.Append("[SIZE]");
+        sb.AppendLine();
+        for (int i = 0; i < sizeColors.Length; i++)
+        {
+            sb.Append(Math.Round(sizeColors[i].hue, 2) + ":" + Math.Round(sizeColors[i].saturation, 2) + ":" + Math.Round(sizeColors[i].lightness, 2));
+            sb.AppendLine();
+        }
+        sb.Append("[SUBREGION]");
+        sb.AppendLine();
+        for (int i = 0; i < customSubregionColors.Keys.Count; i++)
+        {
+            sb.Append("[" + customSubregionColors.ElementAt(i).Key + "]");
+            sb.AppendLine();
+            for (int c = 0; c < customSubregionColors.ElementAt(i).Value.Count; c++)
+            {
+                sb.Append(Math.Round(customSubregionColors.ElementAt(i).Value[c].hue, 2) + ":" + Math.Round(customSubregionColors.ElementAt(i).Value[c].saturation, 2) + ":" + Math.Round(customSubregionColors.ElementAt(i).Value[c].lightness, 2));
+                sb.AppendLine();
+            }
+        }
+        sb.Append("[END]");
+        string text = sb.ToString();
+        if (!Directory.Exists(rootFolder + "Warp"))
+        {
+            Directory.CreateDirectory(rootFolder + "Warp");
+        }
+        File.WriteAllText(savePath, text);
+        Debug.Log("Custom Warp colors saved");
+    }
+
+    public static void Load()
+    {
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string savePath = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
+        if (File.Exists(savePath))
+        {
+            string[] array = new string[]
+            {
+                string.Empty
+            };
+            array = File.ReadAllLines(savePath);
+            int section = 0;
+            int index = 0;
+            string currentReg = "";
+            if (array != new string[] { string.Empty } && array.Length > 0)
+            {
+                for (int i = 0; i < array.Length; i++)
+                {
+                    if (!array[i].StartsWith("//") && array[i] != "")
+                    {
+                        if (array[i] == "[END]")
+                        {
+                            break;
+                        }
+                        if (section == 3)
+                        {
+                            //Determine region
+                            if (array[i].StartsWith("["))
+                            {
+                                char[] trim = { '[', ']' };
+                                string reg = array[i].Trim(trim);
+                                currentReg = reg;
+                                //Region in save file is present
+                                if (!customSubregionColors.ContainsKey(reg))
+                                {
+                                    customSubregionColors.Add(reg, new List<HSLColor>());
+                                }
+                                else
+                                {
+                                    customSubregionColors[reg] = new List<HSLColor>();
+                                }
+                            }
+                            else
+                            {
+                                if (customSubregionColors.ContainsKey(currentReg))
+                                {
+                                    string[] col = Regex.Split(array[i], ":");
+                                    try
+                                    {
+                                        HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
+                                        customSubregionColors[currentReg].Add(hsl);
+                                    }
+                                    catch
+                                    {
+                                        Debug.LogError("Error reading color from save file");
+                                    }
+                                }
+                                else
+                                {
+                                    Debug.Log("REGION NOT PRESENT IN CUSTOM COLOR DICT");
+                                }
+                            }
+                        }
+                        if (array[i] == "[SUBREGION]")
+                        {
+                            section = 3;
+                            index = 0;
+                        }
+                        if (section == 2)
+                        {
+                            string[] col = Regex.Split(array[i], ":");
+                            try
+                            {
+                                HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
+                                sizeColors[index] = hsl;
+                            }
+                            catch
+                            {
+                                Debug.LogError("Error reading color from save file");
+                            }
+                            index++;
+                        }
+                        if (array[i] == "[SIZE]")
+                        {
+                            section = 2;
+                            index = 0;
+                        }
+                        if (section == 1)
+                        {
+                            string[] col = Regex.Split(array[i], ":");
+                            try
+                            {
+                                HSLColor hsl = new HSLColor(float.Parse(col[0]), float.Parse(col[1]), float.Parse(col[2]));
+                                typeColors[index] = hsl;
+                            }
+                            catch
+                            {
+                                Debug.LogError("Error reading color from save file");
+                            }
+                            index++;
+                        }
+                        if (array[i] == "[TYPE]")
+                        {
+                            section = 1;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (!Directory.Exists(rootFolder + "Warp"))
+            {
+                Directory.CreateDirectory(rootFolder + "Warp");
+            }
+            if (Directory.Exists(rootFolder + "Warp"))
+            {
+                //File.WriteAllText(savePath, Warp.Resources.Colors);
+            }
+            Load();
+            Debug.Log("Custom Warp colors loaded");
         }
     }
 }
