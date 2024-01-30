@@ -560,6 +560,16 @@ public static class ColorInfo
 
     public static Dictionary<string, List<HSLColor>> customSubregionColors = new Dictionary<string, List<HSLColor>>();
 
+    public static void Wipe()
+    {
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string savePath = rootFolder + "Warp" + Path.DirectorySeparatorChar + "Colors.txt";
+        if (File.Exists(savePath))
+        {
+            File.Delete(savePath);
+        }
+    }
+
     public static void Save()
     {
         string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
@@ -720,9 +730,9 @@ public static class ColorInfo
             }
             if (Directory.Exists(rootFolder + "Warp"))
             {
-                //File.WriteAllText(savePath, Warp.Resources.Colors);
+                File.WriteAllText(savePath, Warp.Resources.Colors);
+                Load();
             }
-            Load();
             Debug.Log("Custom Warp colors loaded");
         }
     }

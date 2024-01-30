@@ -80,9 +80,9 @@ public class WarpModMenu
 
     private static void RainWorldGame_ContinuePaused(On.RainWorldGame.orig_ContinuePaused orig, RainWorldGame self)
     {
-        if(roomPreview != null)
+        if (roomPreview != null)
         {
-            if(self.pauseMenu != null)
+            if (self.pauseMenu != null)
             {
                 self.pauseMenu.wantToContinue = false;
             }
@@ -219,9 +219,9 @@ public class WarpModMenu
 
     public static void WarpSignal(PauseMenu self, RainWorldGame game, MenuObject sender, string message)
     {
-        if(message == "CONTINUE")
+        if (message == "CONTINUE")
         {
-            if(roomPreview != null)
+            if (roomPreview != null)
             {
                 roomPreview.bg?.RemoveFromContainer();
                 roomPreview.previewSprite?.RemoveFromContainer();
@@ -360,7 +360,7 @@ public class WarpModMenu
                                 coords = new IntVector2(-1, -1);
                             }
                         }
-                        else if(coords != new IntVector2(-1, -1))
+                        else if (coords != new IntVector2(-1, -1))
                         {
                             for (int i = 0; i < self.game.AlivePlayers.Count; i++)
                             {
@@ -451,14 +451,16 @@ public class WarpModMenu
             WarpSettings.LoadFavourites();
             game = (menu as PauseMenu).game;
             newRegion = game.world.region.name;
-            //try
-            //{
-            //    ColorInfo.Load();
-            //}
-            //catch
-            //{
-            //    Debug.Log("WARP: Error loading color info!");
-            //}
+            try
+            {
+                ColorInfo.Load();
+            }
+            catch
+            {
+                ColorInfo.Wipe();
+                Debug.Log("WARP: Error loading color info!");
+                (menu as PauseMenu).wantToContinue = true;
+            }
             bg = new FSprite("LinearGradient200", true);
             bg.color = new Color(0.01f, 0.01f, 0.01f);
             bg.SetAnchor(1f, 0f);
@@ -634,7 +636,7 @@ public class WarpModMenu
 
         public void UpdateSettingPositions()
         {
-            if(previewVisible)
+            if (previewVisible)
             {
                 return;
             }
@@ -1213,328 +1215,331 @@ public class WarpModMenu
 
         public void GenerateRoomButtons(List<RoomInfo> roomList, SortType sort, ViewType view)
         {
-            try
+            //Don't generate room buttons if the color customiser is open
+            if (warpColor != null)
             {
-                //Don't generate room buttons if the color customiser is open
-                if (warpColor != null)
-                {
-                    return;
-                }
-                if (pageLeft != null || pageRight != null)
-                {
-                    pageLeft.RemoveSprites();
-                    RemoveSubObject(pageLeft);
-                    pageLeft = null;
-                    pageRight.RemoveSprites();
-                    RemoveSubObject(pageRight);
-                    pageRight = null;
-                }
-                //Remove existing buttons and labels
-                if (roomButtons != null)
-                {
-                    ObliterateRoomButtons();
-                }
-                if (categoryLabels != null)
-                {
-                    ObliterateCategoryLabels();
-                }
-                if (colorKey != null)
-                {
-                    ObliterateColorKeyLabels();
-                }
-                IntVector2 offset = new IntVector2();
-                gateOffset = new IntVector2();
-                float regionHeight = sortButtons.Last().pos.y;
-                float categoryOffset = 0f;
-                float screenWidth = game.rainWorld.options.ScreenSize.x - 20f;
-                float screenHeight = game.rainWorld.options.ScreenSize.y;
-                int num = -1;
-                roomButtons = new List<WarpButton>();
-                categoryLabels = new List<MenuLabel>();
-                colorKey = new List<MenuLabel>();
-                subregionLabels = new List<MenuLabel>();
-                List<string> subregionNames = new List<string>();
-                //Generate buttons
-                switch (sort)
-                {
-                    case SortType.Type:
-                        {
-                            roomList.Sort(RoomInfo.SortByTypeAndName);
-                            break;
-                        }
-                    case SortType.Size:
-                        {
-                            roomList.Sort(RoomInfo.SortBySizeAndName);
-                            break;
-                        }
-                    case SortType.Subregion:
-                        {
-                            roomList.Sort(RoomInfo.SortBySubregionAndName);
-                            break;
-                        }
-                }
-                foreach (RoomInfo info in roomList)
-                {
-                    Color color = new Color(1f, 1f, 1f);
-                    if (info.cameras == 0)
+                return;
+            }
+            if (pageLeft != null || pageRight != null)
+            {
+                pageLeft.RemoveSprites();
+                RemoveSubObject(pageLeft);
+                pageLeft = null;
+                pageRight.RemoveSprites();
+                RemoveSubObject(pageRight);
+                pageRight = null;
+            }
+            //Remove existing buttons and labels
+            if (roomButtons != null)
+            {
+                ObliterateRoomButtons();
+            }
+            if (categoryLabels != null)
+            {
+                ObliterateCategoryLabels();
+            }
+            if (colorKey != null)
+            {
+                ObliterateColorKeyLabels();
+            }
+            IntVector2 offset = new IntVector2();
+            gateOffset = new IntVector2();
+            float regionHeight = sortButtons.Last().pos.y;
+            float categoryOffset = 0f;
+            float screenWidth = game.rainWorld.options.ScreenSize.x - 20f;
+            float screenHeight = game.rainWorld.options.ScreenSize.y;
+            int num = -1;
+            roomButtons = new List<WarpButton>();
+            categoryLabels = new List<MenuLabel>();
+            colorKey = new List<MenuLabel>();
+            subregionLabels = new List<MenuLabel>();
+            List<string> subregionNames = new List<string>();
+            //Generate buttons
+            switch (sort)
+            {
+                case SortType.Type:
                     {
-                        info.cameras = 1;
+                        roomList.Sort(RoomInfo.SortByTypeAndName);
+                        break;
                     }
-                    switch (view)
+                case SortType.Size:
                     {
-                        case ViewType.Type:
-                            {
-                                color = ColorInfo.typeColors[(int)info.type].rgb;
-                                break;
-                            }
-                        case ViewType.Size:
-                            {
-                                if (info.cameras <= 9)
-                                {
-                                    color = ColorInfo.sizeColors[info.cameras - 1].rgb;
-                                }
-                                else
-                                {
-                                    color = ColorInfo.sizeColors[8].rgb;
-                                }
-                                break;
-                            }
-                        case ViewType.Subregion:
-                            {
-                                if (ColorInfo.customSubregionColors.ContainsKey(newRegion))
-                                {
-                                    color = ColorInfo.customSubregionColors[newRegion][info.subregion].rgb;
-                                }
-                                else
-                                {
-                                    color = ColorInfo.subregionColors[info.subregion].rgb;
-                                }
-                                break;
-                            }
+                        roomList.Sort(RoomInfo.SortBySizeAndName);
+                        break;
                     }
-                    switch (sort)
+                case SortType.Subregion:
                     {
-                        case SortType.Subregion:
-                            {
-                                if (num == -1)
-                                {
-                                    num = info.subregion;
-                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
-                                    categoryLabels.Add(label);
-                                }
-                                if (info.subregion != num)
-                                {
-                                    if (offset.y > 0)
-                                    {
-                                        offset.x++;
-                                        categoryOffset -= 5f;
-                                    }
-                                    else
-                                    {
-                                        categoryOffset += 5f;
-                                    }
-                                    offset.y = 0;
-                                    num = info.subregion;
-                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
-                                    categoryLabels.Add(label);
-                                }
-                                break;
-                            }
-                        case SortType.Size:
-                            {
-                                if (num == -1)
-                                {
-                                    num = info.cameras;
-                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
-                                    categoryLabels.Add(label);
-                                }
-                                if (info.cameras != num)
-                                {
-                                    if (offset.y > 0)
-                                    {
-                                        offset.x++;
-                                        categoryOffset -= 5f;
-                                    }
-                                    offset.y = 0;
-                                    num = info.cameras;
-                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
-                                    categoryLabels.Add(label);
-                                }
-                                break;
-                            }
-                        case SortType.Type:
-                            {
-                                if (num == -1)
-                                {
-                                    num = (int)info.type;
-                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
-                                    categoryLabels.Add(label);
-                                }
-                                if ((int)info.type != num)
-                                {
-                                    if (offset.y > 0)
-                                    {
-                                        offset.x++;
-                                        categoryOffset -= 5f;
-                                    }
-                                    offset.y = 0;
-                                    num = (int)info.type;
-                                    MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
-                                    categoryLabels.Add(label);
-                                }
-                                break;
-                            }
+                        roomList.Sort(RoomInfo.SortBySubregionAndName);
+                        break;
                     }
-                    string name = "";
-                    name = Regex.Split(info.name, "_(.+)")[1];
-                    roomButtons.Add(new WarpButton(menu, this, name, info.name + "warp", new Vector2(screenWidth - (80f + categoryOffset) - (75f * offset.x), screenHeight - 80f - (30f * offset.y)), new Vector2(60f, 25f), color));
-                    if (offset.y < 20)
-                    {
-                        offset.y++;
-                    }
-                    else
-                    {
-                        offset.x++;
-                        offset.y = 0;
-                        categoryOffset -= 10f;
-                    }
-                }
-                //Add buttons
-                bool largeRegion = false;
-                for (int i = 0; i < roomButtons.Count; i++)
+            }
+            foreach (RoomInfo info in roomList)
+            {
+                Color color = new Color(1f, 1f, 1f);
+                if (info.cameras == 0)
                 {
-                    if (roomButtons[i].pos.x < 250f)
-                    {
-                        largeRegion = true;
-                        roomButtons[i].pos.x -= 2000f;
-                    }
-                    subObjects.Add(roomButtons[i]);
+                    info.cameras = 1;
                 }
-
-
-                float sortHeight = regionHeight - 15f;
-                //Add Color Key
                 switch (view)
                 {
                     case ViewType.Type:
                         {
-                            colorKey = new List<MenuLabel>();
-                            keyLabel = new MenuLabel(menu, this, "ROOM TYPE", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
-                            keyLabel.label.alignment = FLabelAlignment.Left;
-                            subObjects.Add(keyLabel);
-                            for (int i = 0; i < ColorInfo.typeColors.Length; i++)
-                            {
-                                MenuLabel label = new MenuLabel(menu, this, Enum.GetNames(typeof(RoomInfo.RoomType))[i], new Vector2(), new Vector2(), false);
-                                label.label.color = ColorInfo.typeColors[i].rgb;
-                                label.label.alignment = FLabelAlignment.Left;
-                                colorKey.Add(label);
-                            }
+                            color = ColorInfo.typeColors[(int)info.type].rgb;
                             break;
                         }
                     case ViewType.Size:
                         {
-                            colorKey = new List<MenuLabel>();
-                            keyLabel = new MenuLabel(menu, this, "ROOM SIZE", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
-                            keyLabel.label.alignment = FLabelAlignment.Left;
-                            subObjects.Add(keyLabel);
-                            for (int i = 0; i < ColorInfo.sizeColors.Length; i++)
+                            if (info.cameras <= 9)
                             {
-                                string name = (i + 1).ToString();
-                                if (i >= 8)
-                                {
-                                    name = "9+";
-                                }
-                                MenuLabel label = new MenuLabel(menu, this, name, new Vector2(), new Vector2(), false);
-                                label.label.alignment = FLabelAlignment.Left;
-                                label.label.color = ColorInfo.sizeColors[i].rgb;
-                                colorKey.Add(label);
+                                color = ColorInfo.sizeColors[info.cameras - 1].rgb;
+                            }
+                            else
+                            {
+                                color = ColorInfo.sizeColors[8].rgb;
                             }
                             break;
                         }
                     case ViewType.Subregion:
                         {
-                            //Sort list by Subregion so values can match correct labels
-                            colorKey = new List<MenuLabel>();
-                            keyLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
-                            keyLabel.label.alignment = FLabelAlignment.Left;
-                            subObjects.Add(keyLabel);
-                            for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
+                            if (ColorInfo.customSubregionColors.ContainsKey(newRegion))
                             {
-                                MenuLabel label = new MenuLabel(menu, this, WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
-                                label.label.alignment = FLabelAlignment.Left;
-                                while (WarpModMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[newRegion].Count)
-                                {
-                                    ColorInfo.customSubregionColors[newRegion].Add(new HSLColor(1f, 1f, 1f));
-                                }
-                                label.label.color = ColorInfo.customSubregionColors[newRegion][i].rgb;
-                                colorKey.Add(label);
+                                color = ColorInfo.customSubregionColors[newRegion][info.subregion].rgb;
+                            }
+                            else
+                            {
+                                color = ColorInfo.subregionColors[info.subregion].rgb;
                             }
                             break;
                         }
                 }
-                //Add color key labels
-                for (int i = 0; i < colorKey.Count; i++)
+                switch (sort)
                 {
-                    if (viewType == ViewType.Size)
-                    {
-                        colorKey[i].pos = new Vector2(25f + (10f * i), keyLabel.pos.y - 15f);
-                    }
-                    else
-                    {
-                        colorKey[i].pos = new Vector2(25f, sortHeight - 35f - (15f * i));
-                    }
-                    subObjects.Add(colorKey[i]);
+                    case SortType.Subregion:
+                        {
+                            if (num == -1)
+                            {
+                                num = info.subregion;
+                                MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                categoryLabels.Add(label);
+                            }
+                            if (info.subregion != num)
+                            {
+                                if (offset.y > 0)
+                                {
+                                    offset.x++;
+                                    categoryOffset -= 5f;
+                                }
+                                else
+                                {
+                                    categoryOffset += 5f;
+                                }
+                                offset.y = 0;
+                                num = info.subregion;
+                                MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                categoryLabels.Add(label);
+                            }
+                            break;
+                        }
+                    case SortType.Size:
+                        {
+                            if (num == -1)
+                            {
+                                num = info.cameras;
+                                MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                categoryLabels.Add(label);
+                            }
+                            if (info.cameras != num)
+                            {
+                                if (offset.y > 0)
+                                {
+                                    offset.x++;
+                                    categoryOffset -= 5f;
+                                }
+                                offset.y = 0;
+                                num = info.cameras;
+                                MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                categoryLabels.Add(label);
+                            }
+                            break;
+                        }
+                    case SortType.Type:
+                        {
+                            if (num == -1)
+                            {
+                                num = (int)info.type;
+                                MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                categoryLabels.Add(label);
+                            }
+                            if ((int)info.type != num)
+                            {
+                                if (offset.y > 0)
+                                {
+                                    offset.x++;
+                                    categoryOffset -= 5f;
+                                }
+                                offset.y = 0;
+                                num = (int)info.type;
+                                MenuLabel label = new MenuLabel(menu, this, CategoryName(sort, num), new Vector2(screenWidth - (50f + categoryOffset) - (75f * offset.x), screenHeight - 45f), new Vector2(), false);
+                                categoryLabels.Add(label);
+                            }
+                            break;
+                        }
                 }
-                if (sortType == SortType.Subregion && viewType != ViewType.Subregion)
+                string name = "";
+                string[] split = Regex.Split(info.name, "_(.+)");
+
+                if(split.Length > 1)
                 {
-                    subregionLabels = new List<MenuLabel>();
-                    roomList.Sort(RoomInfo.SortBySubregionAndName);
-                    float subregionHeight = 0f;
-                    if (viewType == ViewType.Size)
-                    {
-                        subregionHeight = sortHeight - 40f;
-                    }
-                    else
-                    {
-                        subregionHeight = sortHeight - 25f - (15f * colorKey.Count);
-                    }
-                    subLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, subregionHeight - 15f), new Vector2(), false);
-                    subLabel.label.alignment = FLabelAlignment.Left;
-                    subObjects.Add(subLabel);
-                    for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
-                    {
-                        MenuLabel label = new MenuLabel(menu, this, i + " - " + WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
-                        label.label.alignment = FLabelAlignment.Left;
-                        label.label.color = ColorInfo.subregionColors[i].rgb;
-                        subregionLabels.Add(label);
-                    }
-                    for (int i = 0; i < subregionLabels.Count; i++)
-                    {
-                        subregionLabels[i].pos = new Vector2(25f, subregionHeight - 35f - (15f * i));
-                        subObjects.Add(subregionLabels[i]);
-                    }
+                    name = split[1];
                 }
-                //TODO - this doesn't work
-                for (int i = 0; i < categoryLabels.Count; i++)
+                else
                 {
-                    if (categoryLabels[i].label.x < 250f)
-                    {
-                        categoryLabels[i].label.SetPosition(categoryLabels[i].label.x - 2000f, categoryLabels[i].label.y);
-                    }
-                    subObjects.Add(categoryLabels[i]);
+                    continue;
                 }
-                if (largeRegion && (pageLeft == null || pageRight == null))
+
+                roomButtons.Add(new WarpButton(menu, this, name, info.name + "warp", new Vector2(screenWidth - (80f + categoryOffset) - (75f * offset.x), screenHeight - 80f - (30f * offset.y)), new Vector2(60f, 25f), color));
+                if (offset.y < 20)
                 {
-                    pageLeft = new WarpButton(menu, this, "LEFT", "PAGELEFT", new Vector2(screenWidth - 135f, 55f), new Vector2(50f, 25f), new Color(0.3f, 0.3f, 0.3f));
-                    pageRight = new WarpButton(menu, this, "RIGHT", "PAGERIGHT", new Vector2(screenWidth - 80f, 55f), new Vector2(50f, 25f), new Color(1f, 0.9f, 0f));
-                    pageLeft.buttonBehav.greyedOut = true;
-                    subObjects.Add(pageLeft);
-                    subObjects.Add(pageRight);
+                    offset.y++;
+                }
+                else
+                {
+                    offset.x++;
+                    offset.y = 0;
+                    categoryOffset -= 10f;
                 }
             }
-            catch (Exception e)
+            //Add buttons
+            bool largeRegion = false;
+            for (int i = 0; i < roomButtons.Count; i++)
             {
-                Debug.LogException(e);
+                if (roomButtons[i].pos.x < 250f)
+                {
+                    largeRegion = true;
+                    roomButtons[i].pos.x -= 2000f;
+                }
+                subObjects.Add(roomButtons[i]);
+            }
+
+
+            float sortHeight = regionHeight - 15f;
+            //Add Color Key
+            switch (view)
+            {
+                case ViewType.Type:
+                    {
+                        colorKey = new List<MenuLabel>();
+                        keyLabel = new MenuLabel(menu, this, "ROOM TYPE", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
+                        keyLabel.label.alignment = FLabelAlignment.Left;
+                        subObjects.Add(keyLabel);
+                        for (int i = 0; i < ColorInfo.typeColors.Length; i++)
+                        {
+                            MenuLabel label = new MenuLabel(menu, this, Enum.GetNames(typeof(RoomInfo.RoomType))[i], new Vector2(), new Vector2(), false);
+                            label.label.color = ColorInfo.typeColors[i].rgb;
+                            label.label.alignment = FLabelAlignment.Left;
+                            colorKey.Add(label);
+                        }
+                        break;
+                    }
+                case ViewType.Size:
+                    {
+                        colorKey = new List<MenuLabel>();
+                        keyLabel = new MenuLabel(menu, this, "ROOM SIZE", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
+                        keyLabel.label.alignment = FLabelAlignment.Left;
+                        subObjects.Add(keyLabel);
+                        for (int i = 0; i < ColorInfo.sizeColors.Length; i++)
+                        {
+                            string name = (i + 1).ToString();
+                            if (i >= 8)
+                            {
+                                name = "9+";
+                            }
+                            MenuLabel label = new MenuLabel(menu, this, name, new Vector2(), new Vector2(), false);
+                            label.label.alignment = FLabelAlignment.Left;
+                            label.label.color = ColorInfo.sizeColors[i].rgb;
+                            colorKey.Add(label);
+                        }
+                        break;
+                    }
+                case ViewType.Subregion:
+                    {
+                        //Sort list by Subregion so values can match correct labels
+                        colorKey = new List<MenuLabel>();
+                        keyLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
+                        keyLabel.label.alignment = FLabelAlignment.Left;
+                        subObjects.Add(keyLabel);
+                        for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
+                        {
+                            MenuLabel label = new MenuLabel(menu, this, WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
+                            label.label.alignment = FLabelAlignment.Left;
+                            while (WarpModMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[newRegion].Count)
+                            {
+                                ColorInfo.customSubregionColors[newRegion].Add(new HSLColor(1f, 1f, 1f));
+                            }
+                            label.label.color = ColorInfo.customSubregionColors[newRegion][i].rgb;
+                            colorKey.Add(label);
+                        }
+                        break;
+                    }
+            }
+            //Add color key labels
+            for (int i = 0; i < colorKey.Count; i++)
+            {
+                if (viewType == ViewType.Size)
+                {
+                    colorKey[i].pos = new Vector2(25f + (10f * i), keyLabel.pos.y - 15f);
+                }
+                else
+                {
+                    colorKey[i].pos = new Vector2(25f, sortHeight - 35f - (15f * i));
+                }
+                subObjects.Add(colorKey[i]);
+            }
+            if (sortType == SortType.Subregion && viewType != ViewType.Subregion)
+            {
+                subregionLabels = new List<MenuLabel>();
+                roomList.Sort(RoomInfo.SortBySubregionAndName);
+                float subregionHeight = 0f;
+                if (viewType == ViewType.Size)
+                {
+                    subregionHeight = sortHeight - 40f;
+                }
+                else
+                {
+                    subregionHeight = sortHeight - 25f - (15f * colorKey.Count);
+                }
+                subLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, subregionHeight - 15f), new Vector2(), false);
+                subLabel.label.alignment = FLabelAlignment.Left;
+                subObjects.Add(subLabel);
+                for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
+                {
+                    MenuLabel label = new MenuLabel(menu, this, i + " - " + WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
+                    label.label.alignment = FLabelAlignment.Left;
+                    label.label.color = ColorInfo.subregionColors[i].rgb;
+                    subregionLabels.Add(label);
+                }
+                for (int i = 0; i < subregionLabels.Count; i++)
+                {
+                    subregionLabels[i].pos = new Vector2(25f, subregionHeight - 35f - (15f * i));
+                    subObjects.Add(subregionLabels[i]);
+                }
+            }
+            //TODO - this doesn't work
+            for (int i = 0; i < categoryLabels.Count; i++)
+            {
+                if (categoryLabels[i].label.x < 250f)
+                {
+                    categoryLabels[i].label.SetPosition(categoryLabels[i].label.x - 2000f, categoryLabels[i].label.y);
+                }
+                subObjects.Add(categoryLabels[i]);
+            }
+            if (largeRegion && (pageLeft == null || pageRight == null))
+            {
+                pageLeft = new WarpButton(menu, this, "LEFT", "PAGELEFT", new Vector2(screenWidth - 135f, 55f), new Vector2(50f, 25f), new Color(0.3f, 0.3f, 0.3f));
+                pageRight = new WarpButton(menu, this, "RIGHT", "PAGERIGHT", new Vector2(screenWidth - 80f, 55f), new Vector2(50f, 25f), new Color(1f, 0.9f, 0f));
+                pageLeft.buttonBehav.greyedOut = true;
+                subObjects.Add(pageLeft);
+                subObjects.Add(pageRight);
             }
         }
 

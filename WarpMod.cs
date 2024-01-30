@@ -11,7 +11,7 @@ using System.IO;
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-[BepInPlugin("LeeMoriya.Warp", "Warp", "1.84.1")]
+[BepInPlugin("LeeMoriya.Warp", "Warp", "1.84.4")]
 public class WarpMod : BaseUnityPlugin
 {
     public bool init = false;

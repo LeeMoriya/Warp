@@ -16,7 +16,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>F:\Steam Games\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\warp\plugins\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -33,15 +33,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BepInEx">
-      <HintPath>..\rain-world-unity\Build\Standalone Windows\BepInEx\core\BepInEx.dll</HintPath>
+      <HintPath>F:\Steam Games\steamapps\common\Rain World\BepInEx\core\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HOOKS-Assembly-CSharp">
       <HintPath>F:\Steam Games\steamapps\common\Rain World\BepInEx\plugins\HOOKS-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="STRIPPED-Assembly-CSharp">
-      <HintPath>F:\Modding\STRIPPED-Assembly-CSharp.dll</HintPath>
+    <Reference Include="PUBLIC-Assembly-CSharp">
+      <HintPath>F:\Steam Games\steamapps\common\Rain World\BepInEx\utils\PUBLIC-Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -51,11 +51,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>..\rain-world-unity\Build\Standalone Windows\RainWorld_Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>F:\Steam Games\steamapps\common\Rain World\RainWorld_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\rain-world-unity\Build\Standalone Windows\RainWorld_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>F:\Steam Games\steamapps\common\Rain World\RainWorld_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
@@ -63,7 +63,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>..\rain-world-unity\Build\Standalone Windows\RainWorld_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>F:\Steam Games\steamapps\common\Rain World\RainWorld_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

@@ -27,7 +27,7 @@ class RoomFinder
         //to get the most up-to-date version of that room file for parsing.
 
         //Parse the world file for room names and tags and add them to the room list
-        roomList.AddRange(ParseWorldFile(filePath));
+        roomList.AddRange(ParseWorldFile(filePath, region));
 
         //Loop through each room in the roomList and check the true location of that room file for additional info
         foreach (RoomInfo info in roomList)
@@ -100,7 +100,7 @@ class RoomFinder
                         string subRegionName = null;
                         string[] spl = Regex.Split(nameAndInfo[1], "><");
                         if (spl.Length >= 6)
-                            subRegionName = (spl[5].Trim() == "" ? null : spl[5].Trim());
+                            subRegionName = spl[5].Trim() == "" ? null : spl[5].Trim();
 
                         info.subregion = 0;
                         info.subregionName = "None";
@@ -145,7 +145,7 @@ class RoomFinder
         return roomList;
     }
 
-    public List<RoomInfo> ParseWorldFile(string path)
+    public List<RoomInfo> ParseWorldFile(string path, string region)
     {
         List<RoomInfo> roomInfo = new List<RoomInfo>();
         if (File.Exists(path))
@@ -165,7 +165,7 @@ class RoomFinder
                         RoomInfo info = new RoomInfo();
                         //Check for conditionals
                         string[] roomLine = Regex.Split(worldFile[i], " : ");
-                        if (roomLine != null)
+                        if (roomLine != null && (roomLine[0].Contains($"{region}_") || roomLine[0].Contains("GATE_")))
                         {
                             //Assign Room Name
                             if (roomLine[0].Contains("}"))
