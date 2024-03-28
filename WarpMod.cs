@@ -11,7 +11,7 @@ using System.IO;
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 
-[BepInPlugin("LeeMoriya.Warp", "Warp", "1.84.4")]
+[BepInPlugin("LeeMoriya.Warp", "Warp", "1.84.8")]
 public class WarpMod : BaseUnityPlugin
 {
     public bool init = false;
@@ -22,20 +22,7 @@ public class WarpMod : BaseUnityPlugin
     public void OnEnable()
     {
         On.RainWorld.OnModsInit += RainWorld_OnModsInit;
-        //On.RainWorld.Update += RainWorld_Update;
     }
-
-    //private void RainWorld_Update(On.RainWorld.orig_Update orig, RainWorld self)
-    //{
-    //    try
-    //    {
-    //        orig.Invoke(self);
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        Debug.LogException(e);
-    //    }
-    //}
 
     private void RainWorld_OnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
     {

@@ -451,16 +451,16 @@ public class WarpModMenu
             WarpSettings.LoadFavourites();
             game = (menu as PauseMenu).game;
             newRegion = game.world.region.name;
-            try
-            {
-                ColorInfo.Load();
-            }
-            catch
-            {
-                ColorInfo.Wipe();
-                Debug.Log("WARP: Error loading color info!");
-                (menu as PauseMenu).wantToContinue = true;
-            }
+            //try
+            //{
+            //    ColorInfo.Load();
+            //}
+            //catch
+            //{
+            //    ColorInfo.Wipe();
+            //    Debug.Log("WARP: Error loading color info!");
+            //    (menu as PauseMenu).wantToContinue = true;
+            //}
             bg = new FSprite("LinearGradient200", true);
             bg.color = new Color(0.01f, 0.01f, 0.01f);
             bg.SetAnchor(1f, 0f);
@@ -596,7 +596,17 @@ public class WarpModMenu
                 if (name == "Unknown Region") { name = r.name; }
                 regions.Add(r.name, name);
             }
-            var regList = regions.OrderBy(x => x.Value).ToList();
+
+            var regList = new List<KeyValuePair<string, string>>();
+
+            if (!alphabetical)
+            {
+                regList = regions.ToList();
+            }
+            else
+            {
+                regList = regions.OrderBy(x => x.Value).ToList();
+            }
             List<ListItem> regionsList = new List<ListItem>();
             for (int i = 0; i < regList.Count; i++)
             {
@@ -871,6 +881,30 @@ public class WarpModMenu
                     }
                 }
             }
+            if (listToggle.Selected || listToggle.IsMouseOverMe)
+            {
+                if (menu is PauseMenu)
+                {
+                    (menu as PauseMenu).infoLabel.text = "Toggle the region list between list view and button view | Shift click to toggle alphabetical sorting";
+                    (menu as PauseMenu).infoLabel.alpha = 1f;
+                }
+            }
+            if (colorToggle.Selected || colorToggle.IsMouseOverMe)
+            {
+                if (menu is PauseMenu)
+                {
+                    (menu as PauseMenu).infoLabel.text = "Opens the colour customiser where you can change the colors for room types, sizes and subregions";
+                    (menu as PauseMenu).infoLabel.alpha = 1f;
+                }
+            }
+            if (favToggle.Selected || favToggle.IsMouseOverMe)
+            {
+                if (menu is PauseMenu)
+                {
+                    (menu as PauseMenu).infoLabel.text = "Toggle whether this region is favourited, putting it to the top of the list";
+                    (menu as PauseMenu).infoLabel.alpha = 1f;
+                }
+            }
             //Room Preview
             if (!previewVisible && Input.GetMouseButton(1))
             {
@@ -992,6 +1026,7 @@ public class WarpModMenu
                         RemoveSubObject(regionButtons[i]);
                     }
                     regionButtons = null;
+                    regionDropdown._itemList = GetRegionListItems(game.overWorld.regions).ToArray();
                     regionDropdown.Show();
                     dropOffset = 0f;
                 }
@@ -1220,6 +1255,8 @@ public class WarpModMenu
             {
                 return;
             }
+            ColorInfo.Load();
+
             if (pageLeft != null || pageRight != null)
             {
                 pageLeft.RemoveSprites();
@@ -1303,7 +1340,15 @@ public class WarpModMenu
                         {
                             if (ColorInfo.customSubregionColors.ContainsKey(newRegion))
                             {
-                                color = ColorInfo.customSubregionColors[newRegion][info.subregion].rgb;
+                                if (ColorInfo.customSubregionColors[newRegion].Count - 1 < info.subregion)
+                                {
+                                    ColorInfo.customSubregionColors[newRegion].Add(ColorInfo.subregionColors[info.subregion]);
+                                    color = ColorInfo.customSubregionColors[newRegion][info.subregion].rgb;
+                                }
+                                else
+                                {
+                                    color = ColorInfo.customSubregionColors[newRegion][info.subregion].rgb;
+                                }
                             }
                             else
                             {
@@ -1388,7 +1433,7 @@ public class WarpModMenu
                 string name = "";
                 string[] split = Regex.Split(info.name, "_(.+)");
 
-                if(split.Length > 1)
+                if (split.Length > 1)
                 {
                     name = split[1];
                 }

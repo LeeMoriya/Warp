@@ -721,6 +721,14 @@ public static class ColorInfo
                     }
                 }
             }
+            //If there are more subregions than there are custom colors defined, add new colors until there are
+            for (int i = 0; i < WarpModMenu.subregionNames.Count; i++)
+            {
+                if (i > customSubregionColors[currentReg].Count)
+                {
+                    customSubregionColors[currentReg].Add(subregionColors[i]);
+                }
+            }
         }
         else
         {
@@ -735,5 +743,6 @@ public static class ColorInfo
             }
             Debug.Log("Custom Warp colors loaded");
         }
+
     }
 }

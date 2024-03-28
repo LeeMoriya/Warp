@@ -11,6 +11,25 @@ using Application = UnityEngine.Application;
 
 class RoomFinder
 {
+    public List<string> spoilerRooms = new List<string>();
+    public List<string> FindSpoilerRooms(string path)
+    {
+        List<string> spoilerRooms = new List<string>();
+
+        if (File.Exists(path))
+        {
+            string[] lines = File.ReadAllLines(path);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (!lines[i].StartsWith("//"))
+                {
+                    spoilerRooms.Add(lines[i].Trim());
+                }
+            }
+        }
+
+        return spoilerRooms;
+    }
     public List<RoomInfo> GetRegionInfo(string region)
     {
         //Region information can be found in multiple locations, vanilla world folders, world folders from Downpour mod folders, the mergedmods folder and workshop folders.
@@ -21,12 +40,15 @@ class RoomFinder
 
         //Check if a world file for this region exists
         string filePath = AssetManager.ResolveFilePath($"world/{region}/world_{region}.txt");
+        string spoilerPath = AssetManager.ResolveFilePath($"world/{region}/spoilers.txt");
 
         //The path to the -rooms folder is unecessary because in the instances of vanilla regions that have been modified, the mergedmods folder will only contain
         //the modified files and not the originals. Therefore we should only use the updated world file location, parse it for room names, and then use the AssetManager
         //to get the most up-to-date version of that room file for parsing.
 
         //Parse the world file for room names and tags and add them to the room list
+
+        spoilerRooms = FindSpoilerRooms(spoilerPath);
         roomList.AddRange(ParseWorldFile(filePath, region));
 
         //Loop through each room in the roomList and check the true location of that room file for additional info
@@ -120,6 +142,7 @@ class RoomFinder
         Debug.Log("Assigning default subregion colors");
         if (!ColorInfo.customSubregionColors.ContainsKey(region))
         {
+            Debug.Log($"WARP: region {region} doesn't have custom subregion colors defined");
             ColorInfo.customSubregionColors.Add(region, new List<HSLColor>());
             for (int i = 0; i < subregionNames.Count; i++)
             {
@@ -128,11 +151,16 @@ class RoomFinder
         }
         else if (subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
         {
-            while (subregionNames.Count > ColorInfo.customSubregionColors[region].Count)
+            Debug.Log($"WARP: region {region} has {subregionNames.Count} subregions but only {ColorInfo.customSubregionColors[region].Count} custom colors defined");
+            for (int i = ColorInfo.customSubregionColors[region].Count; i < subregionNames.Count; i++)
             {
-                ColorInfo.customSubregionColors[region].Add(new HSLColor(0.5f, 0f, 1f));
+                ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
+                Debug.Log($"WARP: added custom color at index: {i}");
+                Debug.Log($"WARP: total custom colors is now {ColorInfo.customSubregionColors[region].Count}");
             }
         }
+        //ColorInfo.customSubregionColors[region].Add(new HSLColor(1f, 0.5f, 0.5f));
+
         Debug.Log("Default subregion colors assigned");
 
         if (!WarpModMenu.masterRoomList.ContainsKey(region))
@@ -206,7 +234,10 @@ class RoomFinder
                             //Check that a room with this name doesn't already exist
                             if(roomInfo.Find(x => x.name == info.name) == null)
                             {
-                                roomInfo.Add(info);
+                                if (!spoilerRooms.Contains(info.name))
+                                {
+                                    roomInfo.Add(info);
+                                }
                             }
                         }
                     }
