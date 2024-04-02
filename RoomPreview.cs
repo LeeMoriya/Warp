@@ -416,7 +416,6 @@ public class RoomPreview : Dialog
             mousePos /= previewSprite.scale * 3;
             mousePos.x += width / 2;
             mousePos.y += height / 2;
-            //Debug.Log($"Room: {width}x{height} - Coord: {Mathf.RoundToInt(mousePos.x)}x{Mathf.RoundToInt(mousePos.y)}");
             if (mousePos.x > 0 && mousePos.x < width && mousePos.y > 0 && mousePos.y < height)
             {
                 WarpModMenu.coords = new IntVector2(Mathf.RoundToInt(mousePos.x), Mathf.RoundToInt(mousePos.y));

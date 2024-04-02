@@ -271,7 +271,7 @@ public class RegionSwitcher
             }
             if (j == 0)
                 newRoom.world.game.roomRealizer.followCreature = ply;
-            Debug.Log("Player " + j + " Moved to new Region");
+            Debug.Log("WARP: Player " + j + " Moved to new Region");
         }
 
         // Cut transport vessels from the old region

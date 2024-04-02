@@ -105,7 +105,7 @@ public static class WarpSettings
                 for (int i = 0; i < favs.Length; i++)
                 {
                     WarpModMenu.favourites.Add(favs[i]);
-                    Debug.Log("Loading Fav: " + favs[i]);
+                    Debug.Log("WARP: Loading Fav: " + favs[i]);
                 }
             }
             catch { }

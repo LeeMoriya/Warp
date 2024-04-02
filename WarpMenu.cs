@@ -619,7 +619,7 @@ public class WarpModMenu
         private void RegionDropdown_OnValueChanged(UIconfig config, string value, string oldValue)
         {
             newRegion = value;
-            if (!masterRoomList.ContainsKey(value))
+            if (!masterRoomList.ContainsKey(value) || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
             {
                 RoomFinder rf = new RoomFinder();
                 List<RoomInfo> roomList = rf.GetRegionInfo(value);
@@ -881,6 +881,17 @@ public class WarpModMenu
                     }
                 }
             }
+            for (int i = 0; i < regionButtons.Count; i++)
+            {
+                if (regionButtons[i].Selected || regionButtons[i].IsMouseOverMe)
+                {
+                    if (menu is PauseMenu)
+                    {
+                        (menu as PauseMenu).infoLabel.text = "Left click: Load Region    -    Shift click: Reload Region";
+                        (menu as PauseMenu).infoLabel.alpha = 1f;
+                    }
+                }
+            }
             if (listToggle.Selected || listToggle.IsMouseOverMe)
             {
                 if (menu is PauseMenu)
@@ -938,7 +949,7 @@ public class WarpModMenu
                 string regionText = (sender as WarpButton).menuLabel.text;
                 Debug.Log($"WARP: {regionText}");
                 newRegion = regionText;
-                if (!masterRoomList.ContainsKey(regionText))
+                if (!masterRoomList.ContainsKey(regionText) || Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                 {
                     RoomFinder rf = new RoomFinder();
                     List<RoomInfo> roomList = rf.GetRegionInfo(regionText);
@@ -1072,13 +1083,13 @@ public class WarpModMenu
             {
                 if (!favourites.Contains(newRegion))
                 {
-                    Debug.Log("Fav region: " + newRegion);
+                    Debug.Log("WARP: Fav region: " + newRegion);
                     favourites.Add(newRegion);
                     menu.PlaySound(SoundID.MENU_Player_Join_Game);
                 }
                 else
                 {
-                    Debug.Log("Unfav region: " + newRegion);
+                    Debug.Log("WARP: Unfav region: " + newRegion);
                     favourites.Remove(newRegion);
                     menu.PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
                 }

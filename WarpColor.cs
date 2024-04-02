@@ -203,7 +203,6 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
                         break;
                     }
             }
-            Debug.Log("H:" + hue + "S:" + sat + "L:" + lit);
             hue = currentCol.hue;
             sat = currentCol.saturation;
             lit = currentCol.lightness;
@@ -261,7 +260,7 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
 
     public void CreateSubregionButtons()
     {
-        Debug.Log("Creating subregion buttons");
+        Debug.Log("WARP: Creating subregion buttons");
         subregionNames = new List<string>();
         if (WarpModMenu.masterRoomList.ContainsKey(currentRegion))
         {
@@ -610,7 +609,7 @@ public static class ColorInfo
             Directory.CreateDirectory(rootFolder + "Warp");
         }
         File.WriteAllText(savePath, text);
-        Debug.Log("Custom Warp colors saved");
+        Debug.Log("WARP: Custom Warp colors saved");
     }
 
     public static void Load()
@@ -672,7 +671,7 @@ public static class ColorInfo
                                 }
                                 else
                                 {
-                                    Debug.Log("REGION NOT PRESENT IN CUSTOM COLOR DICT");
+                                    Debug.Log("WARP: REGION NOT PRESENT IN CUSTOM COLOR DICT");
                                 }
                             }
                         }
@@ -741,7 +740,7 @@ public static class ColorInfo
                 File.WriteAllText(savePath, Warp.Resources.Colors);
                 Load();
             }
-            Debug.Log("Custom Warp colors loaded");
+            Debug.Log("WARP: Custom Warp colors loaded");
         }
 
     }

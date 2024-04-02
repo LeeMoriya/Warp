@@ -59,7 +59,6 @@ class RoomFinder
             if (File.Exists(roomPath))
             {
                 string[] roomFile = File.ReadAllLines(roomPath);
-                Debug.Log($"{info.name}: {roomFile[3]}");
                 string[] cameraCount = Regex.Split(roomFile[3], @"\|");
                 if (cameraCount != null && cameraCount.Length > 0)
                 {
@@ -139,7 +138,7 @@ class RoomFinder
             }
         }
 
-        Debug.Log("Assigning default subregion colors");
+        Debug.Log("WARP: Assigning default subregion colors");
         if (!ColorInfo.customSubregionColors.ContainsKey(region))
         {
             Debug.Log($"WARP: region {region} doesn't have custom subregion colors defined");
@@ -161,12 +160,17 @@ class RoomFinder
         }
         //ColorInfo.customSubregionColors[region].Add(new HSLColor(1f, 0.5f, 0.5f));
 
-        Debug.Log("Default subregion colors assigned");
+        Debug.Log("WARP: Default subregion colors assigned");
 
         if (!WarpModMenu.masterRoomList.ContainsKey(region))
         {
             WarpModMenu.masterRoomList.Add(region, roomList);
-            Debug.Log(region + " added to master list");
+            Debug.Log($"WARP: {region} added to master list");
+        }
+        else
+        {
+            WarpModMenu.masterRoomList[region].Clear();
+            WarpModMenu.masterRoomList[region].AddRange(roomList);
         }
 
         roomList.Sort(RoomInfo.SortByTypeAndName);

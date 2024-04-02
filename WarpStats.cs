@@ -52,7 +52,7 @@ public class WarpStats : RectangularMenuObject
 
     public void GenerateStats(string region, string room)
     {
-        Debug.Log("Generating " + region + " stats");
+        Debug.Log("WARP: Generating " + region + " stats");
         int rooms = 0;
         int screens = 0;
         int gates = 0;
