@@ -523,7 +523,7 @@ public static class ColorInfo
         new HSLColor(0.46f,0.99f,0.58f)
     };
     //Default subregion colors
-    public static HSLColor[] subregionColors = new HSLColor[15]
+    public static List<HSLColor> subregionColors = new List<HSLColor>()
     {
         //Default
         new HSLColor(0.46f,0.99f,0.99f),

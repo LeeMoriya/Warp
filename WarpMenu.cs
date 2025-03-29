@@ -881,14 +881,17 @@ public class WarpModMenu
                     }
                 }
             }
-            for (int i = 0; i < regionButtons.Count; i++)
+            if (regionButtons != null && regionButtons.Count > 0)
             {
-                if (regionButtons[i].Selected || regionButtons[i].IsMouseOverMe)
+                for (int i = 0; i < regionButtons.Count; i++)
                 {
-                    if (menu is PauseMenu)
+                    if (regionButtons[i].Selected || regionButtons[i].IsMouseOverMe)
                     {
-                        (menu as PauseMenu).infoLabel.text = "Left click: Load Region    -    Shift click: Reload Region";
-                        (menu as PauseMenu).infoLabel.alpha = 1f;
+                        if (menu is PauseMenu)
+                        {
+                            (menu as PauseMenu).infoLabel.text = "Left click: Load Region    -    Shift click: Reload Region";
+                            (menu as PauseMenu).infoLabel.alpha = 1f;
+                        }
                     }
                 }
             }

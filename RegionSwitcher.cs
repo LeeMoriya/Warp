@@ -22,7 +22,13 @@ public class RegionSwitcher
         MoveCamera
     }
 
-    private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod("LoadWorld", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+    private MethodInfo _OverWorld_LoadWorld = typeof(OverWorld).GetMethod(
+        "LoadWorld",
+        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+        null,
+        new Type[] { typeof(string), typeof(SlugcatStats.Name), typeof(SlugcatStats.Timeline), typeof(bool) },
+        null
+    );
     public void SwitchRegions(RainWorldGame game, string destWorld, string destRoom, IntVector2 destPos)
     {
         error = ErrorKey.LoadWorld;
@@ -30,7 +36,7 @@ public class RegionSwitcher
 
         for (int i = 0; i < game.AlivePlayers.Count; i++)
         {
-            AbstractCreature absPly = game.AlivePlayers[i] as AbstractCreature;
+            AbstractCreature absPly = game.AlivePlayers[i];
             if (absPly != null)
             {
                 Debug.Log("WARP: Initiating region warp.");
@@ -41,7 +47,7 @@ public class RegionSwitcher
                     // Load the new world
                     Debug.Log("WARP: Invoking original LoadWorld method for new region.");
                     World oldWorld = game.overWorld.activeWorld;
-                    _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, false });
+                    _OverWorld_LoadWorld.Invoke(game.overWorld, new object[] { destWorld, game.overWorld.PlayerCharacterNumber, game.overWorld.PlayerTimelinePosition, false });
 
                     // Move the player and held items to the new room
                     Debug.Log("WARP: Moving player to new region.");

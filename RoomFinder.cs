@@ -56,9 +56,19 @@ class RoomFinder
         {
             //Check if Room .txt Exists
             string roomPath = AssetManager.ResolveFilePath($"world/{region}-rooms/{info.name}.txt");
+            string levelPath = AssetManager.ResolveFilePath($"levels/{info.name}.txt");
             if (File.Exists(roomPath))
             {
                 string[] roomFile = File.ReadAllLines(roomPath);
+                string[] cameraCount = Regex.Split(roomFile[3], @"\|");
+                if (cameraCount != null && cameraCount.Length > 0)
+                {
+                    info.cameras = cameraCount.Length;
+                }
+            }
+            else if (File.Exists(levelPath))
+            {
+                string[] roomFile = File.ReadAllLines(levelPath);
                 string[] cameraCount = Regex.Split(roomFile[3], @"\|");
                 if (cameraCount != null && cameraCount.Length > 0)
                 {
@@ -143,6 +153,17 @@ class RoomFinder
         {
             Debug.Log($"WARP: region {region} doesn't have custom subregion colors defined");
             ColorInfo.customSubregionColors.Add(region, new List<HSLColor>());
+            int currentColorCount = ColorInfo.subregionColors.Count;
+            int newColors = subregionNames.Count - currentColorCount;
+
+            if(newColors > 0)
+            {
+                for (int i = 0; i < newColors; i++)
+                {
+                    ColorInfo.subregionColors.Add(new HSLColor(UnityEngine.Random.value, UnityEngine.Random.Range(0.7f, 1f), UnityEngine.Random.Range(0.7f, 1f)));
+                }
+            }
+
             for (int i = 0; i < subregionNames.Count; i++)
             {
                 ColorInfo.customSubregionColors[region].Add(ColorInfo.subregionColors[i]);
