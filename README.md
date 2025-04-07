@@ -7,7 +7,8 @@ The Warp menu is accessed via the Pause screen. Rooms in your current region are
 ![Warp](https://imgur.com/Z4ye1e4.png)
 
 ## Requirements:
-Warp versions v1.71 and above are for Rain World Remix (1.9)
+Warp versions v1.71 and above are for Rain World v1.9
+Warp versions v.86.0 and above are for Rain World v1.10
 
 ## Download:
 
