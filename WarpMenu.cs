@@ -52,6 +52,9 @@ public class WarpModMenu
     public static Dictionary<string, List<string>> subregionNames = new Dictionary<string, List<string>>();
     public static WarpContainer warpContainer;
     public static RoomPreview roomPreview;
+    public static bool fullLoad = false;
+    public static int fullLoadIndex = 0;
+    public static int exportDelay = 0;
 
     //Old
     public static bool warpActive = false;
@@ -201,7 +204,6 @@ public class WarpModMenu
                 {
                     RoomFinder rf = new RoomFinder();
                     List<RoomInfo> roomList = rf.GetRegionInfo(newRegion);
-                    rf.GetRegionInfo(newRegion);
                     warpContainer.GenerateRoomButtons(roomList, sortType, viewType);
                 }
                 else
@@ -212,6 +214,32 @@ public class WarpModMenu
                 if (warpContainer != null && warpContainer.warpStats != null)
                 {
                     warpContainer.warpStats.GenerateStats(newRegion, "");
+                }
+            }
+            if (Input.GetKey(KeyCode.F5) && !fullLoad)
+            {
+                fullLoad = true;
+            }
+            if (fullLoad && fullLoadIndex != game.overWorld.regions.Length)
+            {
+                RoomFinder rf = new RoomFinder();
+                List<RoomInfo> roomList = rf.GetRegionInfo(game.overWorld.regions[fullLoadIndex].name);
+                fullLoadIndex++;
+                if(fullLoadIndex == game.overWorld.regions.Length)
+                {
+                    WarpSettings.ExportRoomList();
+                }
+            }
+            if (Input.GetKey(KeyCode.F6) && exportDelay == 0)
+            {
+                WarpSettings.ExportRoomList();
+            }
+            else
+            {
+                exportDelay--;
+                if(exportDelay < 0)
+                {
+                    exportDelay = 0;
                 }
             }
         }
@@ -1269,7 +1297,14 @@ public class WarpModMenu
             {
                 return;
             }
-            ColorInfo.Load();
+            try
+            {
+                ColorInfo.Load();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
 
             if (pageLeft != null || pageRight != null)
             {
@@ -1570,12 +1605,15 @@ public class WarpModMenu
                 subLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, subregionHeight - 15f), new Vector2(), false);
                 subLabel.label.alignment = FLabelAlignment.Left;
                 subObjects.Add(subLabel);
-                for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
+                if (WarpModMenu.subregionNames.ContainsKey(newRegion))
                 {
-                    MenuLabel label = new MenuLabel(menu, this, i + " - " + WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
-                    label.label.alignment = FLabelAlignment.Left;
-                    label.label.color = ColorInfo.subregionColors[i].rgb;
-                    subregionLabels.Add(label);
+                    for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
+                    {
+                        MenuLabel label = new MenuLabel(menu, this, i + " - " + WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
+                        label.label.alignment = FLabelAlignment.Left;
+                        label.label.color = ColorInfo.subregionColors[i].rgb;
+                        subregionLabels.Add(label);
+                    }
                 }
                 for (int i = 0; i < subregionLabels.Count; i++)
                 {

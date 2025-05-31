@@ -7,6 +7,7 @@ using UnityEngine;
 using RWCustom;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 public static class WarpSettings
 {
@@ -105,7 +106,7 @@ public static class WarpSettings
                 for (int i = 0; i < favs.Length; i++)
                 {
                     WarpModMenu.favourites.Add(favs[i]);
-                    Debug.Log("WARP: Loading Fav: " + favs[i]);
+                    UnityEngine.Debug.Log("WARP: Loading Fav: " + favs[i]);
                 }
             }
             catch { }
@@ -124,6 +125,49 @@ public static class WarpSettings
                 Directory.CreateDirectory(rootFolder + "Warp");
             }
             File.WriteAllText(path, favString);
+        }
+    }
+
+    public static void ExportRoomList()
+    {
+        string rootFolder = Application.persistentDataPath + Path.DirectorySeparatorChar;
+        string path = rootFolder + "Warp" + Path.DirectorySeparatorChar + "RoomListExport.txt";
+        if (!Directory.Exists(rootFolder + "Warp"))
+        {
+            Directory.CreateDirectory(rootFolder + "Warp");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.Append("---WARP Room List Export---");
+        sb.AppendLine();
+        sb.AppendLine();
+        foreach (KeyValuePair<string,List<RoomInfo>> kvp in WarpModMenu.masterRoomList)
+        {
+            sb.Append($"---{kvp.Key}---");
+            for(int i = 0; i < kvp.Value.Count; i++)
+            {
+                sb.AppendLine();
+                sb.Append($"{kvp.Value[i].name}: | Cameras: {kvp.Value[i].cameras}, Subregion: {kvp.Value[i].cameras}");
+            }
+            sb.AppendLine();
+            sb.Append($"---Total Rooms: {kvp.Value.Count}---");
+            sb.AppendLine();
+            sb.AppendLine();
+        }
+        File.WriteAllText(path, sb.ToString());
+
+        try
+        {
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            };
+            Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError($"Failed to open file: {ex.Message}");
         }
     }
 }
