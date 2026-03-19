@@ -335,37 +335,51 @@ public class RegionSwitcher
         {
             case ErrorKey.LoadWorld:
                 {
-                    return "An error occurred while loading the new region, check your room connections";
+                    return Translate("An error occurred while loading the new region, check your room connections");
                 }
             case ErrorKey.AbstractRoom:
                 {
-                    return "An error occurred while loading the destination AbstractRoom";
+                    return Translate("An error occurred while loading the destination AbstractRoom");
                 }
             case ErrorKey.RealiseRoom:
                 {
-                    return "An error occurred while realising the destination room";
+                    return Translate("An error occurred while realising the destination room");
                 }
             case ErrorKey.RoomRealiser:
                 {
-                    return "An error occurred while loading rooms in the new region";
+                    return Translate("An error occurred while loading rooms in the new region");
                 }
             case ErrorKey.FindNode:
                 {
-                    return "An error occurred while finding a node to place the player";
+                    return Translate("An error occurred while finding a node to place the player");
                 }
             case ErrorKey.MovePlayer:
                 {
-                    return "An error occurred while moving the player to the new region";
+                    return Translate("An error occurred while moving the player to the new region");
                 }
             case ErrorKey.MoveObjects:
                 {
-                    return "An error occurred while moving the player's items";
+                    return Translate("An error occurred while moving the player's items");
                 }
             case ErrorKey.MoveCamera:
                 {
-                    return "An error occurred while moving the RoomCamera to the new room";
+                    return Translate("An error occurred while moving the RoomCamera to the new room");
                 }
         }
-        return "I have no idea how you got this error";
+        return Translate("I have no idea how you got this error");
+    }
+
+    private static string Translate(string text)
+    {
+        string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
+        bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
+        if (useTranslate)
+        {
+            return text;
+        }
+        else
+        {
+            return TranslateText;
+        }
     }
 }
