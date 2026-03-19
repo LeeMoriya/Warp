@@ -557,7 +557,7 @@ public class WarpModMenu
                     //statText = "WARP";
                     statText = Translate("STATS");
                 }
-                statButton = new WarpButton(menu, this, statText, Translate("STATS"), new Vector2(20f + ((hOffset - 25f) * 1), game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20f), statColor);
+                statButton = new WarpButton(menu, this, statText, "STATS", new Vector2(20f + ((hOffset - 25f) * 1), game.rainWorld.options.ScreenSize.y - 72f), new Vector2(45f, 20f), statColor);
                 subObjects.Add(statButton);
 
                 if (!dropdownMode)
@@ -1563,7 +1563,7 @@ public class WarpModMenu
                         subObjects.Add(keyLabel);
                         for (int i = 0; i < ColorInfo.typeColors.Length; i++)
                         {
-                            MenuLabel label = new MenuLabel(menu, this, Enum.GetNames(typeof(RoomInfo.RoomType))[i], new Vector2(), new Vector2(), false);
+                            MenuLabel label = new MenuLabel(menu, this, Translate(Enum.GetNames(typeof(RoomInfo.RoomType))[i]), new Vector2(), new Vector2(), false);
                             label.label.color = ColorInfo.typeColors[i].rgb;
                             label.label.alignment = FLabelAlignment.Left;
                             colorKey.Add(label);
@@ -1711,7 +1711,7 @@ public class WarpModMenu
                                     break;
                                 }
                         }
-                        return text;
+                        return Translate(text);
                     }
 
             }
@@ -1774,26 +1774,25 @@ public class WarpModMenu
             }
         }
 
-        //public override void GrafUpdate(float timeStacker)
-        //{
-        //    base.GrafUpdate(timeStacker);
-        //    if (denLabel != null)
-        //    {
-        //        if (denPos == "NONE")
-        //        {
-        //            denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Hold shift + click a room to assign").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
-        //        }
-        //        else
-        //        {
-        //            denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Press C to clear").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
-        //        }
-        //    }
-        //}
+        public override void GrafUpdate(float timeStacker)
+        {
+            base.GrafUpdate(timeStacker);
+            if (denLabel != null)
+            {
+                if (denPos == "NONE")
+                {
+                    denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Hold shift + click a room to assign").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
+                }
+                else
+                {
+                    denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Press C to clear").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
+                }
+            }
+        }
 
         private static string Translate(string text)
         {
             string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
-            Debug.Log(TranslateText);
             bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
             if (useTranslate)
             {
