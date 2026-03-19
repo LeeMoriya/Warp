@@ -143,6 +143,7 @@ public class WarpStats : RectangularMenuObject
     private static string Translate(string text)
     {
         string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
+        Debug.Log(TranslateText);
         bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
         if (useTranslate)
         {

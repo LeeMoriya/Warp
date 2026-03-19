@@ -641,8 +641,8 @@ public class WarpModMenu
             Dictionary<string, string> regions = new Dictionary<string, string>();
             foreach (Region r in regs)
             {
-                string name = favourites.Contains(r.name) ? $"> {Region.GetRegionFullName(r.name, game.StoryCharacter)}" : Region.GetRegionFullName(r.name, game.StoryCharacter);
-                if (name == "Unknown Region") { name = r.name; }
+                string name = favourites.Contains(r.name) ? $"> {Translate(Region.GetRegionFullName(r.name, game.StoryCharacter))}" : Translate(Region.GetRegionFullName(r.name, game.StoryCharacter));
+                if (name == Translate("Unknown Region")) { name = r.name; }
                 if (!regions.ContainsKey(r.name))
                 {
                     regions.Add(r.name, name);
@@ -1774,25 +1774,26 @@ public class WarpModMenu
             }
         }
 
-        public override void GrafUpdate(float timeStacker)
-        {
-            base.GrafUpdate(timeStacker);
-            if (denLabel != null)
-            {
-                if (denPos == "NONE")
-                {
-                    denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Hold shift + click a room to assign").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
-                }
-                else
-                {
-                    denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Press C to clear").Replace("{0}", Translate($"{denPos}"));
-                }
-            }
-        }
+        //public override void GrafUpdate(float timeStacker)
+        //{
+        //    base.GrafUpdate(timeStacker);
+        //    if (denLabel != null)
+        //    {
+        //        if (denPos == "NONE")
+        //        {
+        //            denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Hold shift + click a room to assign").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
+        //        }
+        //        else
+        //        {
+        //            denLabel.label.text = Translate("Den Position: {0} #SEPARATOR# Press C to clear").Replace("{0}", Translate($"{denPos}")).Replace("#SEPARATOR#", "|");
+        //        }
+        //    }
+        //}
 
         private static string Translate(string text)
         {
             string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
+            Debug.Log(TranslateText);
             bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
             if (useTranslate)
             {

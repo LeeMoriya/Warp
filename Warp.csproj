@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>F:\Steam Games\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\warp\plugins\</OutputPath>
+    <OutputPath>F:\Steam Games\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\warp\newest\plugins\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
