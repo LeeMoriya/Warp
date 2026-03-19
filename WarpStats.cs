@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Menu;
+using RWCustom;
 using UnityEngine;
 
 public class WarpStats : RectangularMenuObject
@@ -89,7 +90,7 @@ public class WarpStats : RectangularMenuObject
             }
             screenCount[item.cameras]++;
         }
-        data = "ROOMS: " + rooms + Environment.NewLine + "SCREENS: " + screens;
+        data = Translate("ROOMS: ") + rooms + Environment.NewLine + Translate("SCREENS: ") + screens;
         data += Environment.NewLine + Environment.NewLine;
         //data += "Subregions:" + Environment.NewLine;
         //if (WarpModMenu.subregionNames.ContainsKey(region) && WarpModMenu.subregionNames[region].Count >= 2)
@@ -100,24 +101,24 @@ public class WarpStats : RectangularMenuObject
         //        data += WarpModMenu.subregionNames[region][i] + Environment.NewLine;
         //    }
         //}
-        data += "Gates: " + gates + Environment.NewLine;
-        data += "Shelters: " + shelters + Environment.NewLine;
+        data += Translate("Gates: ") + gates + Environment.NewLine;
+        data += Translate("Shelters: ") + shelters + Environment.NewLine;
         if (swarm > 0)
         {
-            data += "Swarm Rooms: " + swarm + Environment.NewLine;
+            data += Translate("Swarm Rooms: ") + swarm + Environment.NewLine;
         }
         if (trader > 0)
         {
-            data += "Scav Traders: " + trader + Environment.NewLine;
+            data += Translate("Scav Traders: ") + trader + Environment.NewLine;
         }
         if (toll > 0)
         {
-            data += "Scav Tolls: " + toll + Environment.NewLine;
+            data += Translate("Scav Tolls: ") + toll + Environment.NewLine;
         }
         data2 = "";
         for (int i = 0; i < screenCount.Keys.Count; i++)
         {
-            data2 += Environment.NewLine + screenCount.Keys.ElementAt(i) + " Screen: " + screenCount[screenCount.Keys.ElementAt(i)];
+            data2 += Environment.NewLine + screenCount.Keys.ElementAt(i) + Translate(" Screen: ") + screenCount[screenCount.Keys.ElementAt(i)];
         }
         stats.label.text = data;
         stats.label.alignment = FLabelAlignment.Left;
@@ -137,5 +138,19 @@ public class WarpStats : RectangularMenuObject
         stats.RemoveSprites();
         stats2.RemoveSprites();
         BG.RemoveFromContainer();
+    }
+
+    private static string Translate(string text)
+    {
+        string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
+        bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
+        if (useTranslate)
+        {
+            return text;
+        }
+        else
+        {
+            return TranslateText;
+        }
     }
 }
