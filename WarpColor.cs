@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Menu;
 using UnityEngine;
-
+using RWCustom;
 public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
 {
     public WarpModMenu.WarpContainer warpContainer;
@@ -45,25 +45,25 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
         currentRegion = WarpModMenu.newRegion;
 
         //Reset and Save buttons
-        saveButton = new WarpButton(menu, this, "SAVE", "SAVE", new Vector2(anchor.x + 20f + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.4f, 1f, 0.4f));
+        saveButton = new WarpButton(menu, this, Translate("SAVE"), "SAVE", new Vector2(anchor.x + 20f + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.4f, 1f, 0.4f));
         this.subObjects.Add(saveButton);
-        doneButton = new WarpButton(menu, this, "DONE", "DONE", new Vector2(saveButton.pos.x + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
+        doneButton = new WarpButton(menu, this, Translate("DONE"), "DONE", new Vector2(saveButton.pos.x + 95f, anchor.y - 20f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
         this.subObjects.Add(doneButton);
 
         //Category switch buttons
-        typeButton = new WarpButton(menu, this, "TYPE", "CTYPE", new Vector2(anchor.x + 20f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
+        typeButton = new WarpButton(menu, this, Translate("TYPE"), "CTYPE", new Vector2(anchor.x + 20f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
         this.subObjects.Add(typeButton);
-        sizeButton = new WarpButton(menu, this, "SIZE", "CSIZE", new Vector2(typeButton.pos.x + 95f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
+        sizeButton = new WarpButton(menu, this, Translate("SIZE"), "CSIZE", new Vector2(typeButton.pos.x + 95f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
         this.subObjects.Add(sizeButton);
-        subButton = new WarpButton(menu, this, "SUB", "CSUB", new Vector2(sizeButton.pos.x + 95f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
+        subButton = new WarpButton(menu, this, Translate("SUB"), "CSUB", new Vector2(sizeButton.pos.x + 95f, anchor.y + 200f), new Vector2(80f, 30f), new Color(0.8f, 0.8f, 0.8f));
         this.subObjects.Add(subButton);
 
         //Title label
-        infoLabel = new MenuLabel(menu, this, "COLOR CUSTOMISER" + Environment.NewLine + "Adjust global room Type and Size button colors" + Environment.NewLine + "and individual subregion colors per region", new Vector2(sizeButton.pos.x + 40f, anchor.y + 265f), new Vector2(), false);
+        infoLabel = new MenuLabel(menu, this, Translate("COLOR CUSTOMISER") + Environment.NewLine + Translate("Adjust global room Type and Size button colors") + Environment.NewLine + Translate("and individual subregion colors per region"), new Vector2(sizeButton.pos.x + 40f, anchor.y + 265f), new Vector2(), false);
         this.subObjects.Add(infoLabel);
 
         //Category label
-        categoryLabel = new MenuLabel(menu, this, "Select a button above to configure colors", new Vector2(sizeButton.pos.x + 40f, anchor.y + 147f), new Vector2(), false);
+        categoryLabel = new MenuLabel(menu, this, Translate("Select a button above to configure colors"), new Vector2(sizeButton.pos.x + 40f, anchor.y + 147f), new Vector2(), false);
         this.subObjects.Add(categoryLabel);
 
         //Mouse Over label
@@ -71,11 +71,11 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
         this.subObjects.Add(mouseOverLabel);
 
         //Color controls
-        hueSlider = new HorizontalSlider(menu, this, "HUE", new Vector2(anchor.x + 30f, anchor.y + 100f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
+        hueSlider = new HorizontalSlider(menu, this, Translate("HUE"), new Vector2(anchor.x + 30f, anchor.y + 100f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
         this.subObjects.Add(hueSlider);
-        satSlider = new HorizontalSlider(menu, this, "SAT", new Vector2(anchor.x + 30f, anchor.y + 60f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
+        satSlider = new HorizontalSlider(menu, this, Translate("SAT"), new Vector2(anchor.x + 30f, anchor.y + 60f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
         this.subObjects.Add(satSlider);
-        litSlider = new HorizontalSlider(menu, this, "LIT", new Vector2(anchor.x + 30f, anchor.y + 20f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
+        litSlider = new HorizontalSlider(menu, this, Translate("LIT"), new Vector2(anchor.x + 30f, anchor.y + 20f), new Vector2(185f, 0f), Slider.SliderID.LevelsListScroll, false);
         this.subObjects.Add(litSlider);
 
         switch (WarpModMenu.viewType)
@@ -366,24 +366,24 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             //Category buttons
             if (typeButton.IsMouseOverMe)
             {
-                text = "Configure button colors when viewing by room type";
+                text = Translate("Configure button colors when viewing by room type");
             }
             else if (sizeButton.IsMouseOverMe)
             {
-                text = "Configure button colors when viewing by room size";
+                text = Translate("Configure button colors when viewing by room size");
             }
             else if (subButton.IsMouseOverMe)
             {
-                text = "Configure button colors when viewing by subregion";
+                text = Translate("Configure button colors when viewing by subregion");
             }
             //Config buttons
             else if (saveButton.IsMouseOverMe)
             {
-                text = "Save the configured colors to a file";
+                text = Translate("Save the configured colors to a file");
             }
             else if (doneButton.IsMouseOverMe)
             {
-                text = "Return to the main Warp menu";
+                text = Translate("Return to the main Warp menu");
             }
             else
             {
@@ -399,7 +399,7 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
                 {
                     if (WarpModMenu.subregionNames[currentRegion].Count >= selectedColor)
                     {
-                        categoryLabel.label.text = WarpModMenu.subregionNames[currentRegion][selectedColor];
+                        categoryLabel.label.text = Translate(WarpModMenu.subregionNames[currentRegion][selectedColor]);
                         categoryLabel.label.color = currentCol.rgb;
                     }
                 }
@@ -407,29 +407,29 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
                 {
                     if (category == Category.Size)
                     {
-                        categoryLabel.label.text = "Cameras: " + (selectedColor + 1).ToString();
+                        categoryLabel.label.text = Translate("Cameras: ") + (selectedColor + 1).ToString();
                     }
                     if (category == Category.Type)
                     {
                         switch (selectedColor)
                         {
                             case 0:
-                                categoryLabel.label.text = "Room";
+                                categoryLabel.label.text = Translate("Room");
                                 break;
                             case 1:
-                                categoryLabel.label.text = "Gate";
+                                categoryLabel.label.text = Translate("Gate");
                                 break;
                             case 2:
-                                categoryLabel.label.text = "Shelter";
+                                categoryLabel.label.text = Translate("Shelter");
                                 break;
                             case 3:
-                                categoryLabel.label.text = "Swarmroom";
+                                categoryLabel.label.text = Translate("Swarmroom");
                                 break;
                             case 4:
-                                categoryLabel.label.text = "Scavenger Trader";
+                                categoryLabel.label.text = Translate("Scavenger Trader");
                                 break;
                             case 5:
-                                categoryLabel.label.text = "Scavenger Outpost";
+                                categoryLabel.label.text = Translate("Scavenger Outpost");
                                 break;
                         }
                     }
@@ -438,12 +438,25 @@ public class WarpColor : RectangularMenuObject, Slider.ISliderOwner
             }
             else
             {
-                categoryLabel.label.text = "Select a button above to configure colors";
+                categoryLabel.label.text = Translate("Select a button above to configure colors");
                 categoryLabel.label.color = Color.white;
             }
         }
     }
 
+    private static string Translate(string text)
+    {
+        string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
+        bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
+        if (useTranslate)
+        {
+            return text;
+        }
+        else
+        {
+            return TranslateText;
+        }
+    }
     public float ValueOfSlider(Slider slider)
     {
         if (slider == hueSlider)

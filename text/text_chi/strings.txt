@@ -1,0 +1,116 @@
+warp-name|传送菜单
+warp-description|一个通过暂停菜单快速传送至新房间和区域的工具。
+
+//RoomPreview
+Left click on the preview to warp to that location  -  Right click to dismiss|左键点击预览传送至该位置 - 右键点击关闭
+Shift + E  -  Export options|Shift + E - 导出选项
+BORDERS: NONE|边框：无
+BORDERS: ALL|边框：全部
+BORDERS: SHELTER|边框：避难所
+BORDERS: TYPES|边框：类型
+BORDERS: NONE|边框：无
+SCALE: X1|大小：X1
+SCALE: X2|大小：X2
+SCALE: X5|大小：X5
+SCALE: X10|大小：X10
+EXPORT|导出
+EXPORT REGION|导出区域
+OPEN FOLDER|打开文件夹
+
+Saved: {0}|已保存：{0}
+{0} x {1} pixels  -  {2}_preview.png|{0} x {1} 像素 - {2}_preview.png
+Finished exporting {0} rooms|已完成导出 {0} 个房间
+
+//WarpColor
+Cameras: |摄像头：
+Room|房间
+ROOM|房间
+GATE|业力门
+STATS|统计
+Gate|业力门
+Shelter|避难所
+SHELTER|避难所
+Swarmroom|蝙蝠房
+SwarmRoom|蝙蝠房
+Scavenger Trader|拾荒者商店
+Scavenger Outpost|拾荒者前哨站
+ScavengerTrader|拾荒者商店
+ScavengerOutpost|拾荒者前哨站
+ScavTrader|拾荒者商店
+ScavOutpost|拾荒者前哨站
+ROOMS|房间
+SCREENS|屏幕
+SCAVTRADER|拾荒者商店
+SWARMROOM|蝙蝠房间
+SCAVOUTPOST|拾荒者前哨站
+OUTPOST|前哨站
+SWARM|蝙蝠房
+TRADER|商店
+GATE|业力门
+CAMS |摄像头
+SUB |子区域
+HUE|色调
+SAT|饱和度
+LIT|亮度
+SAVE|保存
+DONE|完成
+TYPE|类型
+SIZE|大小
+SUB|子区域
+
+COLOR CUSTOMISER|颜色定制器
+Adjust global room Type and Size button colors|调整全局房间类型和大小按钮的颜色
+and individual subregion colors per region|以及每个区域的单独子区域颜色
+
+Configure button colors when viewing by room type|在按房间类型查看时配置按钮颜色
+Configure button colors when viewing by room size|在按房间大小查看时配置按钮颜色
+Configure button colors when viewing by subregion|在按子区域查看时配置按钮颜色
+Save the configured colors to a file|将配置好的颜色保存到文件
+Return to the main Warp menu|返回传送主菜单
+Select a button above to configure colors|选择上方的按钮以配置颜色
+
+//WarpMenu
+Warp Menu|传送菜单
+SORT     #SEPARATOR#     VIEW|排序     #SEPARATOR#     视图
+HIDE|隐藏
+WARP|传送
+NONE|无
+ROOM TYPE|房间类型
+ROOM SIZE|房间大小
+SUBREGION|子区域
+LEFT|左
+RIGHT|右
+TRADER|商店
+SWARM|蝙蝠房
+OUTPOST|前哨站
+Error|错误
+
+Left click on the preview to warp to that location  -  Right click to dismiss|左键点击预览传送至该位置 - 右键点击关闭
+Left click: Warp    -    Right click: Preview|左键：传送 - 右键：预览
+Left click: Load Region    -    Shift click: Reload Region|左键：加载区域 - Shift+点击：重新加载区域
+Toggle the region list between list view and button view #SEPARATOR# Shift click to toggle alphabetical sorting|在列表视图和按钮视图之间切换区域列表 | Shift+点击切换按字母顺序排序
+Opens the colour customiser where you can change the colors for room types, sizes and subregions|打开颜色定制器，您可以在其中更改房间类型、大小和子区域的颜色
+Toggle whether this region is favourited, putting it to the top of the list|切换是否收藏此区域，将其置于列表顶部
+Den Position: {0} #SEPARATOR# Hold shift + click a room to assign|巢穴位置：{0} | 按住Shift并点击房间以指定
+Den Position: {0} #SEPARATOR# Press C to clear|巢穴位置：{0} | 按C键清除
+
+//WarpStats
+ROOMS: |房间数：
+SCREENS: |屏幕数：
+Gates: |业力门数：
+Shelters: |避难所数：
+Swarm Rooms: |蝙蝠房数：
+Scav Traders: |拾荒者商店数：
+Scav Tolls: |拾荒者前哨站数：
+ Screen: | 屏幕房间数：
+
+//RegionSwitcher
+An error occurred while loading the new region, check your room connections|加载新区域时发生错误，请检查您的房间连接
+An error occurred while loading the destination AbstractRoom|加载目标抽象房间时发生错误
+An error occurred while realising the destination room|实现目标房间时发生错误
+An error occurred while loading rooms in the new region|加载新区域中的房间时发生错误
+An error occurred while finding a node to place the player|查找放置玩家的节点时发生错误
+An error occurred while moving the player to the new region|将玩家移动到新区域时发生错误
+An error occurred while moving the player's items|移动玩家的物品时发生错误
+An error occurred while moving the RoomCamera to the new room|将房间摄像头移动到新房间时发生错误
+I have no idea how you got this error|我不知道你是怎么遇到这个错误的

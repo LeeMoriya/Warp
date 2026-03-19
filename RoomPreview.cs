@@ -9,6 +9,7 @@ using System.Globalization;
 using RWCustom;
 using Menu;
 using static System.Net.Mime.MediaTypeNames;
+using RWCustom;
 
 public class RoomPreview : Dialog
 {
@@ -143,14 +144,14 @@ public class RoomPreview : Dialog
         previewSprite.scale = scaleFactor * 0.83f;
         pages[0].Container.AddChild(previewSprite);
 
-        instructions = new FLabel("font", "Left click on the preview to warp to that location  -  Right click to dismiss");
+        instructions = new FLabel(Custom.GetFont(), Translate("Left click on the preview to warp to that location  -  Right click to dismiss"));
         instructions.SetAnchor(0.5f, 0.5f);
         instructions.x = Mathf.RoundToInt(Custom.rainWorld.options.ScreenSize.x / 2) + 0.01f;
         instructions.y = 20.01f;
         instructions.alpha = 0f;
         pages[0].Container.AddChild(instructions);
 
-        exportLabel = new FLabel("font", "Shift + E  -  Export options");
+        exportLabel = new FLabel(Custom.GetFont(), Translate("Shift + E  -  Export options"));
         exportLabel.SetAnchor(0.5f, 0.5f);
         exportLabel.x = Mathf.RoundToInt(Custom.rainWorld.options.ScreenSize.x / 2) + 0.01f;
         exportLabel.y = 45f;
@@ -435,11 +436,11 @@ public class RoomPreview : Dialog
 
         if(exportButton == null && (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) && Input.GetKey(KeyCode.E))
         {
-            borderButton = new WarpButton(this, pages[0], "BORDERS: NONE", "BORDER", new Vector2(683f - 300f, 30f), new Vector2(130f, 30f), new Color(0.5f, 0.5f, 0.5f));
-            scaleButton = new WarpButton(this, pages[0], "SCALE: X1", "SCALE", borderButton.pos + new Vector2(borderButton.size.x + 10f, 0f), new Vector2(90f, 30f), new Color(0.5f, 0.5f, 0.5f));
-            exportButton = new WarpButton(this, pages[0], "EXPORT", "EXPORT", scaleButton.pos + new Vector2(scaleButton.size.x + 10f,0f), new Vector2(80f, 30f), new Color(0.5f, 0.5f, 0.5f));
-            exportAllButton = new WarpButton(this, pages[0], "EXPORT REGION", "EXPORTREGION", exportButton.pos + new Vector2(exportButton.size.x + 10f, 0f), new Vector2(120f, 30f), new Color(0.5f, 0.5f, 0.5f));
-            openFolderButton = new WarpButton(this, pages[0], "OPEN FOLDER", "OPEN", exportAllButton.pos + new Vector2(exportAllButton.size.x + 10f, 0f), new Vector2(100f, 30f), new Color(0.5f, 0.5f, 0.5f));
+            borderButton = new WarpButton(this, pages[0], Translate("BORDERS: NONE"), "BORDER", new Vector2(683f - 300f, 30f), new Vector2(130f, 30f), new Color(0.5f, 0.5f, 0.5f));
+            scaleButton = new WarpButton(this, pages[0], Translate("SCALE: X1"), "SCALE", borderButton.pos + new Vector2(borderButton.size.x + 10f, 0f), new Vector2(90f, 30f), new Color(0.5f, 0.5f, 0.5f));
+            exportButton = new WarpButton(this, pages[0], Translate("EXPORT"), "EXPORT", scaleButton.pos + new Vector2(scaleButton.size.x + 10f,0f), new Vector2(80f, 30f), new Color(0.5f, 0.5f, 0.5f));
+            exportAllButton = new WarpButton(this, pages[0], Translate("EXPORT REGION"), "EXPORTREGION", exportButton.pos + new Vector2(exportButton.size.x + 10f, 0f), new Vector2(120f, 30f), new Color(0.5f, 0.5f, 0.5f));
+            openFolderButton = new WarpButton(this, pages[0], Translate("OPEN FOLDER"), "OPEN", exportAllButton.pos + new Vector2(exportAllButton.size.x + 10f, 0f), new Vector2(100f, 30f), new Color(0.5f, 0.5f, 0.5f));
             pages[0].subObjects.Add(borderButton);
             pages[0].subObjects.Add(scaleButton);
             pages[0].subObjects.Add(exportButton);
@@ -447,7 +448,7 @@ public class RoomPreview : Dialog
             pages[0].subObjects.Add(openFolderButton);
 
             exportLabel.y = 20f;
-            exportLabel.text = $"{image.width} x {image.height} pixels  -  {roomName}_preview.png";
+            exportLabel.text = Translate("{0} x {1} pixels  -  {2}_preview.png").Replace("{0}", $"{image.width}").Replace("{1}", $"{image.height}").Replace("{2}", $"{roomName}");
             exportLabel.color = new Color(0.8f, 0.8f, 0.8f);
             instructions.text = "";
 
@@ -483,7 +484,7 @@ public class RoomPreview : Dialog
                 exporting = false;
                 currentExport = 0;
                 progressBar.alpha = 0f;
-                exportLabel.text = $"Finished exporting {roomsToExport} rooms";
+                exportLabel.text = Translate("Finished exporting {0} rooms").Replace("{0}", $"{roomsToExport}");
                 roomsToExport = 0;
             }
         }
@@ -719,24 +720,24 @@ public class RoomPreview : Dialog
             if(currentScaleMultiplier == 1)
             {
                 currentScaleMultiplier = 2;
-                scaleButton.menuLabel.text = "SCALE: X2";
+                scaleButton.menuLabel.text = Translate("SCALE: X2");
             }
             else if (currentScaleMultiplier == 2)
             {
                 currentScaleMultiplier = 5;
-                scaleButton.menuLabel.text = "SCALE: X5";
+                scaleButton.menuLabel.text = Translate("SCALE: X5");
             }
             else if(currentScaleMultiplier == 5)
             {
                 currentScaleMultiplier = 10;
-                scaleButton.menuLabel.text = "SCALE: X10";
+                scaleButton.menuLabel.text = Translate("SCALE: X10");
             }
             else if(currentScaleMultiplier == 10)
             {
                 currentScaleMultiplier = 1;
-                scaleButton.menuLabel.text = "SCALE: X1";
+                scaleButton.menuLabel.text = Translate("SCALE: X1");
             }
-            exportLabel.text = $"{image.width * currentScaleMultiplier} x {image.height * currentScaleMultiplier} pixels  -  {roomName}_preview.png";
+            exportLabel.text = Translate("{0} x {1} pixels  -  {2}_preview.png").Replace("{0}", $"{image.width * currentScaleMultiplier}").Replace("{1}", $"{image.height * currentScaleMultiplier}").Replace("{2}", $"{roomName}");
             PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
         }
         if(message == "BORDER")
@@ -744,29 +745,29 @@ public class RoomPreview : Dialog
             if (borders == 0)
             {
                 borders = 1;
-                borderButton.menuLabel.text = "BORDERS: ALL";
+                borderButton.menuLabel.text = Translate("BORDERS: ALL");
             }
             else if (borders == 1)
             {
                 borders = 2;
-                borderButton.menuLabel.text = "BORDERS: SHELTER";
+                borderButton.menuLabel.text = Translate("BORDERS: SHELTER");
             }
             else if (borders == 2)
             {
                 borders = 3;
-                borderButton.menuLabel.text = "BORDERS: TYPES";
+                borderButton.menuLabel.text = Translate("BORDERS: TYPES");
             }
             else if (borders == 3)
             {
                 borders = 0;
-                borderButton.menuLabel.text = "BORDERS: NONE";
+                borderButton.menuLabel.text = Translate("BORDERS: NONE");
             }
             PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
         }
         if(message == "EXPORT")
         {
             Export(roomName, image, currentScaleMultiplier);
-            exportLabel.text = $"Saved: {UnityEngine.Application.persistentDataPath}/Warp/Export/{regionName}/{roomName}_preview.png";
+            exportLabel.text = Translate("Saved: {0}").Replace("{0}", $"{UnityEngine.Application.persistentDataPath}/Warp/Export/{regionName}/{roomName}_preview.png");
             PlaySound(SoundID.MENU_Button_Standard_Button_Pressed);
         }
         if(message == "EXPORTREGION")
@@ -784,6 +785,19 @@ public class RoomPreview : Dialog
         }
     }
 
+    private static string Translate(string text)
+    {
+        string TranslateText = Custom.rainWorld.inGameTranslator.Translate(text);
+        bool useTranslate = string.IsNullOrEmpty(TranslateText) || TranslateText == "!NO TRANSLATION!";
+        if (useTranslate)
+        {
+            return text;
+        }
+        else
+        {
+            return TranslateText;
+        }
+    }
     public override void ShutDownProcess()
     {
         base.ShutDownProcess();
