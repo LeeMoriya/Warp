@@ -28,7 +28,7 @@ public class WarpStats : RectangularMenuObject
         BG.alpha = 0f;
         Container.AddChild(BG);
         //Region Stats
-        stats = new MenuLabel(menu, this, "", new Vector2(22f, (owner as WarpModMenu.WarpContainer).colorKey.Last().pos.y - 20f), new Vector2(), false);
+        stats = new MenuLabel(menu, this, "", new Vector2(22f, (owner as WarpModMenu.WarpContainer).colorKey.Count > 0 ? (owner as WarpModMenu.WarpContainer).colorKey.Last().pos.y - 20f : (owner as WarpModMenu.WarpContainer).keyLabel.pos.y - 15f), new Vector2(), false);
         stats.label.color = new Color(0.65f, 0.65f, 0.65f);
         subObjects.Add(stats);
         stats2 = new MenuLabel(menu, this, "", new Vector2(), new Vector2(), false);

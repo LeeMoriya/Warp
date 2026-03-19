@@ -225,7 +225,7 @@ public class WarpModMenu
                 RoomFinder rf = new RoomFinder();
                 List<RoomInfo> roomList = rf.GetRegionInfo(game.overWorld.regions[fullLoadIndex].name);
                 fullLoadIndex++;
-                if(fullLoadIndex == game.overWorld.regions.Length)
+                if (fullLoadIndex == game.overWorld.regions.Length)
                 {
                     WarpSettings.ExportRoomList();
                 }
@@ -237,7 +237,7 @@ public class WarpModMenu
             else
             {
                 exportDelay--;
-                if(exportDelay < 0)
+                if (exportDelay < 0)
                 {
                     exportDelay = 0;
                 }
@@ -524,6 +524,13 @@ public class WarpModMenu
 
             if (game.overWorld.regions != null)
             {
+                //If too many regions are installed, force drop-down mode
+                bool regOverflow = game.overWorld.regions.Length >= 50;
+                if (regOverflow)
+                {
+                    //dropdownMode = true;
+                }
+
                 Color statColor;
                 string statText;
                 if (mode == Mode.Stats)
@@ -551,6 +558,7 @@ public class WarpModMenu
                 listToggle = new WarpSymbolButton(menu, this, "warpList", "TOGGLE", new Vector2(22f, regionHeight + 20f));
                 listToggle.roundedRect.size = new Vector2(30f, 30f);
                 listToggle.size = listToggle.roundedRect.size;
+                //listToggle.buttonBehav.greyedOut = regOverflow;
                 subObjects.Add(listToggle);
 
                 colorToggle = new WarpSymbolButton(menu, this, "warpColor", "COLORS", new Vector2(57f, regionHeight + 20f));
@@ -622,7 +630,10 @@ public class WarpModMenu
             {
                 string name = favourites.Contains(r.name) ? $"> {Region.GetRegionFullName(r.name, game.StoryCharacter)}" : Region.GetRegionFullName(r.name, game.StoryCharacter);
                 if (name == "Unknown Region") { name = r.name; }
-                regions.Add(r.name, name);
+                if (!regions.ContainsKey(r.name))
+                {
+                    regions.Add(r.name, name);
+                }
             }
 
             var regList = new List<KeyValuePair<string, string>>();
@@ -742,7 +753,14 @@ public class WarpModMenu
                 {
                     if (regionButtons != null)
                     {
-                        warpStats.pos.x = 110f;
+                        if (regionButtons.Count > 50)
+                        {
+                            warpStats.pos.x = 130f;
+                        }
+                        else
+                        {
+                            warpStats.pos.x = 110f;
+                        }
                     }
                     else
                     {
@@ -750,7 +768,7 @@ public class WarpModMenu
                     }
                     warpStats.pos.y = 0f;
                     warpStats.lastPos = warpStats.pos;
-                    warpStats.stats.pos.y = statButton.pos.y + 20f;
+                    warpStats.stats.pos.y = statButton.pos.y - 15f;
                     warpStats.stats.lastPos.y = warpStats.stats.pos.y;
                 }
                 else
@@ -1091,6 +1109,7 @@ public class WarpModMenu
                     (sender as WarpButton).color = new Color(1f, 0.85f, 0f);
                     warpStats = new WarpStats(menu, this);
                     warpStats.GenerateStats(newRegion, "");
+                    UpdateSettingPositions();
                     subObjects.Add(warpStats);
                     showStats = true;
                 }
@@ -1214,6 +1233,9 @@ public class WarpModMenu
 
         public void GenerateRegionButtons()
         {
+            int maxColWidth = game.overWorld.regions.Length >= 50 ? 4 : 3;
+            float regOffset = maxColWidth == 4 ? 17f : 0f;
+
             regionButtons = new List<WarpButton>();
             int column = 0;
             int row = 0;
@@ -1246,11 +1268,11 @@ public class WarpModMenu
 
             for (int i = 0; i < regions.Count; i++)
             {
-                WarpButton button = new WarpButton(menu, this, regions[i], $"reg-{regions[i]}", statButton.pos + new Vector2(-55f + (35f * column), -(35f + (27f * row))), new Vector2(30f, 23f), Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey));
+                WarpButton button = new WarpButton(menu, this, regions[i], $"reg-{regions[i]}", statButton.pos + new Vector2(-55f - regOffset + (35f * column), -(35f + (27f * row))), new Vector2(30f, 23f), Menu.Menu.MenuRGB(Menu.Menu.MenuColors.MediumGrey));
                 subObjects.Add(button);
                 regionButtons.Add(button);
                 column++;
-                if (column >= 3)
+                if (column >= maxColWidth)
                 {
                     column = 0;
                     row++;
@@ -1562,16 +1584,19 @@ public class WarpModMenu
                         keyLabel = new MenuLabel(menu, this, "SUBREGION", new Vector2(22f, sortHeight - 15f), new Vector2(), false);
                         keyLabel.label.alignment = FLabelAlignment.Left;
                         subObjects.Add(keyLabel);
-                        for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
+                        if (WarpModMenu.subregionNames.ContainsKey(newRegion) && WarpModMenu.subregionNames[newRegion].Count > 0)
                         {
-                            MenuLabel label = new MenuLabel(menu, this, WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
-                            label.label.alignment = FLabelAlignment.Left;
-                            while (WarpModMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[newRegion].Count)
+                            for (int i = 0; i < WarpModMenu.subregionNames[newRegion].Count; i++)
                             {
-                                ColorInfo.customSubregionColors[newRegion].Add(new HSLColor(1f, 1f, 1f));
+                                MenuLabel label = new MenuLabel(menu, this, WarpModMenu.subregionNames[newRegion][i], new Vector2(), new Vector2(), false);
+                                label.label.alignment = FLabelAlignment.Left;
+                                while (WarpModMenu.subregionNames[newRegion].Count > ColorInfo.customSubregionColors[newRegion].Count)
+                                {
+                                    ColorInfo.customSubregionColors[newRegion].Add(new HSLColor(1f, 1f, 1f));
+                                }
+                                label.label.color = ColorInfo.customSubregionColors[newRegion][i].rgb;
+                                colorKey.Add(label);
                             }
-                            label.label.color = ColorInfo.customSubregionColors[newRegion][i].rgb;
-                            colorKey.Add(label);
                         }
                         break;
                     }
