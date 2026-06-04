@@ -57,6 +57,7 @@ class RoomFinder
             //Check if Room .txt Exists
             string roomPath = AssetManager.ResolveFilePath($"world/{region}-rooms/{info.name}.txt");
             string levelPath = AssetManager.ResolveFilePath($"levels/{info.name}.txt");
+            string gatePath = AssetManager.ResolveFilePath($"world/gates/{info.name}.txt");
             if (File.Exists(roomPath))
             {
                 string[] roomFile = File.ReadAllLines(roomPath);
@@ -69,6 +70,15 @@ class RoomFinder
             else if (File.Exists(levelPath))
             {
                 string[] roomFile = File.ReadAllLines(levelPath);
+                string[] cameraCount = Regex.Split(roomFile[3], @"\|");
+                if (cameraCount != null && cameraCount.Length > 0)
+                {
+                    info.cameras = cameraCount.Length;
+                }
+            }
+            else if (File.Exists(gatePath))
+            {
+                string[] roomFile = File.ReadAllLines(gatePath);
                 string[] cameraCount = Regex.Split(roomFile[3], @"\|");
                 if (cameraCount != null && cameraCount.Length > 0)
                 {
