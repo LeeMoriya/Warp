@@ -179,6 +179,7 @@ public class RoomPreview : Dialog
 
         //Load data from room file
         string[] data = File.ReadAllLines(WorldLoader.FindRoomFile(roomName, false, ".txt"));
+        RoomPreprocessor.VersionFix(ref data);
 
         //Determine water level
         if (data[1].Split(new char[]
