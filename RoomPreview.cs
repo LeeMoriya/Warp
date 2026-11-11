@@ -138,7 +138,6 @@ public class RoomPreview : Dialog
         float scaleWidth = Custom.rainWorld.options.ScreenSize.x / (width * 3);
         float scaleHeight = Custom.rainWorld.options.ScreenSize.y / (height * 3);
 
-        // Choose the minimum scaling factor to fit either the width or height
         scaleFactor = Math.Min(scaleWidth, scaleHeight);
 
         previewSprite.scale = scaleFactor * 0.83f;
@@ -162,8 +161,6 @@ public class RoomPreview : Dialog
         openingCounter = 10;
         closingCounter = -1;
         cooldown = 30;
-
-        //Export(roomName, image, 2);
     }
 
     public Room.Tile[,] GenerateTiles(string roomName)
@@ -179,6 +176,7 @@ public class RoomPreview : Dialog
 
         //Load data from room file
         string[] data = File.ReadAllLines(WorldLoader.FindRoomFile(roomName, false, ".txt"));
+        RoomPreprocessor.VersionFix(ref data);
 
         //Determine water level
         if (data[1].Split(new char[]

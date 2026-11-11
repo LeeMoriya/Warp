@@ -76,10 +76,10 @@ public class RegionSwitcher
         return null;
     }
 
-    // Taken from OverWorld.WorldLoaded
+    //Taken from OverWorld.WorldLoaded
     private void WorldLoaded(RainWorldGame game, AbstractRoom oldRoom, World oldWorld, string newRoomName, IntVector2 newPos)
     {
-        // Realize the new room
+        //Realize the new room
         this.error = ErrorKey.AbstractRoom;
         World newWorld = game.overWorld.activeWorld;
         AbstractRoom newRoom = newWorld.GetAbstractRoom(newRoomName);
@@ -87,7 +87,7 @@ public class RegionSwitcher
         newRoom.RealizeRoom(newWorld, game);
 
         this.error = ErrorKey.RoomRealiser;
-        // Forcibly prepare all loaded rooms
+        //Forcibly prepare all loaded rooms
         while (newWorld.loadingRooms.Count > 0)
         {
             for (int i = 0; i < 1; i++)
