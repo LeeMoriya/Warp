@@ -13,3 +13,14 @@ Warp versions v.86.0 and above are for Rain World v1.10
 ## Download:
 
 Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.85.0)
+
+## Building:
+Needs the .NET SDK or Visual Studio, and Rain World with BepInEx installed. It builds on Windows, Linux and macOS:
+
+    dotnet build -c Release
+
+The project looks for the game in the usual Steam folders. If yours is somewhere else, pass its folder or set the `RAINWORLD_DIR` environment variable:
+
+    dotnet build -c Release -p:RainWorldDir="/path/to/Rain World"
+
+The result is `bin/Release/Warp.dll`. A Debug build is written straight into the game's `RainWorld_Data/StreamingAssets/mods/warp/newest/plugins` folder if that folder exists, and to `bin/Debug` otherwise.
