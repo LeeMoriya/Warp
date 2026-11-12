@@ -15,12 +15,16 @@ Warp versions v.86.0 and above are for Rain World v1.10
 Get the latest release [Here](https://github.com/LeeMoriya/Warp/releases/tag/v1.85.0)
 
 ## Building:
-Needs the .NET SDK or Visual Studio, and Rain World with BepInEx installed. It builds on Windows, Linux and macOS:
+Needs the .NET SDK or Visual Studio, and Rain World with BepInEx installed (run the game once with BepInEx so it creates the `HOOKS-Assembly-CSharp` and `PUBLIC-Assembly-CSharp` libraries the build uses). It builds on Windows, Linux and macOS. The first build downloads a small package from NuGet, so it needs an internet connection that once:
 
     dotnet build -c Release
+
+Use `-c Release` unless you want the Debug behaviour described below.
 
 The project looks for the game in the usual Steam folders. If yours is somewhere else, pass its folder or set the `RAINWORLD_DIR` environment variable:
 
     dotnet build -c Release -p:RainWorldDir="/path/to/Rain World"
 
-The result is `bin/Release/Warp.dll`. A Debug build is written straight into the game's `RainWorld_Data/StreamingAssets/mods/warp/newest/plugins` folder if that folder exists, and to `bin/Debug` otherwise.
+The result is `bin/Release/Warp.dll`.
+
+A Debug build, which is what `dotnet build` does when you leave out `-c Release`, is written straight into the game's `RainWorld_Data/StreamingAssets/mods/warp/newest/plugins` folder if that folder exists, so a change can be tried in the game at once. **That overwrites the Warp in that folder.** To build a Debug version without that, add `-p:DeployToGame=false`, and it goes to `bin/Debug` instead. Without a `mods/warp` folder, Debug builds always go to `bin/Debug`.

@@ -2,7 +2,7 @@
 
   <!--
     Output: bin/Release/Warp.dll
-    The build needs Rain World's own libraries, and BepInEx installed in the game. 
+    The build needs Rain World's own libraries, and BepInEx installed in the game.
     -->
 
   <PropertyGroup>
@@ -20,9 +20,6 @@
   <PropertyGroup Condition="'$(RainWorldDir)' == '' and '$(RAINWORLD_DIR)' != ''">
     <RainWorldDir>$(RAINWORLD_DIR)</RainWorldDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(RainWorldDir)' == '' and Exists('F:/Steam Games/steamapps/common/Rain World')">
-    <RainWorldDir>F:/Steam Games/steamapps/common/Rain World</RainWorldDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(RainWorldDir)' == '' and Exists('C:/Program Files (x86)/Steam/steamapps/common/Rain World')">
     <RainWorldDir>C:/Program Files (x86)/Steam/steamapps/common/Rain World</RainWorldDir>
   </PropertyGroup>
@@ -35,10 +32,18 @@
   <PropertyGroup Condition="'$(RainWorldDir)' == '' and Exists('$(HOME)/Library/Application Support/Steam/steamapps/common/Rain World')">
     <RainWorldDir>$(HOME)/Library/Application Support/Steam/steamapps/common/Rain World</RainWorldDir>
   </PropertyGroup>
+  <!-- The original author's own install, kept last so his builds find it as before -->
+  <PropertyGroup Condition="'$(RainWorldDir)' == '' and Exists('F:/Steam Games/steamapps/common/Rain World')">
+    <RainWorldDir>F:/Steam Games/steamapps/common/Rain World</RainWorldDir>
+  </PropertyGroup>
 
   <Target Name="CheckRainWorldDir" BeforeTargets="ResolveAssemblyReferences;CoreCompile">
-    <Error Condition="'$(RainWorldDir)' == '' or !Exists('$(RainWorldDir)/RainWorld_Data/Managed/UnityEngine.dll')"
-           Text="Could not find Rain World. Pass its folder with -p:RainWorldDir=&quot;...&quot; or set RAINWORLD_DIR. BepInEx must be installed in it." />
+    <Error Condition="'$(RainWorldDir)' == ''
+                      or !Exists('$(RainWorldDir)/RainWorld_Data/Managed/UnityEngine.dll')
+                      or !Exists('$(RainWorldDir)/BepInEx/core/BepInEx.dll')
+                      or !Exists('$(RainWorldDir)/BepInEx/plugins/HOOKS-Assembly-CSharp.dll')
+                      or !Exists('$(RainWorldDir)/BepInEx/utils/PUBLIC-Assembly-CSharp.dll')"
+           Text="Could not find Rain World with BepInEx set up in it. Pass its folder with -p:RainWorldDir=&quot;...&quot; or set RAINWORLD_DIR. The folder needs RainWorld_Data/Managed/UnityEngine.dll, BepInEx/core/BepInEx.dll, and the HOOKS-Assembly-CSharp.dll and PUBLIC-Assembly-CSharp.dll that BepInEx generates the first time the game runs with it. Looked in: '$(RainWorldDir)'" />
   </Target>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -46,7 +51,9 @@
     <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug' and Exists('$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/warp')">
+  <!-- A Debug build is written straight into the game's local mods\warp folder, if there is one, so a change can be tried at
+       once. This overwrites the Warp in that folder. Pass -p:DeployToGame=false to build into bin/Debug instead. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug' and '$(DeployToGame)' != 'false' and Exists('$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/warp')">
     <OutputPath>$(RainWorldDir)/RainWorld_Data/StreamingAssets/mods/warp/newest/plugins/</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
